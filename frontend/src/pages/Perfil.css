@@ -1,0 +1,41 @@
+.perfil-pagina { padding: 40px 24px 64px; max-width: 760px; }
+
+.perfil-tarjeta {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 26px;
+  margin-bottom: 28px;
+}
+.perfil-avatar {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: var(--color-turquesa);
+  color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem; font-weight: 700;
+  flex-shrink: 0;
+}
+.perfil-tarjeta h2 { margin: 0; }
+.perfil-correo { margin: 2px 0 8px; color: var(--color-texto-suave); font-size: 0.9rem; }
+
+.perfil-secciones { display: grid; gap: 16px; }
+.perfil-seccion { padding: 20px; }
+.perfil-seccion h3 { margin-bottom: 6px; }
+.perfil-seccion p { color: var(--color-texto-suave); margin: 0; font-size: 0.9rem; }
+.perfil-seccion p a { color: var(--color-turquesa); font-weight: 600; }
+
+.perfil-reservaciones { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.perfil-reservaciones li a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--radio-sm);
+  transition: background 0.15s ease;
+}
+.perfil-reservaciones li a:hover { background: var(--color-fondo-alterno); }
+.perfil-reservaciones__meta { color: var(--color-texto-suave); font-weight: 400; font-size: 0.85rem; }
+.perfil-reservaciones__fecha { font-size: 0.85rem; color: var(--color-texto-suave); }
+.estado-cancelada { background: rgba(179,38,30,0.1); color: var(--color-error); }

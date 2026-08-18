@@ -1,0 +1,15 @@
+.rutas-pagina { padding: 40px 24px 64px; }
+.rutas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+.ruta-tarjeta { padding: 22px; display: flex; flex-direction: column; gap: 8px; }
+.ruta-tarjeta h3 { margin: 0; }
+.ruta-tarjeta p { color: var(--color-texto-suave); margin: 0; font-size: 0.9rem; }
+.ruta-tarjeta__paradas {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-turquesa);
+}

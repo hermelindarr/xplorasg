@@ -1,0 +1,16 @@
+.lugares-pagina { padding: 40px 24px 64px; }
+.lugares-subtitulo { color: var(--color-texto-suave); margin-top: -8px; margin-bottom: 24px; }
+
+.lugares-filtros {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  background: var(--color-fondo-alterno);
+  padding: 20px;
+  border-radius: var(--radio-lg);
+  margin-bottom: 28px;
+}
+.lugares-filtros__campo { margin-bottom: 0; min-width: 220px; }
+
+.lugares-resultados { color: var(--color-texto-suave); font-size: 0.9rem; margin-bottom: 16px; }

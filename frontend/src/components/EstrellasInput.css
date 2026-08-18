@@ -1,0 +1,13 @@
+.estrellas-input { display: flex; gap: 4px; }
+.estrellas-input__estrella {
+  background: none;
+  border: none;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: #D8D2C2;
+  cursor: pointer;
+  padding: 2px;
+  transition: color 0.1s ease, transform 0.1s ease;
+}
+.estrellas-input__estrella.activa { color: var(--color-dorado); }
+.estrellas-input__estrella:hover { transform: scale(1.1); }

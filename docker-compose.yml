@@ -1,0 +1,45 @@
+# ============================================================
+# XploraSG — Docker Compose
+# Levanta MySQL y el backend. El frontend se corre aparte con
+# "npm run dev" (o se agrega un servicio adicional si se desea
+# contenerizar también, una vez definido el hosting final).
+# ============================================================
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: xplorasg_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-changeme}
+      MYSQL_DATABASE: ${DB_NAME:-xplorasg}
+    ports:
+      - "3306:3306"
+    volumes:
+      - xplorasg_mysql_data:/var/lib/mysql
+      - ./backend/seeds/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ./backend/seeds/02_seed_data.sql:/docker-entrypoint-initdb.d/02_seed_data.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    container_name: xplorasg_backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      DB_HOST: mysql
+    ports:
+      - "4000:4000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+volumes:
+  xplorasg_mysql_data:

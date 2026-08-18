@@ -1,0 +1,7 @@
+.reserva-tarjeta { padding: 22px; margin-top: 22px; }
+.reserva-tarjeta h3 { margin-bottom: 4px; }
+.reserva-precio { color: var(--color-verde); font-weight: 700; margin: 0 0 14px; }
+.reserva-aviso { color: var(--color-texto-suave); margin: 0; }
+.reserva-aviso a { color: var(--color-turquesa); font-weight: 600; }
+.reserva-confirmacion { line-height: 1.9; }
+.reserva-nota { font-size: 0.82rem; color: var(--color-texto-suave); margin-top: 10px; }

@@ -1,0 +1,21 @@
+# Dependencias
+node_modules/
+
+# Variables de entorno reales (NUNCA subir credenciales)
+.env
+backend/.env
+frontend/.env
+
+# Builds
+frontend/dist/
+frontend/dist-qa/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sistema operativo / editor
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea/

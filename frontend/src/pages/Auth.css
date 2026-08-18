@@ -1,0 +1,34 @@
+.auth-pagina {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 20px;
+  background: var(--color-fondo-alterno);
+}
+
+.auth-tarjeta {
+  width: 100%;
+  max-width: 420px;
+  padding: 36px 32px;
+}
+
+.auth-subtitulo {
+  color: var(--color-texto-suave);
+  font-size: 0.9rem;
+  margin-top: -8px;
+  margin-bottom: 22px;
+}
+
+.auth-boton { width: 100%; margin-top: 6px; }
+
+.auth-pie {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 0.88rem;
+  color: var(--color-texto-suave);
+}
+.auth-pie a { color: var(--color-turquesa); font-weight: 600; }
+
+.selector-rol { display: flex; gap: 10px; }
+.selector-rol .chip { flex: 1; justify-content: center; }

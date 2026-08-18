@@ -1,0 +1,61 @@
+.hero {
+  background: linear-gradient(160deg, var(--color-crema) 0%, #EAE3D0 100%);
+  padding: 64px 0;
+  border-bottom: 1px solid var(--color-borde);
+}
+.hero__interior { max-width: 640px; }
+.hero__texto h1 { font-size: 2.4rem; line-height: 1.15; }
+.hero__slogan { color: var(--color-turquesa); font-weight: 700; margin-bottom: 14px; }
+.hero__descripcion { color: var(--color-texto-suave); margin-bottom: 26px; }
+.hero__acciones { display: flex; gap: 14px; flex-wrap: wrap; }
+
+.seccion { padding: 48px 0; }
+.seccion__encabezado { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 18px; }
+.seccion__vertodo { color: var(--color-turquesa); font-weight: 600; font-size: 0.9rem; }
+
+.categorias-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.categoria-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: var(--radio-lg);
+  border: 1.5px solid var(--color-borde);
+  font-weight: 600;
+  color: var(--color-azul-oscuro);
+  transition: all 0.15s ease;
+}
+.categoria-chip:hover {
+  border-color: var(--color-turquesa);
+  background: rgba(31, 167, 165, 0.06);
+}
+.categoria-chip__icono { font-size: 1.2rem; }
+
+.lugares-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.franja-confianza {
+  background: var(--color-azul-oscuro);
+  padding: 40px 0;
+}
+.franja-confianza__interior {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  text-align: center;
+}
+.franja-confianza__interior div { display: flex; flex-direction: column; gap: 6px; }
+.franja-confianza__interior strong { font-size: 2rem; color: var(--color-dorado); font-family: var(--fuente-titulos); }
+.franja-confianza__interior span { color: #C9D3DC; font-size: 0.85rem; }
+
+@media (max-width: 760px) {
+  .hero__texto h1 { font-size: 1.8rem; }
+  .franja-confianza__interior { grid-template-columns: 1fr; }
+}

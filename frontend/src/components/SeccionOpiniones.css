@@ -1,0 +1,19 @@
+.form-opinion { padding: 20px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 12px; }
+.form-opinion h3 { margin: 0; }
+.form-opinion textarea {
+  padding: 12px 14px;
+  border: 1.5px solid var(--color-borde);
+  border-radius: var(--radio-sm);
+  font-family: inherit;
+  resize: vertical;
+}
+.form-opinion__exito { color: var(--color-verde); font-weight: 600; margin: 0; }
+.form-opinion__aviso { color: var(--color-texto-suave); margin-bottom: 16px; }
+.form-opinion__aviso a { color: var(--color-turquesa); font-weight: 600; }
+
+.lista-opiniones { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }
+.lista-opiniones__item { border-bottom: 1px solid var(--color-borde); padding-bottom: 14px; }
+.lista-opiniones__encabezado { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.lista-opiniones__estrellas { color: var(--color-dorado); letter-spacing: 1px; }
+.lista-opiniones__item p { margin: 4px 0; color: var(--color-texto); }
+.lista-opiniones__item time { font-size: 0.78rem; color: var(--color-texto-suave); }

@@ -1,0 +1,45 @@
+.panel-pagina { padding: 40px 24px 64px; }
+.panel-encabezado {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.panel-seccion { margin-top: 32px; }
+.panel-seccion h2 { margin-bottom: 14px; }
+
+.panel-tabla { display: flex; flex-direction: column; gap: 10px; }
+.panel-fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+}
+.panel-fila__meta { color: var(--color-texto-suave); font-weight: 400; font-size: 0.88rem; }
+.estado-rechazado { background: rgba(179,38,30,0.1); color: var(--color-error); }
+
+.form-negocio {
+  padding: 24px;
+  margin: 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.form-negocio h3 { margin: 0; }
+.form-negocio__aviso { color: var(--color-texto-suave); font-size: 0.85rem; margin: 0 0 10px; }
+.form-negocio__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 4px 18px;
+}
+.form-negocio textarea {
+  padding: 12px 14px;
+  border: 1.5px solid var(--color-borde);
+  border-radius: var(--radio-sm);
+  font-family: inherit;
+  resize: vertical;
+}

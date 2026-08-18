@@ -1,0 +1,15 @@
+.eventos-pagina { padding: 40px 24px 64px; }
+.eventos-lista { display: grid; gap: 16px; max-width: 760px; }
+.evento-item { display: flex; gap: 18px; padding: 18px 22px; align-items: flex-start; }
+.evento-item__fecha {
+  background: var(--color-crema);
+  color: var(--color-azul-oscuro);
+  font-weight: 700;
+  border-radius: var(--radio-sm);
+  padding: 10px 14px;
+  text-align: center;
+  min-width: 68px;
+  text-transform: capitalize;
+}
+.evento-item h3 { margin: 0 0 4px; font-size: 1rem; }
+.evento-item__lugar { margin: 0 0 6px; color: var(--color-texto-suave); font-size: 0.85rem; }

@@ -1,0 +1,40 @@
+.lugar-tarjeta { display: flex; flex-direction: column; height: 100%; }
+
+.lugar-tarjeta__imagen {
+  height: 150px;
+  background: linear-gradient(135deg, var(--color-turquesa), var(--color-azul-oscuro));
+  display: flex;
+  align-items: flex-end;
+  padding: 12px;
+}
+.lugar-tarjeta__categoria {
+  background: rgba(255,255,255,0.92);
+  color: var(--color-azul-oscuro);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.lugar-tarjeta__cuerpo { padding: 16px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.lugar-tarjeta__nombre { font-size: 1.02rem; margin: 0; }
+.lugar-tarjeta__municipio { margin: 0; font-size: 0.85rem; color: var(--color-texto-suave); }
+.lugar-tarjeta__descripcion {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: var(--color-texto-suave);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.lugar-tarjeta__pie {
+  margin-top: auto;
+  padding-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+}
+.lugar-tarjeta__calificacion { color: var(--color-dorado); font-weight: 600; }
+.lugar-tarjeta__precio { color: var(--color-texto-suave); }
