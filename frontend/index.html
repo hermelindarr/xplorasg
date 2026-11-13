@@ -2,18 +2,32 @@
 <html lang="es-MX">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/favicon.png" />
-    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/favicon-64.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <!-- Abre la conexión con la API mientras carga el código (las fotos y datos de la portada salen de ahí). -->
+    <link rel="preconnect" href="__API_URL__" crossorigin />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="XploraSG — Turismo Digital Inteligente de la Sierra Gorda de Querétaro. Explora. Conecta. Vive la Sierra Gorda." />
-    <meta name="theme-color" content="#0D2B45" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="XploraSG" />
-    <title>XploraSG — Turismo Inteligente</title>
+    <meta name="theme-color" content="#FAF7F1" />
+    <meta name="description" content="XploraSG · Turismo inteligente. Explora. Conecta. Vive la Sierra Gorda: misiones, cascadas, rutas y prestadores locales verificados." />
+
+    <!-- Vista previa al compartir (WhatsApp, Facebook, X). __SITE_URL__ se reemplaza al compilar con VITE_SITE_URL. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="XploraSG" />
+    <meta property="og:locale" content="es_MX" />
+    <meta property="og:title" content="XploraSG · Turismo inteligente en la Sierra Gorda" />
+    <meta property="og:description" content="Misiones, cascadas, miradores y prestadores locales con información verificada, también sin señal." />
+    <meta property="og:image" content="__SITE_URL__/og-xplorasg.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="XploraSG: Explora. Conecta. Vive la Sierra Gorda." />
+    <meta property="og:url" content="__SITE_URL__/" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <title>XploraSG | Sierra Gorda</title>
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

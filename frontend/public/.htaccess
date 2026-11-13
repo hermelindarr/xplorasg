@@ -1,0 +1,58 @@
+# =============================================================================
+# XploraSG - public_html/.htaccess  (SPA React + PWA en Apache / LiteSpeed)
+# Vite copia este archivo de frontend/public/ a dist/ en cada "npm run build".
+# =============================================================================
+
+Options -Indexes
+DirectoryIndex index.html
+
+# --- Tipos MIME que algunos servidores no traen por defecto -----------------
+<IfModule mod_mime.c>
+  AddType application/manifest+json .webmanifest
+  AddType image/webp .webp
+  AddType font/woff2 .woff2
+  AddType font/woff .woff
+  AddType image/svg+xml .svg
+</IfModule>
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # 1) Forzar HTTPS (geolocalizacion, PWA y Supabase Auth lo necesitan)
+  RewriteCond %{HTTPS} off
+  RewriteCond %{HTTP:X-Forwarded-Proto} !https
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # 2) Archivos y carpetas reales se sirven tal cual (incluye /.well-known de AutoSSL)
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # 3) Todo lo demas (/explorar, /mapa, /admin, /lugares/slug...) -> React Router
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+# --- Cabeceras de seguridad (equivalentes a las de vercel.json) -------------
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "DENY"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  # microphone=(self): el asistente usa dictado por voz (SpeechRecognition)
+  Header always set Permissions-Policy "geolocation=(self), camera=(), microphone=(self)"
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+  # Nunca cachear el HTML ni el service worker: asi la PWA recibe cada version nueva
+  <FilesMatch "^(index\.html|sw\.js|registerSW\.js|manifest\.webmanifest)$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+  </FilesMatch>
+
+  # Archivos con hash de Vite (index-AbCd1234.js, etc.): cache de 1 ano
+  <FilesMatch "-[A-Za-z0-9_-]{8}\.(js|css|woff2?)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+</IfModule>
+
+# --- Compresion -------------------------------------------------------------
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css application/javascript text/javascript application/json application/manifest+json image/svg+xml
+</IfModule>

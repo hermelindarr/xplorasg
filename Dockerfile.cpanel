@@ -1,0 +1,52 @@
+# =============================================================================
+# XploraSG - Compilacion para cPanel con Docker
+#
+# Uso (desde la carpeta Proyecto_XploraSG, con Docker Desktop abierto):
+#   docker build -f Dockerfile.cpanel --output type=local,dest=_cpanel .
+#
+# Resultado en _cpanel\ :
+#   public_html.zip   -> extraer DENTRO de public_html
+#   xplorasg_api.zip  -> extraer en /home/USUARIO/xplorasg_api (app Node de cPanel)
+#
+# Requiere frontend/.env.production (copia de frontend/env.production.ejemplo
+# con los valores reales). Ningun otro .env entra en la imagen.
+# =============================================================================
+
+ARG NODE_VERSION=22
+
+# ---------- 1. Frontend: React + Vite -> dist/ ------------------------------
+FROM node:${NODE_VERSION}-bookworm-slim AS frontend
+WORKDIR /app/frontend
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY frontend/ ./
+# Valida la configuracion de produccion antes de compilar
+COPY scripts/validar-env-produccion.mjs /validar-env-produccion.mjs
+RUN node /validar-env-produccion.mjs .env.production
+RUN npm run build \
+ && for f in index.html .htaccess sw.js manifest.webmanifest; do test -f "dist/$f" || { echo "Falta dist/$f"; exit 1; }; done
+
+# ---------- 2. API: Express + TypeScript -> dist/ ----------------------------
+FROM node:${NODE_VERSION}-bookworm-slim AS backend
+WORKDIR /app/backend
+COPY backend/package.json backend/package-lock.json ./
+RUN npm ci --include=dev --no-audit --no-fund
+COPY backend/ ./
+RUN npm run build && test -f dist/server.js
+# Prueba de humo: los modulos de produccion cargan con esta version de Node
+RUN npm prune --omit=dev \
+ && DATABASE_URL=postgresql://prueba:prueba@localhost:5432/prueba \
+    node -e "require('./dist/app.js'); console.log('API carga correctamente en Node', process.version)"
+
+# ---------- 3. Empaquetado ---------------------------------------------------
+FROM node:${NODE_VERSION}-bookworm-slim AS empaquetar
+COPY scripts/zip-dir.mjs /zip-dir.mjs
+COPY --from=frontend /app/frontend/dist /out/public_html
+COPY --from=backend  /app/backend/dist  /out/xplorasg_api/dist
+COPY backend/package.json backend/package-lock.json /out/xplorasg_api/
+RUN node /zip-dir.mjs /out/public_html  /out/public_html.zip \
+ && node /zip-dir.mjs /out/xplorasg_api /out/xplorasg_api.zip
+
+# ---------- 4. Salida: solo los dos zips ------------------------------------
+FROM scratch AS export
+COPY --from=empaquetar /out/public_html.zip /out/xplorasg_api.zip /

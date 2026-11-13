@@ -1,0 +1,15 @@
+# Contexto minimo para Dockerfile.cpanel (solo entra el codigo de frontend y backend)
+*
+!frontend/
+!backend/
+!scripts/zip-dir.mjs
+!scripts/validar-env-produccion.mjs
+**/node_modules
+**/dist
+**/dev-dist
+**/test-results
+**/playwright-report
+# Ningun .env entra, excepto la configuracion PUBLICA de produccion del frontend
+**/.env
+**/.env.*
+!frontend/.env.production
