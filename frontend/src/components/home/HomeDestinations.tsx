@@ -7,7 +7,9 @@ import { useLanguage, useMessages } from '../../i18n';
 import { categoryLabel } from '../../i18n/common';
 import { homeMessages } from '../../i18n/home';
 import { ArrowRightIcon } from '../brand/icons';
-import { HomeHeading, Photo, TextLink } from './HomeUi';
+import { SectionHeading } from '../ui/SectionHeading';
+import { TextLink } from '../ui/TextLink';
+import { CardMedia } from '../ui/Card';
 
 // Proporciones alternadas para el ritmo del mosaico (vertical, cuadrada, horizontal…).
 const ASPECTS = ['aspect-[4/5]', 'aspect-[4/3]', 'aspect-square', 'aspect-[5/4]', 'aspect-[4/5]', 'aspect-square', 'aspect-[4/3]', 'aspect-[4/5]', 'aspect-[5/4]'];
@@ -18,16 +20,15 @@ const Destination = ({ place, index, lang }: { place: Place; index: number; lang
   const aspect = panoramic ? 'aspect-[4/3]' : ASPECTS[index % ASPECTS.length];
   return (
     <Link to={`/lugares/${place.slug}`} className="group block rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-green">
-      <div className={`relative overflow-hidden rounded-2xl transition-shadow duration-500 group-hover:shadow-[0_22px_44px_-22px_rgba(31,44,36,.5)] ${aspect}`}>
-        <Photo
-          src={place.imagenPrincipal?.url}
-          name={place.nombre}
-          alt={place.imagenPrincipal?.altText || place.nombre}
-          imgClassName="img-zoom"
-          nameClassName="text-xl sm:text-2xl"
-          onRatio={(ratio) => setPanoramic(ratio > 1.7)}
-        />
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0f1a13]/85 via-[#0f1a13]/25 to-transparent transition-opacity duration-500 group-hover:opacity-90" />
+      <CardMedia
+        src={place.imagenPrincipal?.url}
+        name={place.nombre}
+        alt={place.imagenPrincipal?.altText}
+        className={`rounded-2xl transition-shadow duration-500 group-hover:shadow-[0_22px_44px_-22px_rgba(31,44,36,.5)] ${aspect}`}
+        veilClassName="transition-opacity duration-500 group-hover:opacity-90"
+        showName={false}
+        onRatio={(ratio) => setPanoramic(ratio > 1.7)}
+      >
         <div className="absolute inset-x-0 bottom-0 p-3 text-white sm:p-5">
           {/* En móvil las columnas son angostas: sólo nombre y municipio. */}
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/75 max-sm:hidden">{categoryLabel(place.categoria, lang)}</p>
@@ -37,7 +38,7 @@ const Destination = ({ place, index, lang }: { place: Place; index: number; lang
             <ArrowRightIcon className="size-3.5 -translate-x-1 opacity-0 transition-[opacity,transform] duration-300 group-hover:translate-x-0 group-hover:opacity-100" />
           </p>
         </div>
-      </div>
+      </CardMedia>
     </Link>
   );
 };
@@ -50,7 +51,7 @@ export const HomeDestinations = ({ places }: { places: Place[] }) => {
   return (
     <section className="border-t border-brand-sand" aria-labelledby="home-destinations">
       <div className="mx-auto max-w-7xl px-5 py-20 lg:px-8 lg:py-28">
-        <HomeHeading
+        <SectionHeading
           id="home-destinations"
           eyebrow={m.railEyebrow}
           title={m.railTitle}

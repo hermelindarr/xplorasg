@@ -40,6 +40,26 @@ test.describe('Inicio', () => {
     await request;
   });
 
+  test('"Ver todos los lugares" lleva la búsqueda de la portada a Explorar', async ({ page }) => {
+    await mockApi(page);
+    await page.goto('/');
+    await page.getByLabel('Buscar lugar').fill('cascada');
+    await page.getByRole('button', { name: 'Buscar', exact: true }).click();
+    const request = page.waitForRequest((req) => new URL(req.url()).pathname.endsWith('/catalogo/lugares') && req.url().includes('q=cascada'));
+    await page.locator('#lugares').getByRole('link', { name: 'Ver todos los lugares' }).click();
+    await expect(page).toHaveURL(/\/explorar\?q=cascada$/);
+    await request;
+    await expect(page.getByLabel('Buscar lugar')).toHaveValue('cascada');
+  });
+
+  test('Explorar no carga la portada: sin hero, sin mosaico y sin prestadores', async ({ page }) => {
+    await mockApi(page);
+    await page.goto('/explorar');
+    await expect(page.locator('#lugares article').first()).toBeVisible();
+    await expect(page.locator('#prestadores')).toHaveCount(0);
+    await expect(page.locator('#home-destinations')).toHaveCount(0);
+  });
+
   test('paginación con "Cargar más"', async ({ page }) => {
     const first = Array.from({ length: 24 }, (_, index) => makePlace(index + 1));
     const second = Array.from({ length: 3 }, (_, index) => makePlace(index + 25));

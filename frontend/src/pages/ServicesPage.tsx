@@ -6,11 +6,12 @@ import { usePageTitle } from '../hooks/usePageTitle';
 import { defineMessages, useLanguage, useMessages } from '../i18n';
 import { categoryLabel } from '../i18n/common';
 import { CloseIcon, PinIcon, SearchIcon, CommunityIcon } from '../components/brand/icons';
-import { ItalicTail } from '../components/home/HomeUi';
+import { Accented } from '../components/ui/Accented';
 import { PageHero } from '../components/ui/PageHero';
 
 const messages = defineMessages({
   title: 'Servicios locales',
+  titleAccent: 'locales',
   eyebrow: 'Planea tu visita',
   intro: 'Hospedaje, gastronomía, guías y experiencias ofrecidas por prestadores comunitarios verificados. Contacta directo a quien te recibe.',
   searchLabel: 'Buscar servicio',
@@ -34,6 +35,7 @@ const messages = defineMessages({
   filtersLabel: 'Filtrar servicios',
 }, {
   title: 'Local services',
+  titleAccent: 'services',
   eyebrow: 'Plan your visit',
   intro: 'Lodging, food, guides and experiences offered by verified community businesses. Contact your hosts directly.',
   searchLabel: 'Search services',
@@ -127,7 +129,7 @@ export const ServicesPage = () => {
     <>
       <PageHero
         eyebrow={m.eyebrow}
-        title={<ItalicTail text={m.title} words={1} />}
+        title={<Accented text={m.title} accent={m.titleAccent} />}
         subtitle={m.intro}
         image={loading || heroService ? { url: heroService?.imagenPrincipal?.url, alt: '' } : null}
         actions={(

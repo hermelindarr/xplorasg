@@ -7,7 +7,7 @@ import { defineMessages, useMessages } from '../i18n';
 import {
   ArrowRightIcon, CommunityIcon, CompassIcon, HeartIcon, LodgingIcon, ShieldIcon, SparkleIcon,
 } from '../components/brand/icons';
-import { ItalicTail } from '../components/home/HomeUi';
+import { Accented } from '../components/ui/Accented';
 
 // Los valores (turista, mapa, satisfaccion…) se guardan tal cual y se agregan en el panel admin:
 // sólo se traducen las etiquetas visibles.
@@ -35,6 +35,7 @@ const surveyMessages = defineMessages({
   keepExploring: 'Seguir explorando',
   eyebrow: 'Validación del prototipo',
   title: '¿Cómo fue tu experiencia?',
+  titleAccent: 'experiencia?',
   intro: 'Encuesta anónima de 2 minutos. Es parte de la evaluación del proyecto Nuevos Talentos Científicos y Tecnológicos 2026.',
   alreadyAnswered: 'Ya respondiste desde este dispositivo. Puedes enviar otra respuesta solo si eres otra persona.',
   otherPerson: 'Soy otra persona y no he respondido antes esta encuesta.',
@@ -92,6 +93,7 @@ const surveyMessages = defineMessages({
   keepExploring: 'Keep exploring',
   eyebrow: 'Prototype validation',
   title: 'How was your experience?',
+  titleAccent: 'experience?',
   intro: 'Anonymous 2-minute survey. It is part of the evaluation of the Nuevos Talentos Científicos y Tecnológicos 2026 project.',
   alreadyAnswered: 'You already answered from this device. Only send another response if you are a different person.',
   otherPerson: 'I am a different person and have not answered this survey before.',
@@ -320,7 +322,7 @@ export const SurveyPage = () => {
         {/* Introducción */}
         <div className="lg:sticky lg:top-28 lg:col-span-4 lg:h-fit">
           <p className="eyebrow">{m.eyebrow}</p>
-          <h1 className="mt-5 text-[2.5rem] leading-[1.05] text-brand-blue sm:text-5xl"><ItalicTail text={m.title} words={1} /></h1>
+          <h1 className="mt-5 text-[2.5rem] leading-[1.05] text-brand-blue sm:text-5xl"><Accented text={m.title} accent={m.titleAccent} /></h1>
           <p className="mt-5 max-w-md text-[15px] leading-7 text-brand-blue/75">{m.intro}</p>
           <p className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-brand-blue/70">
             <span className="inline-flex items-center gap-1.5"><ShieldIcon className="size-3.5 text-brand-green" />{m.anonymous}</span>

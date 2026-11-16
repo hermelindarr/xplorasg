@@ -1,11 +1,11 @@
-// Buscador del inicio: una fila limpia con borde fino (texto, municipio, categoría y "Buscar").
+// Buscador del catálogo (portada y Explorar): una fila con texto, municipio, categoría y "Buscar".
 import type { FormEvent, ReactNode } from 'react';
 import type { Category, Municipality } from '../../types/catalog';
 import { useLanguage } from '../../i18n';
 import { categoryLabel } from '../../i18n/common';
 import { SearchIcon } from '../brand/icons';
 
-export interface HomeSearchLabels {
+export interface CatalogSearchLabels {
   searchLabel: string;
   searchPlaceholder: string;
   municipality: string;
@@ -17,9 +17,9 @@ export interface HomeSearchLabels {
   popularTerms: string[];
 }
 
-interface HomeSearchBarProps {
+interface CatalogSearchBarProps {
   title: string;
-  labels: HomeSearchLabels;
+  labels: CatalogSearchLabels;
   value: string;
   onValueChange: (value: string) => void;
   municipality: string;
@@ -55,10 +55,10 @@ const SelectField = ({ id, label, children, value, onChange }: {
   </div>
 );
 
-export const HomeSearchBar = ({
+export const CatalogSearchBar = ({
   title, labels, value, onValueChange, municipality, onMunicipalityChange, category, onCategoryChange,
   municipalities, categories, onSubmit, onQuickSearch, overlap = true,
-}: HomeSearchBarProps) => {
+}: CatalogSearchBarProps) => {
   const { lang } = useLanguage();
   return (
     <section className={`relative z-20 mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 ${overlap ? '-mt-10 lg:-mt-16' : 'mt-6'}`} aria-labelledby="home-search">

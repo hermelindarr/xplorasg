@@ -9,7 +9,8 @@ export interface PageHeroStat {
 }
 
 interface PageHeroProps {
-  eyebrow: string;
+  /** Antetítulo pequeño en mayúsculas. Opcional. */
+  eyebrow?: string;
   title: ReactNode;
   subtitle?: ReactNode;
   /**
@@ -71,9 +72,9 @@ export const PageHero = ({ eyebrow, title, subtitle, image, caption, actions, st
 
   const text = (
     <div className={split ? 'flex flex-col justify-center lg:col-span-5 lg:py-6' : 'max-w-3xl'}>
-      <p className="eyebrow">{eyebrow}</p>
+      {eyebrow && <p className="eyebrow">{eyebrow}</p>}
       <h1
-        className={`animate-fade-up mt-5 leading-[1.03] text-brand-blue [overflow-wrap:anywhere] ${
+        className={`animate-fade-up ${eyebrow ? 'mt-5' : ''} leading-[1.03] text-brand-blue [overflow-wrap:anywhere] ${
           compact ? 'text-[2.3rem] sm:text-5xl' : 'text-[2.6rem] sm:text-6xl lg:text-[clamp(3.4rem,4.6vw,4.5rem)]'
         }`}
       >

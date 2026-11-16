@@ -151,17 +151,6 @@ export const HeroFact = ({ icon: Icon, label, children }: { icon: IconType; labe
   </div>
 );
 
-/** Encabezado de sección editorial: eyebrow terracota + titular en serif. */
-export const SectionHeading = ({ eyebrow, title, action }: { eyebrow?: string; title: ReactNode; action?: ReactNode }) => (
-  <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-    <div className="min-w-0">
-      {eyebrow && <p className="eyebrow">{eyebrow}</p>}
-      <h2 className={`${eyebrow ? 'mt-4' : ''} text-[2rem] leading-[1.08] text-brand-blue sm:text-[2.5rem]`}>{title}</h2>
-    </div>
-    {action && <div className="shrink-0">{action}</div>}
-  </div>
-);
-
 /** Subtítulo de bloque dentro del cuerpo de la ficha. */
 export const BlockTitle = ({ children }: { children: ReactNode }) => (
   <h2 className="text-2xl leading-tight text-brand-blue sm:text-[1.75rem]">{children}</h2>

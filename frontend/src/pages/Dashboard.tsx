@@ -7,7 +7,7 @@ import { common } from '../i18n/common';
 import {
   ArrowRightIcon, CalendarIcon, HeartIcon, MapIcon, ShieldIcon, SparkleIcon,
 } from '../components/brand/icons';
-import { ItalicTail } from '../components/home/HomeUi';
+import { Accented } from '../components/ui/Accented';
 
 const extraMessages = defineMessages({
   pageTitle: 'Mi cuenta',
@@ -57,7 +57,7 @@ export const Dashboard = () => {
         </span>
         <div className="min-w-0">
           <p className="eyebrow">{m.eyebrow}</p>
-          <h1 className="mt-4 break-words text-[2.5rem] leading-[1.05] text-brand-blue sm:text-5xl"><ItalicTail text={m.greeting(firstName)} words={1} /></h1>
+          <h1 className="mt-4 break-words text-[2.5rem] leading-[1.05] text-brand-blue sm:text-5xl"><Accented text={m.greeting(firstName)} accent={firstName} /></h1>
           <p className="mt-3 text-[15px] leading-7 text-brand-blue/75">{m.intro}</p>
         </div>
       </div>

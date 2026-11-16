@@ -6,7 +6,6 @@ import '@fontsource/poppins/latin-600.css';
 import '@fontsource/poppins/latin-700.css';
 import '@fontsource/fraunces/latin-400.css';
 import '@fontsource/fraunces/latin-500.css';
-import '@fontsource/fraunces/latin-600.css';
 import '@fontsource/fraunces/latin-400-italic.css';
 import './index.css'
 import App from './App.tsx'

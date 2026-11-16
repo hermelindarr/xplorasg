@@ -7,7 +7,10 @@ import { useMessages } from '../../i18n';
 import { homeMessages } from '../../i18n/home';
 import { ArrowRightIcon } from '../brand/icons';
 import { firstWithPhoto, isMission, isNature, photoOf, serviceIn } from './homeData';
-import { HomeHeading, ItalicTail, Photo, TextLink } from './HomeUi';
+import { Accented } from '../ui/Accented';
+import { Photo } from '../ui/Photo';
+import { SectionHeading } from '../ui/SectionHeading';
+import { TextLink } from '../ui/TextLink';
 
 interface HomeThemesProps {
   places: Place[];
@@ -78,10 +81,10 @@ export const HomeThemes = ({ places, services, categories, presentCategories, ac
 
   return (
     <section className="mx-auto max-w-7xl px-5 pb-20 lg:px-8 lg:pb-28" aria-labelledby="home-themes">
-      <HomeHeading
+      <SectionHeading
         id="home-themes"
         eyebrow={m.themesEyebrow}
-        title={<ItalicTail text={m.themesTitle} words={2} />}
+        title={<Accented text={m.themesTitle} accent={m.themesTitleAccent} />}
         text={m.themesText}
         action={<TextLink to="/mapa">{m.themesCta}</TextLink>}
       />

@@ -7,7 +7,8 @@ import { usePageTitle } from '../hooks/usePageTitle';
 import { defineMessages, useLanguage, useMessages } from '../i18n';
 import { ArrowRightIcon, CalendarIcon, PinIcon, SparkleIcon } from '../components/brand/icons';
 import { PageHero } from '../components/ui/PageHero';
-import { ItalicTail, Photo } from '../components/home/HomeUi';
+import { Accented } from '../components/ui/Accented';
+import { Photo } from '../components/ui/Photo';
 
 type Tab = 'eventos' | 'promociones';
 
@@ -16,6 +17,7 @@ const agendaMessages = defineMessages({
   loadError: 'No pudimos cargar la agenda. Revisa tu conexión e inténtalo de nuevo.',
   eyebrow: 'Tradición viva',
   title: 'Agenda Sierra Gorda',
+  titleAccent: 'Sierra Gorda',
   intro: 'Fiestas patronales, huapango y tradiciones de las misiones, además de promociones de prestadores locales.',
   tabsLabel: 'Secciones de la agenda',
   eventsTab: 'Eventos culturales',
@@ -45,6 +47,7 @@ const agendaMessages = defineMessages({
   loadError: 'We couldn’t load the events. Check your connection and try again.',
   eyebrow: 'Living tradition',
   title: 'Sierra Gorda events',
+  titleAccent: 'Sierra Gorda',
   intro: 'Patron saint festivals, huapango music and mission traditions, plus deals from local businesses.',
   tabsLabel: 'Events sections',
   eventsTab: 'Cultural events',
@@ -153,7 +156,7 @@ export const AgendaPage = () => {
     <>
     <PageHero
       eyebrow={m.eyebrow}
-      title={<ItalicTail text={m.title} words={2} />}
+      title={<Accented text={m.title} accent={m.titleAccent} />}
       subtitle={m.intro}
       image={hero}
     />

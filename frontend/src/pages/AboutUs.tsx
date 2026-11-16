@@ -4,7 +4,8 @@ import { aboutMessages } from '../i18n/about';
 import { BrandLogo } from '../components/brand/BrandLogo';
 import { CONTACT_EMAIL } from '../config/contact';
 import { CommunityIcon, NatureIcon, SparkleIcon } from '../components/brand/icons';
-import { ItalicTail, TextLink } from '../components/home/HomeUi';
+import { Accented } from '../components/ui/Accented';
+import { TextLink } from '../components/ui/TextLink';
 import { PageHero } from '../components/ui/PageHero';
 
 const extra = defineMessages({
@@ -31,7 +32,7 @@ export const AboutUs = () => {
       <PageHero
         layout="stacked"
         eyebrow={m.eyebrow}
-        title={<ItalicTail text={m.title} words={1} />}
+        title={<Accented text={m.title} accent={m.titleAccent} />}
         subtitle={m.missionText}
         image={{
           url: '/equipo/xplorasg-equipo-1600.webp',
@@ -54,7 +55,7 @@ export const AboutUs = () => {
       <section className="bg-brand-light" aria-labelledby="about-values">
         <div className="mx-auto max-w-7xl px-5 py-20 lg:px-8 lg:py-28">
           <p className="eyebrow">{m.missionTitle}</p>
-          <h2 id="about-values" className="section-title mt-5"><ItalicTail text={m.valuesTitle} words={1} /></h2>
+          <h2 id="about-values" className="section-title mt-5"><Accented text={m.valuesTitle} accent={m.valuesTitleAccent} /></h2>
           <div className="mt-12 grid gap-10 md:grid-cols-3 md:gap-8 lg:mt-16 lg:gap-12">
             {values.map(({ Icon, title, text }, i) => (
               <article key={title} className="border-t border-brand-blue/70 pt-6">

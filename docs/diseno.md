@@ -11,10 +11,29 @@ Basado en la hoja de marca oficial (`Iconografia.pdf`, `png Logo.pdf`). Objetivo
 - **Ilustración**: `<SierraLandscape />` (sierra en capas + ruta con nodos + misión + agaves). Usar como cierre de secciones/hero, con moderación.
 
 ## Utilidades (src/index.css)
-- `surface` tarjeta blanca (radio 24px, borde 1px, sombra suave) · `bento` similar · `lift` hover que eleva.
-- `btn` + `btn-primary` (azul → verde al hover) · `btn-accent` (verde) · `btn-secondary` (blanco con borde) · `btn-ghost`.
-- `chip` etiqueta suave · `eyebrow` (mayúsculas verdes con línea dorada) · `section-title` (titular de sección fluido) · `field` (inputs) · `bg-topo` (curvas de nivel sutiles para fondos).
-- `img-zoom` dentro de un `.group` para zoom suave de fotos.
+- `btn` + `btn-primary` · `btn-accent` · `btn-secondary` · `btn-ghost`.
+- `eyebrow` (antetítulo en mayúsculas con línea) · `section-title` (titular de sección fluido) · `field` (inputs) · `meta` (metadato de tarjeta) · `label-quiet` (rótulo de dato) · `font-display` (familia de titulares) · `accent` (acento editorial).
+- `img-zoom` dentro de un `.group` para zoom suave de fotos · `reveal` (aparición al entrar en pantalla; se desactiva sola dentro de `.snap-rail`) · `snap-rail` (carril horizontal con scroll-snap).
+- Retiradas en la Fase 2 por no tener usos: `bento`, `surface`, `chip`, `bg-topo`, `rule`, `legend-dot`.
+
+## Sistema visual (Fase 2)
+**Color** (tokens en `@theme`): verde `brand-green` #2F5D3E · terracota `brand-gold` #9E552F · crema `brand-paper` #FAF7F1 · tinta `brand-blue` #1F2C24. Las escalas `clay-*` (errores, avisos de cierre) y `ochre-*` (modo sin conexión, advertencias) se conservan.
+
+**Tipografía por roles**: los componentes usan el rol, no la familia.
+- `--font-sans` (Poppins 400/500/600/700): todo el contenido y la interfaz.
+- `--font-heading`: h1, h2, `section-title`, `font-display`. Hoy apunta a Fraunces; cambiar esta línea a `var(--font-sans)` pasa todos los titulares a Poppins.
+- `--font-accent` (Fraunces 400 cursiva): sólo la utilidad `accent`.
+- Fraunces cargada: 400, 500 y 400 cursiva.
+
+**Cursivas**: no hay cursivas automáticas. El único camino es `<Accented text accent>` (`components/ui/Accented.tsx`); el fragmento se elige a mano por idioma en una clave `…Accent` junto al título.
+
+**Piezas compartidas** (`components/ui`):
+- `SectionHeading` (`size="lg"` secciones de página, `size="md"` bloques de ficha; `eyebrow` opcional).
+- `PageHero` (encabezado de página interior; `eyebrow` opcional).
+- `Card`: `CardFrame` (marco blanco con elevación y foco), `CardMedia` (foto + velo `strong`/`soft` + etiqueta + contenido encima), `CardBadge`, `CardPlace`. Las usan `PlaceCard`, `ServiceCard` y el mosaico de la portada.
+- `Photo` (foto que llena su contenedor, con nombre de respaldo), `TextLink` (enlace subrayado con flecha), `RelatedRail`.
+
+**Catálogo** (`components/catalog`, `hooks/usePlaceSearch.ts`, `i18n/catalog.ts`): `CatalogSearchBar` y `PlaceResults` son comunes a la portada (`pages/HomePage.tsx`) y a Explorar (`pages/ExplorePage.tsx`). Explorar acepta `?q=&municipio=&categoria=` como filtros iniciales.
 
 ## Principios de layout
 - Contenedor `mx-auto max-w-7xl px-5 lg:px-8`; secciones `py-16 lg:py-24`.

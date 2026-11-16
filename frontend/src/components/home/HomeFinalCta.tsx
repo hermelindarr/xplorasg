@@ -4,7 +4,7 @@ import { MacawAvatar } from '../brand/Macaw';
 import { useMessages } from '../../i18n';
 import { homeMessages } from '../../i18n/home';
 import { openAssistant } from './homeData';
-import { Photo } from './HomeUi';
+import { Photo } from '../ui/Photo';
 
 export const HomeFinalCta = ({ photo, name }: { photo: string | null; name?: string | null }) => {
   const m = useMessages(homeMessages);

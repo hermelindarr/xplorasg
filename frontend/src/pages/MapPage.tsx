@@ -13,7 +13,7 @@ import { categoryLabel, common } from '../i18n/common';
 import {
   AdventureIcon, ArrowRightIcon, CloseIcon, CompassIcon, MapIcon, PinIcon, RouteIcon,
 } from '../components/brand/icons';
-import { ItalicTail } from '../components/home/HomeUi';
+import { Accented } from '../components/ui/Accented';
 
 const mapMessages = defineMessages({
   pageTitle: 'Mapa interactivo',
@@ -35,6 +35,7 @@ const mapMessages = defineMessages({
   straightLineNote: 'Distancia en línea recta y tiempo aproximado (las carreteras de la sierra son más largas). Para navegar usa Google Maps.',
   eyebrow: 'Ubícate y explora',
   title: 'Mapa de la Sierra Gorda',
+  titleAccent: 'Sierra Gorda',
   intro: 'Ubica los lugares de la Sierra Gorda, encuentra lo más cercano a ti y prepara tu ruta.',
   locating: 'Buscando ubicación…',
   useLocation: 'Usar mi ubicación',
@@ -106,6 +107,7 @@ const mapMessages = defineMessages({
   straightLineNote: 'Straight-line distance and approximate time (mountain roads are longer). Use Google Maps to navigate.',
   eyebrow: 'Find your way and explore',
   title: 'Sierra Gorda map',
+  titleAccent: 'map',
   intro: 'Find Sierra Gorda places, see what is closest to you and plan your route.',
   locating: 'Finding your location…',
   useLocation: 'Use my location',
@@ -620,7 +622,6 @@ export const MapPage = () => {
     ? `https://www.google.com/maps/dir/?api=1&destination=${destination.latitud},${destination.longitud}${userLocation ? `&origin=${userLocation[0]},${userLocation[1]}` : ''}&travelmode=${routeProfile.startsWith('foot') ? 'walking' : routeProfile.startsWith('cycling') ? 'bicycling' : 'driving'}`
     : null;
 
-  const titleWords = lang === 'en' ? 1 : 2;
   const columnHeight = 'lg:h-[calc(100svh-150px)] lg:min-h-[620px] lg:max-h-[880px]';
 
   return (
@@ -631,7 +632,7 @@ export const MapPage = () => {
           <div className="max-w-2xl">
             <p className="eyebrow">{m.eyebrow}</p>
             <h1 className="mt-5 text-[2.5rem] leading-[1.04] text-brand-blue sm:text-5xl lg:text-[3.5rem]">
-              <ItalicTail text={m.title} words={titleWords} />
+              <Accented text={m.title} accent={m.titleAccent} />
             </h1>
             <p className="mt-5 max-w-xl text-[15px] leading-7 text-brand-blue/75">{m.intro}</p>
           </div>

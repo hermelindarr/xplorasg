@@ -49,6 +49,12 @@
 
   --font-sans: 'Poppins', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-serif: 'Fraunces', 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+  /* Roles tipográficos. Los componentes usan el rol, no la familia:
+     --font-heading  titulares (h1, h2, .section-title, .font-display)
+     --font-accent   acento editorial en cursiva (.accent, componente <Accented>)
+     Para pasar los titulares a Poppins basta con cambiar --font-heading a var(--font-sans). */
+  --font-heading: var(--font-serif);
+  --font-accent: var(--font-serif);
 
   /* Sombras casi imperceptibles: el diseño se apoya en espacio y bordes finos, no en elevación */
   --shadow-soft: 0 1px 2px rgb(31 44 36 / 0.04), 0 6px 18px -12px rgb(31 44 36 / 0.10);
@@ -56,15 +62,6 @@
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Tarjeta Bento: borde fino de 1px, fondo limpio y sombra suave */
-@utility bento {
-  border-radius: 1rem;
-  border: 1px solid color-mix(in oklab, var(--color-brand-blue) 10%, transparent);
-  background-color: #fff;
-  box-shadow: var(--shadow-soft);
-}
-
-/* Campo de formulario de marca */
 @utility field {
   min-height: 3rem;
   width: 100%;
@@ -106,15 +103,6 @@
   }
 }
 
-/* Superficie estándar: tarjeta blanca con borde de 1px y sombra suave */
-@utility surface {
-  border-radius: 1rem;
-  border: 1px solid color-mix(in oklab, var(--color-brand-blue) 8%, transparent);
-  background-color: #fff;
-  box-shadow: var(--shadow-soft);
-}
-
-/* Botones de marca */
 @utility btn {
   display: inline-flex;
   align-items: center;
@@ -150,28 +138,9 @@
   &:hover:not(:disabled) { background: color-mix(in oklab, var(--color-brand-blue) 6%, transparent); }
 }
 
-/* Chip / etiqueta */
-@utility chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  border-radius: 999px;
-  padding: 0.3rem 0.7rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-  background: color-mix(in oklab, var(--color-brand-light) 75%, #fff);
-  color: color-mix(in oklab, var(--color-brand-blue) 80%, transparent);
-  border: 1px solid color-mix(in oklab, var(--color-brand-blue) 7%, transparent);
-}
-
-/* Antes: curvas de nivel. En v3 no hay texturas decorativas: se conserva el nombre como no-op. */
-@utility bg-topo {
-  background-image: none;
-}
-
 /* Título de sección */
 @utility section-title {
-  font-family: var(--font-serif);
+  font-family: var(--font-heading);
   font-size: clamp(2rem, 1.3rem + 2.2vw, 3.25rem);
   line-height: 1.05;
   font-weight: 500;
@@ -231,7 +200,7 @@ h1, h2, h3 {
 /* Titulares editoriales en serif (Fraunces). Los textos y la interfaz siguen en Poppins. */
 @layer base {
   h1, h2 {
-    font-family: var(--font-serif);
+    font-family: var(--font-heading);
     font-weight: 500;
     letter-spacing: -0.02em;
     font-optical-sizing: auto;
@@ -252,8 +221,14 @@ h1, h2, h3 {
   font-weight: 500;
   color: color-mix(in oklab, var(--color-brand-blue) 70%, transparent);
 }
-@utility font-display { font-family: var(--font-serif); font-optical-sizing: auto; }
-@utility rule { height: 1px; background: var(--color-brand-sand); }
+@utility font-display { font-family: var(--font-heading); font-optical-sizing: auto; }
+/* Acento editorial: fragmento de un titular en cursiva serif y verde. Sólo lo aplica <Accented>. */
+@utility accent {
+  font-family: var(--font-accent);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--color-brand-green);
+}
 
 ::selection {
   background: color-mix(in oklab, var(--color-brand-gold) 35%, transparent);
@@ -330,14 +305,6 @@ h1, h2, h3 {
   background: var(--color-brand-blue);
 }
 
-.legend-dot {
-  display: inline-block;
-  width: 9px;
-  height: 9px;
-  margin-right: 5px;
-  border-radius: 999px;
-}
-
 @keyframes xplora-fade-up {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: none; }
@@ -400,6 +367,9 @@ h1, h2, h3 {
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
     .reveal { animation: xplora-reveal linear both; animation-timeline: view(); animation-range: entry 0% entry 60%; }
+    /* Dentro de un carril horizontal la línea de tiempo de vista sigue el desplazamiento lateral
+       y dejaría tarjetas a medio aparecer: ahí el contenido se muestra sin animación. */
+    .snap-rail .reveal { animation: none; }
   }
 }
 

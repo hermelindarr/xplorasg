@@ -2,6 +2,20 @@
 import { defineMessages } from './index';
 
 export const homeMessages = defineMessages({
+  // Página
+  pageTitle: 'Turismo en la Sierra Gorda de Querétaro',
+  pageDescription: 'Descubre lugares, misiones, cascadas, prestadores locales y rutas de la Sierra Gorda de Querétaro.',
+  // Resultados de búsqueda en la portada
+  placesEyebrow: 'Explora el territorio',
+  resultsHeading: 'Resultados',
+  viewAllPlaces: 'Ver todos los lugares',
+  // Prestadores locales
+  providersEyebrow: 'Economía local',
+  providersTitle: 'Prestadores de servicios comunitarios',
+  providersText: 'Hospedaje, alimentos, guías y experiencias operadas por gente de la Sierra. Contáctalos directamente para reservar.',
+  allServices: 'Ver todos los servicios',
+  allServicesCount: (n: number) => `Ver los ${n} servicios`,
+  providersEmpty: 'El directorio de prestadores se está actualizando.',
   // Hero
   heroEyebrow: 'Sierra Gorda · Querétaro',
   heroText: 'Misiones Patrimonio Mundial, cascadas turquesa y miradores entre la niebla, con información verificada y gente local que te recibe.',
@@ -40,6 +54,7 @@ export const homeMessages = defineMessages({
   // Temas
   themesEyebrow: 'Experiencias',
   themesTitle: 'Vive la Sierra a tu manera',
+  themesTitleAccent: 'tu manera',
   themesText: 'Cascadas, misiones franciscanas, cañones y cocina serrana: elige tu forma de recorrerla.',
   themesCta: 'Trazar mi ruta',
   themeNature: 'Naturaleza',
@@ -53,15 +68,6 @@ export const homeMessages = defineMessages({
   themeFilter: 'Ver lugares',
   themeActive: 'Filtro activo',
   themeServices: 'Ver prestadores',
-  // Cómo funciona
-  howEyebrow: 'En 3 pasos',
-  howTitle: 'Cómo funciona',
-  howStep1: 'Descubre',
-  howStep1Text: 'Explora lugares verificados en los seis municipios, con fotos, actividades y cómo llegar.',
-  howStep2: 'Planea con Chatboot',
-  howStep2Text: 'Pregúntale a Chatboot qué hacer hoy, arma tu ruta en el mapa y guarda tus favoritos.',
-  howStep3: 'Reserva directo',
-  howStep3Text: 'Contacta por WhatsApp a hospedajes, guías y fondas de la comunidad.',
   // CTA final
   finalEyebrow: '¿Te ayudamos?',
   finalTitle: '¿No encontraste lo que buscabas?',
@@ -69,6 +75,17 @@ export const homeMessages = defineMessages({
   finalAsk: 'Pregúntale a Chatboot',
   finalSurvey: 'Responder encuesta',
 }, {
+  pageTitle: 'Tourism in the Sierra Gorda of Querétaro',
+  pageDescription: 'Discover places, missions, waterfalls, local businesses and routes in the Sierra Gorda of Querétaro.',
+  placesEyebrow: 'Explore the region',
+  resultsHeading: 'Results',
+  viewAllPlaces: 'See all places',
+  providersEyebrow: 'Local economy',
+  providersTitle: 'Community tourism businesses',
+  providersText: 'Lodging, food, guides and experiences run by people from the Sierra. Contact them directly to book.',
+  allServices: 'See all services',
+  allServicesCount: (n: number) => `See all ${n} services`,
+  providersEmpty: 'The local business directory is being updated.',
   heroEyebrow: 'Sierra Gorda · Querétaro',
   heroText: 'World Heritage missions, turquoise waterfalls and misty viewpoints, with verified information and local people ready to welcome you.',
   planTrip: 'Plan my trip',
@@ -102,6 +119,7 @@ export const homeMessages = defineMessages({
   seeAll: 'See all places',
   themesEyebrow: 'Experiences',
   themesTitle: 'Live the Sierra your way',
+  themesTitleAccent: 'your way',
   themesText: 'Waterfalls, Franciscan missions, canyons and mountain cooking: choose how you want to explore.',
   themesCta: 'Plan my route',
   themeNature: 'Nature',
@@ -115,14 +133,6 @@ export const homeMessages = defineMessages({
   themeFilter: 'See places',
   themeActive: 'Filter on',
   themeServices: 'See local businesses',
-  howEyebrow: 'In 3 steps',
-  howTitle: 'How it works',
-  howStep1: 'Discover',
-  howStep1Text: 'Browse verified places across the six municipalities, with photos, activities and directions.',
-  howStep2: 'Plan with Chatboot',
-  howStep2Text: 'Ask Chatboot what to do today, map your route and save your favorites.',
-  howStep3: 'Book directly',
-  howStep3Text: 'Contact community lodgings, guides and fondas on WhatsApp.',
   finalEyebrow: 'Need a hand?',
   finalTitle: 'Didn’t find what you were looking for?',
   finalText: 'Chatboot knows every corner of the catalog. Ask about routes, weather or where to eat, or help us improve with a 2-minute survey.',

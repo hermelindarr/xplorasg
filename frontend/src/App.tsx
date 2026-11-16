@@ -8,6 +8,7 @@ import { common } from './i18n/common';
 import { FavoritesProvider } from './contexts/FavoritesContext';
 import { AppShell } from './layouts/AppShell';
 import { ExplorePage } from './pages/ExplorePage';
+import { HomePage } from './pages/HomePage';
 import { PlaceDetailPage } from './pages/PlaceDetailPage';
 import { ServicesPage } from './pages/ServicesPage';
 import { FavoritesPage } from './pages/FavoritesPage';
@@ -113,7 +114,7 @@ function App() {
         <BrowserRouter>
         <Routes>
           <Route element={<AppShell />}>
-            <Route index element={<ExplorePage />} />
+            <Route index element={<HomePage />} />
             <Route path="/explorar" element={<ExplorePage />} />
             <Route path="/mapa" element={<MapRoute />} />
             <Route path="/servicios" element={<ServicesPage />} />

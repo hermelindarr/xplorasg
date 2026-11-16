@@ -7,12 +7,14 @@ import { catalogApi } from '../services/catalogApi';
 import type { Place } from '../types/catalog';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { defineMessages, useMessages } from '../i18n';
-import { ItalicTail, TextLink } from '../components/home/HomeUi';
+import { Accented } from '../components/ui/Accented';
+import { TextLink } from '../components/ui/TextLink';
 import { PageHero } from '../components/ui/PageHero';
 
 const messages = defineMessages({
   pageTitle: 'Mis favoritos',
   title: 'Tus favoritos',
+  titleAccent: 'favoritos',
   subtitle: 'Lugares que has guardado para visitar.',
   loading: 'Cargando favoritos...',
   emptyTitle: 'Tus favoritos están vacíos',
@@ -29,6 +31,7 @@ const messages = defineMessages({
 }, {
   pageTitle: 'My favorites',
   title: 'Your favorites',
+  titleAccent: 'favorites',
   subtitle: 'Places you have saved to visit.',
   loading: 'Loading favorites...',
   emptyTitle: 'You have no favorites yet',
@@ -98,7 +101,7 @@ export const FavoritesPage = () => {
     <>
       <PageHero
         eyebrow={m.eyebrow}
-        title={<ItalicTail text={m.title} words={1} />}
+        title={<Accented text={m.title} accent={m.titleAccent} />}
         subtitle={m.subtitle}
         image={heroPhoto ? { url: heroPhoto.url, alt: '' } : null}
         actions={hasPlaces && <TextLink to="/mapa">{m.openMap}</TextLink>}

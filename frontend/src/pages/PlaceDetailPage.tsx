@@ -12,7 +12,8 @@ import { defineMessages, useLanguage, useMessages } from '../i18n';
 import { categoryLabel, common } from '../i18n/common';
 import { AdventureIcon, LodgingIcon, MapIcon, RouteIcon, SparkleIcon, WifiOffIcon } from '../components/brand/icons';
 import { AccessIcon, ClockIcon, ExternalIcon, MountainIcon, NavigationIcon, TicketIcon } from '../components/ui/LineIcons';
-import { AmenityGrid, BlockTitle, DetailHero, DetailSkeleton, DetailUnavailable, HeroFact, InfoBlock, PracticalItem, SectionHeading } from '../components/ui/DetailParts';
+import { AmenityGrid, BlockTitle, DetailHero, DetailSkeleton, DetailUnavailable, HeroFact, InfoBlock, PracticalItem } from '../components/ui/DetailParts';
+import { SectionHeading } from '../components/ui/SectionHeading';
 import { RelatedRail } from '../components/ui/RelatedRail';
 import { activityIcon } from '../components/ui/activityIcons';
 
@@ -220,7 +221,7 @@ export const PlaceDetailPage = () => {
 
       <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)] gap-14 px-5 py-16 lg:grid-cols-12 lg:gap-10 lg:px-8 lg:py-24">
         <div className="min-w-0 lg:col-span-7">
-          <SectionHeading title={m.about} />
+          <SectionHeading size="md" title={m.about} />
           <p className="mt-7 max-w-[40rem] whitespace-pre-line text-[17px] leading-8 text-brand-blue/75 sm:text-lg sm:leading-9">{place.descripcion || m.noDescription}</p>
           {isClosedNotice(place.horarios) && (
             <p role="status" className="mt-6 max-w-[40rem] rounded-lg border border-clay-200 bg-clay-50 px-5 py-4 text-sm font-medium text-clay-800">

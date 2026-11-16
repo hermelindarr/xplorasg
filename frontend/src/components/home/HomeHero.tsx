@@ -9,7 +9,7 @@ import { common } from '../../i18n/common';
 import { homeMessages } from '../../i18n/home';
 import { ArrowRightIcon, MapIcon } from '../brand/icons';
 import { openAssistant } from './homeData';
-import { Photo } from './HomeUi';
+import { Photo } from '../ui/Photo';
 
 const AUTO_ADVANCE_MS = 7000;
 

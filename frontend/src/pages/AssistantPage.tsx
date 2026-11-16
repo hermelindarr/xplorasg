@@ -1,17 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { MacawAvatar } from '../components/brand/Macaw';
 import { usePageTitle } from '../hooks/usePageTitle';
-import { useLanguage, useMessages } from '../i18n';
+import { useMessages } from '../i18n';
 import { assistantMessages } from '../i18n/assistant';
 import { AssistantChat, type AssistantChatHandle } from '../components/assistant/AssistantChat';
 import { ArrowRightIcon } from '../components/brand/icons';
-import { ItalicTail } from '../components/home/HomeUi';
+import { Accented } from '../components/ui/Accented';
 
 // Vista completa de Chatboot (también accesible desde el botón flotante → "pantalla completa").
 // Columna editorial con los accesos rápidos (envían la pregunta a la conversación) y la libreta del chat.
 export const AssistantPage = () => {
   const m = useMessages(assistantMessages);
-  const { lang } = useLanguage();
   const chat = useRef<AssistantChatHandle>(null);
   const [online, setOnline] = useState(() => navigator.onLine);
   useEffect(() => {
@@ -31,7 +30,7 @@ export const AssistantPage = () => {
       <div className="lg:sticky lg:top-28 lg:col-span-5 lg:h-fit lg:pr-8">
         <p className="eyebrow">{m.eyebrow}</p>
         <h1 className="mt-5 text-[2.5rem] leading-[1.04] text-brand-blue sm:text-5xl lg:text-[3.5rem]">
-          <ItalicTail text={m.title} words={lang === 'en' ? 3 : 2} />
+          <Accented text={m.title} accent={m.titleAccent} />
         </h1>
         <p className="mt-6 max-w-md text-[15px] leading-7 text-brand-blue/75">{m.intro}</p>
 
