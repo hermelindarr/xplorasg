@@ -30,7 +30,7 @@ export const HomeIntro = () => {
     <section className="mx-auto max-w-7xl px-5 py-20 lg:px-8 lg:py-28" aria-labelledby="home-simple">
       <p className="eyebrow">{m.simpleEyebrow}</p>
       <h2 id="home-simple" className="font-display mt-6 max-w-4xl text-[1.75rem] leading-[1.25] text-brand-blue sm:text-[2.1rem] lg:text-[2.6rem] lg:leading-[1.15]">
-        {m.introLead} <em className="italic text-brand-green">{m.introEmphasis}</em>
+        {m.introLead} <em className="accent">{m.introEmphasis}</em>
       </h2>
 
       <ul className="mt-12 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:mt-16 lg:grid-cols-4">

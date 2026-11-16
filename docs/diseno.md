@@ -25,7 +25,7 @@ Basado en la hoja de marca oficial (`Iconografia.pdf`, `png Logo.pdf`). Objetivo
 - `--font-accent` (Fraunces 400 cursiva): sólo la utilidad `accent`.
 - Fraunces cargada: 400, 500 y 400 cursiva.
 
-**Cursivas**: no hay cursivas automáticas. El único camino es `<Accented text accent>` (`components/ui/Accented.tsx`); el fragmento se elige a mano por idioma en una clave `…Accent` junto al título.
+**Cursivas**: no hay cursivas automáticas. El único camino es `<Accented text accent>` (`components/ui/Accented.tsx`); el fragmento se elige a mano por idioma en una clave `…Accent` junto al título. El eslogan de la portada y del pie usa `sloganAccent` (`i18n/common.ts`); `stacked` lo pone en su propia línea y `accentClassName` cambia el color sobre fondos oscuros.
 
 **Piezas compartidas** (`components/ui`):
 - `SectionHeading` (`size="lg"` secciones de página, `size="md"` bloques de ficha; `eyebrow` opcional).

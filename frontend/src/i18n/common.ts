@@ -45,6 +45,8 @@ export const common = defineMessages({
   share: 'Compartir',
   bookContact: 'Reservar / Contactar',
   slogan: 'Explora. Conecta. Vive la Sierra Gorda.',
+  // Fragmento del eslogan que va en cursiva (acento editorial elegido a mano).
+  sloganAccent: 'Vive la Sierra Gorda.',
   tagline: 'Turismo inteligente',
   footerDiscover: 'Descubre',
   footerPlan: 'Planea tu viaje',
@@ -103,6 +105,7 @@ export const common = defineMessages({
   share: 'Share',
   bookContact: 'Book / Contact',
   slogan: 'Explore. Connect. Live the Sierra Gorda.',
+  sloganAccent: 'Live the Sierra Gorda.',
   tagline: 'Smart tourism',
   footerDiscover: 'Discover',
   footerPlan: 'Plan your trip',

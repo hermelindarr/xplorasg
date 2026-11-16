@@ -10,6 +10,7 @@ import { homeMessages } from '../../i18n/home';
 import { ArrowRightIcon, MapIcon } from '../brand/icons';
 import { openAssistant } from './homeData';
 import { Photo } from '../ui/Photo';
+import { Accented } from '../ui/Accented';
 
 const AUTO_ADVANCE_MS = 7000;
 
@@ -49,9 +50,6 @@ export const HomeHero = ({ slides }: { slides: Place[] }) => {
   }, [count, paused, reduced, go, active]);
 
   // "Explora. Conecta." + "Vive la Sierra Gorda." (la última frase va en cursiva).
-  const sloganParts = c.slogan.split(/(?<=\.)\s+/);
-  const sloganLead = sloganParts.slice(0, -1).join(' ');
-  const sloganLast = sloganParts[sloganParts.length - 1];
 
   return (
     <section
@@ -110,8 +108,7 @@ export const HomeHero = ({ slides }: { slides: Place[] }) => {
               {m.heroEyebrow}
             </p>
             <h1 className="animate-fade-up mt-5 text-[2.6rem] leading-[1.02] drop-shadow-[0_2px_18px_rgba(0,0,0,.25)] sm:text-6xl lg:text-[clamp(3.25rem,4.8vw,4.6rem)]">
-              <span className="block">{sloganLead}</span>
-              <em className="block font-normal italic text-[#BFE3C8]">{sloganLast}</em>
+              <Accented text={c.slogan} accent={c.sloganAccent} accentClassName="text-[#BFE3C8]!" stacked />
             </h1>
             <p className="mt-5 max-w-lg text-[15px] leading-7 text-white/85 sm:text-base sm:leading-8">
               {m.heroText}

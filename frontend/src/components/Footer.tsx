@@ -4,6 +4,7 @@ import { useMessages } from '../i18n';
 import { common } from '../i18n/common';
 import { CONTACT_EMAIL, SOCIAL_LINKS } from '../config/contact';
 import { BrandLogo } from './brand/BrandLogo';
+import { Accented } from './ui/Accented';
 
 // Logotipos oficiales de cada red (simple-icons, CC0), en un solo color de la paleta.
 const SOCIALS: Array<{ name: string; href: string; icon: SocialIcon }> = [
@@ -52,9 +53,6 @@ export const Footer = ({ variant = 'full' }: { variant?: 'full' | 'slim' }) => {
   }
 
   // "Explora. Conecta." + "Vive la Sierra Gorda." en cursiva.
-  const sloganParts = m.slogan.split(/(?<=\.)\s+/);
-  const sloganLead = sloganParts.slice(0, -1).join(' ');
-  const sloganLast = sloganParts[sloganParts.length - 1];
 
   return (
     <footer className="mt-16 bg-brand-blue pb-16 text-brand-light lg:pb-0">
@@ -63,7 +61,7 @@ export const Footer = ({ variant = 'full' }: { variant?: 'full' | 'slim' }) => {
           <div className="lg:col-span-5">
             <BrandLogo variant="horizontal" tone="light" />
             <p className="font-display mt-8 text-[2rem] leading-[1.1] text-brand-light sm:text-4xl">
-              {sloganLead} <em className="italic text-brand-sand/80">{sloganLast}</em>
+              <Accented text={m.slogan} accent={m.sloganAccent} accentClassName="text-brand-sand/80!" />
             </p>
             <p className="mt-5 max-w-sm text-sm leading-6 text-brand-light/60">{m.footerTagline}</p>
           </div>
