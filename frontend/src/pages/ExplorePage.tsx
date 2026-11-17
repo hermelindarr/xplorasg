@@ -17,21 +17,15 @@ const messages = defineMessages({
   title: 'Explora la Sierra Gorda',
   titleAccent: 'Sierra Gorda',
   description: 'Catálogo completo de lugares de la Sierra Gorda: busca y filtra por municipio y categoría.',
-  eyebrow: 'Explora el territorio',
-  text: 'Todos los lugares publicados de los seis municipios: busca por nombre o filtra por municipio y tipo de lugar.',
+  text: 'Todos los lugares publicados, por nombre, municipio o tipo de lugar.',
   viewOnMap: 'Ver en el mapa',
-  statPlaces: 'lugares publicados',
-  statMunicipalities: 'municipios',
   placesTitle: 'Lugares para conocer',
 }, {
   title: 'Explore the Sierra Gorda',
   titleAccent: 'Sierra Gorda',
   description: 'Full catalog of places in the Sierra Gorda: search and filter by municipality and category.',
-  eyebrow: 'Explore the region',
-  text: 'Every published place across the six municipalities: search by name or filter by municipality and type of place.',
+  text: 'Every published place, by name, municipality or type.',
   viewOnMap: 'View on the map',
-  statPlaces: 'published places',
-  statMunicipalities: 'municipalities',
   placesTitle: 'Places to visit',
 });
 
@@ -50,20 +44,15 @@ export const ExplorePage = () => {
     category: params.get('categoria') ?? '',
   }));
   const catalog = usePlaceSearch({ initial, onResults: scrollToResults });
-  const { totalPlaces, loading, municipalities } = catalog;
+  const { municipalities } = catalog;
 
   return (
     <>
       <PageHero
         compact
-        eyebrow={m.eyebrow}
         title={<Accented text={m.title} accent={m.titleAccent} />}
         subtitle={m.text}
-        actions={<TextLink to="/mapa">{m.viewOnMap}</TextLink>}
-        stats={[
-          { value: loading && !totalPlaces ? '—' : totalPlaces, label: m.statPlaces },
-          { value: municipalities.length || '—', label: m.statMunicipalities },
-        ]}
+        aside={<TextLink to="/mapa">{m.viewOnMap}</TextLink>}
       />
 
       <CatalogSearchBar
@@ -80,9 +69,10 @@ export const ExplorePage = () => {
         onSubmit={catalog.submitSearch}
         onQuickSearch={catalog.quickSearch}
         overlap={false}
+        hideTitle
       />
 
-      <section id="lugares" className="mx-auto max-w-7xl scroll-mt-24 px-5 pb-20 pt-2 lg:px-8 lg:pb-28" aria-labelledby="explore-places">
+      <section id="lugares" className="mx-auto max-w-7xl scroll-mt-24 px-5 pb-16 lg:px-8 lg:pb-24" aria-labelledby="explore-places">
         <h2 id="explore-places" className="sr-only">{m.placesTitle}</h2>
         <PlaceResults catalog={catalog} />
       </section>

@@ -12,12 +12,13 @@ import { TextLink } from '../ui/TextLink';
 import { CardMedia } from '../ui/Card';
 
 // Proporciones alternadas para el ritmo del mosaico (vertical, cuadrada, horizontal…).
-const ASPECTS = ['aspect-[4/5]', 'aspect-[4/3]', 'aspect-square', 'aspect-[5/4]', 'aspect-[4/5]', 'aspect-square', 'aspect-[4/3]', 'aspect-[4/5]', 'aspect-[5/4]'];
+const ASPECTS = ['sm:aspect-[4/5]', 'sm:aspect-[4/3]', 'sm:aspect-square', 'sm:aspect-[5/4]', 'sm:aspect-[4/5]', 'sm:aspect-square', 'sm:aspect-[4/3]', 'sm:aspect-[4/5]', 'sm:aspect-[5/4]'];
 
 const Destination = ({ place, index, lang }: { place: Place; index: number; lang: 'es' | 'en' }) => {
   // Las fotos panorámicas de baja altura no se recortan en vertical (se verían borrosas).
   const [panoramic, setPanoramic] = useState(false);
-  const aspect = panoramic ? 'aspect-[4/3]' : ASPECTS[index % ASPECTS.length];
+  // En el carril de móvil todas las fotos miden lo mismo; el mosaico alterna proporciones desde `sm`.
+  const aspect = `max-sm:aspect-[4/5] ${panoramic ? 'sm:aspect-[4/3]' : ASPECTS[index % ASPECTS.length]}`;
   return (
     <Link to={`/lugares/${place.slug}`} className="group block rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-green">
       <CardMedia
@@ -29,10 +30,10 @@ const Destination = ({ place, index, lang }: { place: Place; index: number; lang
         showName={false}
         onRatio={(ratio) => setPanoramic(ratio > 1.7)}
       >
-        <div className="absolute inset-x-0 bottom-0 p-3 text-white sm:p-5">
+        <div className="absolute inset-x-0 bottom-0 p-4 text-white sm:p-5">
           {/* En móvil las columnas son angostas: sólo nombre y municipio. */}
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/75 max-sm:hidden">{categoryLabel(place.categoria, lang)}</p>
-          <h3 className="font-display line-clamp-2 text-[15px] leading-snug sm:mt-1 sm:text-[1.35rem]">{place.nombre}</h3>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/75">{categoryLabel(place.categoria, lang)}</p>
+          <h3 className="font-display mt-1 line-clamp-2 text-[1.25rem] leading-snug sm:text-[1.35rem]">{place.nombre}</h3>
           <p className="mt-0.5 flex items-center gap-2 text-xs text-white/80 sm:text-[13px]">
             {place.municipio}
             <ArrowRightIcon className="size-3.5 -translate-x-1 opacity-0 transition-[opacity,transform] duration-300 group-hover:translate-x-0 group-hover:opacity-100" />
@@ -50,7 +51,7 @@ export const HomeDestinations = ({ places }: { places: Place[] }) => {
 
   return (
     <section className="border-t border-brand-sand" aria-labelledby="home-destinations">
-      <div className="mx-auto max-w-7xl px-5 py-20 lg:px-8 lg:py-28">
+      <div className="mx-auto max-w-7xl px-5 py-14 lg:px-8 lg:py-24">
         <SectionHeading
           id="home-destinations"
           eyebrow={m.railEyebrow}
@@ -59,9 +60,9 @@ export const HomeDestinations = ({ places }: { places: Place[] }) => {
           action={<TextLink to="/explorar">{m.seeAll}</TextLink>}
         />
 
-        <ul className="mt-12 columns-2 gap-4 sm:gap-6 lg:mt-16 lg:columns-3 lg:gap-8">
+        <ul className="snap-rail -mx-5 mt-8 flex scroll-px-5 gap-4 overflow-x-auto px-5 pb-3 sm:mx-0 sm:mt-12 sm:block sm:columns-2 sm:gap-6 sm:overflow-visible sm:px-0 sm:pb-0 lg:mt-16 lg:columns-3 lg:gap-8">
           {places.map((place, index) => (
-            <li key={place.id} className={`reveal mb-4 break-inside-avoid sm:mb-6 lg:mb-8 ${index >= 4 ? 'max-sm:hidden' : ''}`}>
+            <li key={place.id} className="w-[68%] max-w-[18rem] shrink-0 break-inside-avoid sm:mb-6 sm:w-auto sm:max-w-none lg:mb-8">
               <Destination place={place} index={index} lang={lang} />
             </li>
           ))}

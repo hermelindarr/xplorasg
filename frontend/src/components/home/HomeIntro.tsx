@@ -1,5 +1,5 @@
 // Por qué XploraSG: una declaración en serif y cuatro razones con el mismo lenguaje de "Lo que nos mueve"
-// (filete superior, número en itálica, icono de línea). Sin fichas ni círculos de color: la jerarquía la dan
+// (filete superior e icono de línea). Sin fichas ni círculos de color: la jerarquía la dan
 // la tipografía y el espacio. La razón del asistente abre Chatboot.
 import type { ComponentType } from 'react';
 import { useMessages } from '../../i18n';
@@ -27,21 +27,18 @@ export const HomeIntro = () => {
   ];
 
   return (
-    <section className="mx-auto max-w-7xl px-5 py-20 lg:px-8 lg:py-28" aria-labelledby="home-simple">
+    <section className="mx-auto max-w-7xl px-5 py-14 lg:px-8 lg:py-24" aria-labelledby="home-simple">
       <p className="eyebrow">{m.simpleEyebrow}</p>
       <h2 id="home-simple" className="font-display mt-6 max-w-4xl text-[1.75rem] leading-[1.25] text-brand-blue sm:text-[2.1rem] lg:text-[2.6rem] lg:leading-[1.15]">
         {m.introLead} <em className="accent">{m.introEmphasis}</em>
       </h2>
 
-      <ul className="mt-12 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:mt-16 lg:grid-cols-4">
-        {items.map(({ key, title, text, Icon, action }, index) => (
-          <li key={key} className="reveal flex flex-col border-t border-brand-blue/70 pt-6">
-            <div className="flex items-center justify-between">
-              <span className="font-display text-sm italic text-brand-gold" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
-              <Icon className="size-5 text-brand-green" strokeWidth={1.4} />
-            </div>
-            <h3 className="font-display mt-5 text-xl leading-snug text-brand-blue">{title}</h3>
-            <p className="mt-2 text-[15px] leading-7 text-brand-blue/75">{text}</p>
+      <ul className="mt-8 grid grid-cols-2 gap-x-5 gap-y-8 sm:gap-x-8 sm:gap-y-10 lg:mt-14 lg:grid-cols-4">
+        {items.map(({ key, title, text, Icon, action }) => (
+          <li key={key} className="reveal flex flex-col border-t border-brand-blue/70 pt-4 sm:pt-6">
+            <Icon className="size-6 text-brand-green" strokeWidth={1.4} />
+            <h3 className="font-display mt-3 text-lg leading-snug text-brand-blue sm:mt-4 sm:text-xl">{title}</h3>
+            <p className="mt-2 text-sm leading-6 text-brand-blue/75 sm:text-[15px] sm:leading-7">{text}</p>
             {action && (
               <button type="button" onClick={action.run} className="mt-3 inline-flex min-h-8 items-center gap-2 self-start border-b border-brand-blue/25 text-sm font-medium text-brand-blue transition-colors duration-300 hover:border-brand-green hover:text-brand-green">
                 {action.label}

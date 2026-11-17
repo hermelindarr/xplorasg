@@ -95,6 +95,12 @@ export const usePlaceSearch = ({ initial, onResults }: Options = {}) => {
     void loadPlaces(nextPage, true);
   };
 
+  /** Vuelve a pedir la primera página con los filtros actuales (botón "Reintentar"). */
+  const retry = () => {
+    setPage(1);
+    void loadPlaces(1, false);
+  };
+
   const submitSearch = (event: FormEvent) => {
     event.preventDefault();
     const term = searchInput.trim();
@@ -130,7 +136,7 @@ export const usePlaceSearch = ({ initial, onResults }: Options = {}) => {
   );
 
   return {
-    places, totalPlaces, hasMore, loading, error, storedAt, loadMore,
+    places, totalPlaces, hasMore, loading, error, storedAt, loadMore, retry,
     municipalities, categories, filterCategories, presentCategories, catalogSample,
     municipality, setMunicipality, category, setCategory, toggleCategory,
     searchInput, setSearchInput, search, submitSearch, quickSearch, clearFilters,

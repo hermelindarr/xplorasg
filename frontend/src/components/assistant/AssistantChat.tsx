@@ -367,7 +367,7 @@ export const AssistantChat = ({ variant = 'page', onNavigate, autoFocus = false,
               type="button"
               onClick={voice.toggleSpeakReplies}
               aria-pressed={voice.speakReplies}
-              aria-label={m.readAloudLabel}
+              title={m.readAloudLabel}
               className={`inline-flex min-h-8 items-center gap-1.5 rounded-full px-3 text-xs font-medium transition-colors duration-300 ${
                 voice.speakReplies
                   ? 'bg-brand-green/10 text-brand-green'

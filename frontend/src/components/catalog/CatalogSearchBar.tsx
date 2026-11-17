@@ -32,6 +32,8 @@ interface CatalogSearchBarProps {
   onQuickSearch: (term: string) => void;
   /** En la portada la tarjeta se monta sobre la foto del hero. */
   overlap?: boolean;
+  /** Oculta el título visible (la página ya lo dice en su encabezado). */
+  hideTitle?: boolean;
 }
 
 const Chevron = () => (
@@ -41,13 +43,13 @@ const Chevron = () => (
 const SelectField = ({ id, label, children, value, onChange }: {
   id: string; label: string; children: ReactNode; value: string; onChange: (value: string) => void;
 }) => (
-  <div className="relative min-w-0 border-t border-brand-sand lg:w-56 lg:border-l lg:border-t-0">
-    <label htmlFor={id} className="pointer-events-none absolute left-5 top-2.5 label-quiet">{label}</label>
+  <div className="relative min-w-0 border-t border-brand-sand lg:w-56 lg:border-l lg:border-t-0 [&+&]:border-l">
+    <label htmlFor={id} className="pointer-events-none absolute left-4 top-2 label-quiet sm:left-5 sm:top-2.5">{label}</label>
     <select
       id={id}
       value={value}
       onChange={(event) => onChange(event.target.value)}
-      className="h-16 w-full cursor-pointer appearance-none truncate bg-transparent pb-2 pl-5 pr-10 pt-6 text-sm text-brand-blue outline-none transition-colors duration-300 hover:bg-brand-paper focus-visible:bg-brand-paper"
+      className="h-14 w-full cursor-pointer appearance-none truncate bg-transparent pb-1.5 pl-4 pr-9 pt-6 text-sm sm:h-16 sm:pb-2 sm:pl-5 sm:pr-10 text-brand-blue outline-none transition-colors duration-300 hover:bg-brand-paper focus-visible:bg-brand-paper"
     >
       {children}
     </select>
@@ -57,17 +59,17 @@ const SelectField = ({ id, label, children, value, onChange }: {
 
 export const CatalogSearchBar = ({
   title, labels, value, onValueChange, municipality, onMunicipalityChange, category, onCategoryChange,
-  municipalities, categories, onSubmit, onQuickSearch, overlap = true,
+  municipalities, categories, onSubmit, onQuickSearch, overlap = true, hideTitle = false,
 }: CatalogSearchBarProps) => {
   const { lang } = useLanguage();
   return (
-    <section className={`relative z-20 mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 ${overlap ? '-mt-10 lg:-mt-16' : 'mt-6'}`} aria-labelledby="home-search">
+    <section className={`relative z-20 mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 ${overlap ? '-mt-10 lg:-mt-16' : 'mt-2'}`} aria-labelledby="home-search">
       <div className="rounded-[1.5rem] bg-white p-4 shadow-[0_24px_60px_-28px_rgba(31,44,36,.45)] ring-1 ring-brand-blue/5 sm:p-6">
-      <h2 id="home-search" className="font-display px-1 text-xl text-brand-blue sm:text-2xl">{title}</h2>
+      <h2 id="home-search" className={hideTitle ? 'sr-only' : 'font-display px-1 text-xl text-brand-blue sm:text-2xl'}>{title}</h2>
       <form
         onSubmit={onSubmit}
         role="search"
-        className="mt-4 flex flex-col overflow-hidden rounded-2xl border border-brand-blue/12 bg-brand-paper/60 text-brand-blue transition-colors duration-300 focus-within:border-brand-blue/35 lg:flex-row lg:items-stretch"
+        className={`${hideTitle ? '' : 'mt-4 '}flex flex-col overflow-hidden rounded-2xl border border-brand-blue/12 bg-brand-paper/60 text-brand-blue transition-colors duration-300 focus-within:border-brand-blue/35 lg:flex-row lg:items-stretch`}
       >
         <label className="sr-only" htmlFor="place-search">{labels.searchLabel}</label>
         <div className="relative min-w-0 lg:flex-1">
@@ -79,9 +81,10 @@ export const CatalogSearchBar = ({
             onChange={(event) => onValueChange(event.target.value)}
             placeholder={labels.searchPlaceholder}
             maxLength={120}
-            className="h-16 w-full bg-transparent pl-13 pr-4 text-[15px] text-brand-blue outline-none placeholder:text-brand-blue/70 focus-visible:bg-brand-paper"
+            className="h-14 w-full bg-transparent pl-13 pr-4 text-[15px] sm:h-16 text-brand-blue outline-none placeholder:text-brand-blue/70 focus-visible:bg-brand-paper"
           />
         </div>
+        <div className="grid grid-cols-2 lg:contents">
         <SelectField id="municipality-filter" label={labels.municipality} value={municipality} onChange={onMunicipalityChange}>
           <option value="">{labels.allMunicipalities}</option>
           {municipalities.map((item) => <option key={item.id} value={item.nombre}>{item.nombre}</option>)}
@@ -90,6 +93,7 @@ export const CatalogSearchBar = ({
           <option value="">{labels.allCategoriesLong}</option>
           {categories.map((item) => <option key={item.id} value={item.nombre}>{categoryLabel(item.nombre, lang)}</option>)}
         </SelectField>
+        </div>
         <div className="border-t border-brand-sand p-2 lg:border-t-0 lg:pl-0">
           <button type="submit" className="btn btn-accent h-12 w-full rounded-xl px-8 transition-transform duration-300 hover:-translate-y-px active:translate-y-0 lg:h-full lg:w-auto">
             {labels.search}
@@ -97,7 +101,7 @@ export const CatalogSearchBar = ({
         </div>
       </form>
 
-      <div className="mt-4 flex flex-wrap items-center gap-2 px-1 text-sm">
+      <div className="mt-3 flex flex-wrap items-center gap-2 px-1 text-sm sm:mt-4">
         <span className="mr-1 text-brand-blue/70">{labels.popular}</span>
         {labels.popularTerms.map((term) => (
           <button

@@ -39,7 +39,7 @@ test.describe('Chatboot', () => {
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Tu guía de campo');
     await expect(page.getByText('Chatboot', { exact: true }).first()).toBeVisible();
 
-    await page.getByRole('button', { name: 'Leer las respuestas de Chatboot en voz alta' }).click();
+    await page.getByRole('button', { name: 'Leer en voz alta' }).click();
     await page.getByRole('button', { name: 'Dictar pregunta' }).click();
     await expect(page.getByText('Para comer cocina serrana en la Sierra Gorda:')).toBeVisible();
     expect(asked).toBe('Comida cercana');

@@ -5,7 +5,8 @@ import { agendaApi } from '../services/agendaApi';
 import type { Evento, Promocion } from '../services/agendaApi';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { defineMessages, useLanguage, useMessages } from '../i18n';
-import { ArrowRightIcon, CalendarIcon, PinIcon, SparkleIcon } from '../components/brand/icons';
+import { ArrowRightIcon, CalendarIcon, PinIcon } from '../components/brand/icons';
+import { PromoCard } from '../components/agenda/PromoCard';
 import { PageHero } from '../components/ui/PageHero';
 import { Accented } from '../components/ui/Accented';
 import { Photo } from '../components/ui/Photo';
@@ -15,7 +16,6 @@ type Tab = 'eventos' | 'promociones';
 const agendaMessages = defineMessages({
   pageTitle: 'Agenda cultural',
   loadError: 'No pudimos cargar la agenda. Revisa tu conexión e inténtalo de nuevo.',
-  eyebrow: 'Tradición viva',
   title: 'Agenda Sierra Gorda',
   titleAccent: 'Sierra Gorda',
   intro: 'Fiestas patronales, huapango y tradiciones de las misiones, además de promociones de prestadores locales.',
@@ -32,20 +32,15 @@ const agendaMessages = defineMessages({
   schedule: (value: string) => `Horario: ${value}`,
   tentative: 'Por confirmar',
   tentativeDate: (value: string) => `Fecha tentativa: ${value} (por confirmar)`,
-  promotion: 'Promoción',
-  sample: 'Ejemplo',
-  sampleNote: 'Promoción de ejemplo del prototipo: no es una oferta real y no se puede canjear.',
-  offeredBy: (name: string) => `Ofrece: ${name}`,
-  validUntil: (date: string) => `Válida hasta el ${date}`,
   viewPlace: 'Ver lugar',
-  viewService: 'Ver prestador',
-  conditions: 'Condiciones',
-  validLabel: 'Vigencia',
   upcoming: (n: number) => `${n} ${n === 1 ? 'evento próximo' : 'eventos próximos'}`,
+  nextEvent: 'Próximo evento',
+  inDays: (n: number) => (n <= 0 ? 'En curso' : n === 1 ? 'Mañana' : `En ${n} días`),
+  promosServicesHint: 'Las promociones también aparecen en el directorio de servicios.',
+  viewServices: 'Ver servicios',
 }, {
   pageTitle: 'Cultural events',
   loadError: 'We couldn’t load the events. Check your connection and try again.',
-  eyebrow: 'Living tradition',
   title: 'Sierra Gorda events',
   titleAccent: 'Sierra Gorda',
   intro: 'Patron saint festivals, huapango music and mission traditions, plus deals from local businesses.',
@@ -62,16 +57,12 @@ const agendaMessages = defineMessages({
   schedule: (value: string) => `Hours: ${value}`,
   tentative: 'TBC',
   tentativeDate: (value: string) => `Tentative date: ${value} (to be confirmed)`,
-  promotion: 'Deal',
-  sample: 'Sample',
-  sampleNote: 'Sample deal from the prototype: it is not a real offer and cannot be redeemed.',
-  offeredBy: (name: string) => `Offered by: ${name}`,
-  validUntil: (date: string) => `Valid until ${date}`,
   viewPlace: 'View place',
-  viewService: 'View business',
-  conditions: 'Conditions',
-  validLabel: 'Valid',
   upcoming: (n: number) => `${n} upcoming ${n === 1 ? 'event' : 'events'}`,
+  nextEvent: 'Next event',
+  inDays: (n: number) => (n <= 0 ? 'Happening now' : n === 1 ? 'Tomorrow' : `In ${n} days`),
+  promosServicesHint: 'Deals also appear in the services directory.',
+  viewServices: 'View services',
 });
 
 const formatters = (locale: string) => ({
@@ -105,15 +96,13 @@ const clean = (value: string) => value.replace('.', '');
 export const AgendaPage = () => {
   const m = useMessages(agendaMessages);
   usePageTitle(m.pageTitle, m.intro);
+  const format = useFormatters();
   const [tab, setTab] = useState<Tab>('eventos');
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [promociones, setPromociones] = useState<Promocion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [offline, setOffline] = useState(false);
-  const [heroImage, setHeroImage] = useState<{ url: string; alt: string } | null>(null);
-  const [heroChecked, setHeroChecked] = useState(false);
-
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true);
@@ -123,8 +112,6 @@ export const AgendaPage = () => {
       ? agendaApi.eventos(1, controller.signal).then((res) => {
         setEventos(res.data);
         setOffline(Boolean(res._offline));
-        const withPhoto = res.data.find((evento) => evento.lugar_imagen);
-        if (withPhoto?.lugar_imagen) setHeroImage((current) => current ?? { url: withPhoto.lugar_imagen!, alt: withPhoto.lugar_nombre ?? '' });
       })
       : agendaApi.promociones(1, controller.signal).then((res) => { setPromociones(res.data); setOffline(Boolean(res._offline)); });
 
@@ -134,10 +121,7 @@ export const AgendaPage = () => {
         setError(m.loadError);
       })
       .finally(() => {
-        if (!controller.signal.aborted) {
-          setLoading(false);
-          setHeroChecked(true);
-        }
+        if (!controller.signal.aborted) setLoading(false);
       });
 
     return () => controller.abort();
@@ -149,18 +133,26 @@ export const AgendaPage = () => {
   ];
 
   const isEmpty = tab === 'eventos' ? eventos.length === 0 : promociones.length === 0;
-  // Mientras llega la primera respuesta se reserva el espacio de la foto (bloque beige) para que la página no salte.
-  const hero = heroImage ?? (heroChecked ? null : { url: null });
+  // Los eventos llegan en orden cronológico: el primero se destaca y el resto se agrupa por mes.
+  const [featured, ...rest] = eventos;
+  const groups = useMemo(() => {
+    const map = new Map<string, Evento[]>();
+    for (const evento of rest) {
+      const key = format.monthYear.format(new Date(evento.fecha_inicio));
+      map.set(key, [...(map.get(key) ?? []), evento]);
+    }
+    return [...map.entries()];
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `rest` se deriva de `eventos`
+  }, [eventos, format]);
 
   return (
     <>
     <PageHero
-      eyebrow={m.eyebrow}
+      compact
       title={<Accented text={m.title} accent={m.titleAccent} />}
       subtitle={m.intro}
-      image={hero}
     />
-    <section className="mx-auto max-w-7xl px-5 pb-20 pt-12 lg:px-8 lg:pb-28 lg:pt-16">
+    <section className="mx-auto max-w-7xl px-5 pb-16 lg:px-8 lg:pb-24">
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-b border-brand-sand">
         <div role="tablist" aria-label={m.tabsLabel} className="flex gap-8">
           {tabs.map(({ value, label }) => {
@@ -197,8 +189,8 @@ export const AgendaPage = () => {
         {loading ? (
           <div aria-live="polite">
             {[0, 1, 2].map((item) => (
-              <div key={item} className="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-5 border-b border-brand-sand py-8 sm:grid-cols-[6rem_minmax(0,1fr)]">
-                <div className="h-16 animate-pulse rounded-lg bg-brand-sand/60" />
+              <div key={item} className="grid grid-cols-[3.5rem_minmax(0,1fr)] gap-4 border-b border-brand-sand py-5 sm:grid-cols-[4.5rem_minmax(0,1fr)] sm:gap-6">
+                <div className="h-14 animate-pulse rounded-lg bg-brand-sand/60" />
                 <div className="space-y-3">
                   <div className="h-6 w-2/3 animate-pulse rounded-full bg-brand-sand/60" />
                   <div className="h-3 w-1/3 animate-pulse rounded-full bg-brand-sand/50" />
@@ -216,21 +208,31 @@ export const AgendaPage = () => {
           <div>
             {/* h2 oculto para que los h3 de cada evento sigan el orden de encabezados. */}
             <h2 className="sr-only">{m.eventsTab}</h2>
-            {eventos.map((e) => (
-              <div key={e.id} className="min-w-0">
-                <EventoCard evento={e} />
-              </div>
+            {featured && <FeaturedEvent evento={featured} />}
+            {groups.map(([month, items]) => (
+              <section key={month} className="mt-8 lg:mt-10" aria-label={month}>
+                <h3 className="label-quiet border-b border-brand-sand pb-2 first-letter:uppercase">{month}</h3>
+                <ul>
+                  {items.map((e) => <li key={e.id}><EventRow evento={e} /></li>)}
+                </ul>
+              </section>
             ))}
           </div>
         ) : (
-          <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:gap-8 xl:grid-cols-3">
+          <>
             <h2 className="sr-only">{m.promotionsTab}</h2>
-            {promociones.map((p) => (
-              <div key={p.id} className="min-w-0">
-                <PromocionCard promocion={p} />
-              </div>
-            ))}
-          </div>
+            <div className="mt-6 grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {promociones.map((p) => (
+                <div key={p.id} className="min-w-0">
+                  <PromoCard promocion={p} />
+                </div>
+              ))}
+            </div>
+            <p className="mt-8 text-sm text-brand-blue/70">
+              {m.promosServicesHint}{' '}
+              <Link to="/servicios" className="font-medium text-brand-blue underline decoration-brand-blue/25 underline-offset-4 hover:text-brand-green">{m.viewServices}</Link>
+            </p>
+          </>
         )}
       </div>
     </section>
@@ -241,8 +243,8 @@ export const AgendaPage = () => {
 const EmptyState = ({ title, message }: { title: string; message: string }) => {
   const m = useMessages(agendaMessages);
   return (
-    <div className="mt-8 rounded-xl bg-brand-light px-6 py-16 text-center sm:py-20">
-      <h2 className="text-3xl leading-tight text-brand-blue sm:text-4xl">{title}</h2>
+    <div className="mt-8 rounded-2xl bg-brand-light px-6 py-12 text-center sm:py-16">
+      <h2 className="text-2xl leading-tight text-brand-blue sm:text-3xl">{title}</h2>
       <p className="mx-auto mt-3 max-w-md text-[15px] leading-7 text-brand-blue/70">{message}</p>
       <Link to="/explorar" className="btn btn-primary mt-7 min-h-12 px-7">
         {m.exploreCatalog}
@@ -251,130 +253,115 @@ const EmptyState = ({ title, message }: { title: string; message: string }) => {
   );
 };
 
-const EventoCard = ({ evento }: { evento: Evento }) => {
+// Si la ficha dice que la fecha no está confirmada, no se muestra un día exacto.
+const isTentative = (evento: Evento) => /por confirmar|sin confirmar|to be confirmed|\btbc\b/i.test(`${evento.horario ?? ''} ${evento.descripcion ?? ''}`);
+
+/** Bloque de fecha: día grande y mes, o mes y año si la fecha es tentativa. */
+const DateBlock = ({ evento, large = false }: { evento: Evento; large?: boolean }) => {
+  const format = useFormatters();
+  const start = new Date(evento.fecha_inicio);
+  const big = large ? 'text-5xl sm:text-6xl' : 'text-[2rem] sm:text-4xl';
+  return (
+    <p className="flex flex-col">
+      {isTentative(evento) ? (
+        <>
+          <span className={`font-display mt-0.5 leading-none capitalize text-brand-blue ${large ? 'text-4xl' : 'text-2xl sm:text-3xl'}`}>{clean(format.month.format(start))}</span>
+          <span className="mt-1.5 text-xs font-medium tracking-[0.14em] text-brand-blue/70">{format.year.format(start)}</span>
+        </>
+      ) : (
+        <>
+          <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-gold">{clean(format.weekday.format(start))}</span>
+          <span className={`font-display mt-0.5 leading-none tabular-nums text-brand-blue ${big}`}>{format.day.format(start)}</span>
+          <span className="mt-1.5 text-xs font-medium uppercase tracking-[0.16em] text-brand-blue/70">{clean(format.month.format(start))}</span>
+        </>
+      )}
+    </p>
+  );
+};
+
+/** Fecha, lugar y horario en líneas con icono. */
+const EventMeta = ({ evento }: { evento: Evento }) => {
   const m = useMessages(agendaMessages);
   const format = useFormatters();
   const start = new Date(evento.fecha_inicio);
-  // Si la ficha dice que la fecha no está confirmada, no se muestra un día exacto.
-  const tentative = /por confirmar|sin confirmar|to be confirmed|\btbc\b/i.test(`${evento.horario ?? ''} ${evento.descripcion ?? ''}`);
   return (
-    <article className="group relative grid grid-cols-[4.25rem_minmax(0,1fr)] gap-x-5 gap-y-6 border-b border-brand-sand py-9 sm:grid-cols-[6rem_minmax(0,1fr)] sm:gap-x-8 lg:grid-cols-[7rem_minmax(0,1fr)_minmax(0,24rem)] lg:gap-x-12 lg:py-12">
-      <div className={`col-span-2 lg:col-span-1 lg:col-start-3 lg:row-start-1 ${evento.lugar_imagen ? '' : 'max-lg:hidden'}`}>
-        <div className="relative aspect-[16/10] overflow-hidden rounded-lg lg:aspect-[4/3]">
-          <Photo src={evento.lugar_imagen} name={evento.lugar_nombre ?? evento.titulo} alt={evento.lugar_nombre ?? ''} imgClassName="img-zoom" nameClassName="text-xl" />
-        </div>
-      </div>
-
-      <p className="flex flex-col lg:col-start-1 lg:row-start-1">
-        {tentative ? (
-          <>
-            <span className="text-xs font-medium uppercase tracking-[0.14em] text-brand-gold">{m.tentative}</span>
-            <span className="font-display mt-1 text-3xl leading-none text-brand-blue sm:text-4xl">{clean(format.month.format(start))}</span>
-            <span className="mt-2 text-xs font-medium tracking-[0.14em] text-brand-blue/70">{format.year.format(start)}</span>
-          </>
-        ) : (
-          <>
-            <span className="text-xs font-medium uppercase tracking-[0.2em] text-brand-gold">{clean(format.weekday.format(start))}</span>
-            <span className="font-display mt-1 text-5xl leading-none tabular-nums text-brand-blue sm:text-6xl">{format.day.format(start)}</span>
-            <span className="mt-2 text-xs font-medium uppercase tracking-[0.2em] text-brand-blue/70">{clean(format.month.format(start))}</span>
-          </>
-        )}
-      </p>
-
-      <div className="min-w-0 lg:col-start-2 lg:row-start-1">
-        <h3 className="font-display text-2xl leading-tight text-brand-blue underline-offset-4 sm:text-[1.9rem] lg:group-hover:underline">{evento.titulo}</h3>
-        <ul className="mt-4 grid gap-1.5 text-sm text-brand-blue/75">
-          <li className="flex items-start gap-2.5">
-            <CalendarIcon className="mt-0.5 size-4 shrink-0 text-brand-teal" />
-            <span>{tentative ? m.tentativeDate(format.monthYear.format(start)) : formatRange(format.long, evento.fecha_inicio, evento.fecha_fin)}</span>
-          </li>
-          {(evento.lugar_nombre || evento.municipio) && (
-            <li className="flex items-start gap-2.5">
-              <PinIcon className="mt-0.5 size-4 shrink-0 text-brand-teal" />
-              <span>{[evento.lugar_nombre, evento.municipio].filter(Boolean).join(' · ')}</span>
-            </li>
-          )}
-          {evento.horario && (
-            <li className="flex items-start gap-2.5">
-              <ClockIcon className="mt-0.5 size-4 shrink-0 text-brand-teal" />
-              <span>{m.schedule(evento.horario)}</span>
-            </li>
-          )}
-        </ul>
-        {evento.descripcion && <p className="mt-4 max-w-xl text-[15px] leading-7 text-brand-blue/75">{evento.descripcion}</p>}
-        {evento.lugar_slug && (
-          <Link
-            to={`/lugares/${evento.lugar_slug}`}
-            aria-label={`${m.viewPlace}: ${evento.lugar_nombre ?? evento.titulo}`}
-            className="mt-6 inline-flex items-center gap-2 border-b border-brand-blue/25 pb-1 text-sm font-medium text-brand-blue transition-colors duration-300 after:absolute after:inset-0 after:content-[''] group-hover:border-brand-green group-hover:text-brand-green"
-          >
-            {m.viewPlace}
-            <ArrowRightIcon className="size-4 transition-transform duration-300 group-hover:translate-x-0.5" />
-          </Link>
-        )}
-      </div>
-    </article>
+    <ul className="grid gap-1 text-[13px] text-brand-blue/75 sm:text-sm">
+      <li className="flex items-start gap-2">
+        <CalendarIcon className="mt-0.5 size-4 shrink-0 text-brand-teal" />
+        <span>{isTentative(evento) ? m.tentativeDate(format.monthYear.format(start)) : formatRange(format.long, evento.fecha_inicio, evento.fecha_fin)}</span>
+      </li>
+      {(evento.lugar_nombre || evento.municipio) && (
+        <li className="flex items-start gap-2">
+          <PinIcon className="mt-0.5 size-4 shrink-0 text-brand-teal" />
+          <span>{[evento.lugar_nombre, evento.municipio].filter(Boolean).join(' · ')}</span>
+        </li>
+      )}
+      {evento.horario && (
+        <li className="flex items-start gap-2">
+          <ClockIcon className="mt-0.5 size-4 shrink-0 text-brand-teal" />
+          <span>{m.schedule(evento.horario)}</span>
+        </li>
+      )}
+    </ul>
   );
 };
 
-const PromocionCard = ({ promocion }: { promocion: Promocion }) => {
+const PlaceLink = ({ evento }: { evento: Evento }) => {
   const m = useMessages(agendaMessages);
-  const format = useFormatters();
+  if (!evento.lugar_slug) return null;
   return (
-    <article className="relative flex h-full flex-col rounded-xl border border-brand-sand bg-white">
-      <div className="px-6 pb-6 pt-6 sm:px-7 sm:pt-7">
-        {promocion.es_ejemplo ? (
-          <p className="inline-flex items-center gap-2 rounded-full border border-brand-blue/20 px-2.5 py-0.5 text-xs font-medium uppercase tracking-[0.2em] text-brand-blue/70">
-            {m.sample}
-          </p>
-        ) : (
-          <p className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.2em] text-brand-gold">
-            <SparkleIcon className="size-3.5" />
-            {m.promotion}
-          </p>
-        )}
-        <h3 className="font-display mt-3 text-2xl leading-tight text-brand-blue">{promocion.titulo}</h3>
-        {promocion.es_ejemplo && (
-          <p role="note" className="mt-3 rounded-lg bg-brand-sand/40 px-3 py-2 text-sm leading-6 text-brand-blue/80">{m.sampleNote}</p>
-        )}
-        {!promocion.es_ejemplo && !promocion.servicio_nombre && promocion.prestador_nombre && (
-          <p className="mt-1.5 text-sm text-brand-blue/70">{m.offeredBy(promocion.prestador_nombre)}</p>
-        )}
-        {promocion.servicio_nombre && (
-          <p className="mt-1.5 text-sm text-brand-blue/70">
-            {promocion.servicio_slug
-              ? <Link to={`/servicios/${promocion.servicio_slug}`} className="underline decoration-brand-blue/25 underline-offset-4 transition-colors duration-300 hover:text-brand-green">{promocion.servicio_nombre}</Link>
-              : promocion.servicio_nombre}
-          </p>
-        )}
-        {promocion.descripcion && <p className="mt-4 text-[15px] leading-7 text-brand-blue/75">{promocion.descripcion}</p>}
-        {promocion.condiciones && (
-          <p className="mt-3 text-xs leading-5 text-brand-blue/70">
-            <span className="font-medium text-brand-blue/70">{m.conditions}: </span>
-            {promocion.condiciones}
-          </p>
-        )}
-      </div>
+    <Link
+      to={`/lugares/${evento.lugar_slug}`}
+      aria-label={`${m.viewPlace}: ${evento.lugar_nombre ?? evento.titulo}`}
+      className="mt-3 inline-flex min-h-9 items-center gap-2 border-b border-brand-blue/25 text-[13px] font-medium text-brand-blue transition-colors duration-300 after:absolute after:inset-0 after:content-[''] group-hover:border-brand-green group-hover:text-brand-green"
+    >
+      {m.viewPlace}
+      <ArrowRightIcon className="size-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
+    </Link>
+  );
+};
 
-      {/* Talón del cupón: línea punteada con muescas */}
-      <div className="relative mt-auto flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-dashed border-brand-gold/70 px-6 py-4 sm:px-7">
-        <span aria-hidden="true" className="absolute -left-px top-0 h-5 w-2.5 -translate-y-1/2 rounded-r-full border border-l-0 border-brand-sand bg-brand-paper" />
-        <span aria-hidden="true" className="absolute -right-px top-0 h-5 w-2.5 -translate-y-1/2 rounded-l-full border border-r-0 border-brand-sand bg-brand-paper" />
-        <p className="text-xs text-brand-blue/75">
-          <span className="mr-2 label-quiet">{m.validLabel}</span>
-          {m.validUntil(format.long.format(new Date(promocion.fecha_fin)))}
+/** El evento más cercano: tarjeta con foto del lugar, cuenta regresiva y descripción completa. */
+const FeaturedEvent = ({ evento }: { evento: Evento }) => {
+  const m = useMessages(agendaMessages);
+  const [now] = useState(() => Date.now());
+  const days = Math.ceil((new Date(evento.fecha_inicio).getTime() - now) / 86_400_000);
+  return (
+    <article className="group relative mt-6 grid overflow-hidden rounded-2xl bg-white ring-1 ring-brand-blue/8 md:grid-cols-2">
+      <div className={`relative aspect-[16/9] md:aspect-auto md:min-h-[18rem] ${evento.lugar_imagen ? '' : 'max-md:hidden'}`}>
+        <Photo src={evento.lugar_imagen} name={evento.lugar_nombre ?? evento.titulo} alt={evento.lugar_nombre ?? ''} imgClassName="img-zoom" nameClassName="text-xl" />
+      </div>
+      <div className="flex flex-col p-5 sm:p-7 lg:p-9">
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold uppercase tracking-[0.14em] text-brand-gold">
+          {m.nextEvent}
+          {!isTentative(evento) && <span className="rounded-full bg-brand-green/10 px-2.5 py-1 tracking-[0.08em] text-brand-green">{m.inDays(days)}</span>}
         </p>
-        {promocion.servicio_slug && (
-          <Link
-            to={`/servicios/${promocion.servicio_slug}`}
-            aria-label={`${m.viewService}: ${promocion.servicio_nombre ?? promocion.titulo}`}
-            className="group inline-flex items-center gap-1.5 border-b border-brand-blue/25 pb-0.5 text-[13px] font-medium text-brand-blue transition-colors duration-300 hover:border-brand-green hover:text-brand-green"
-          >
-            {m.viewService}
-            <ArrowRightIcon className="size-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
-          </Link>
-        )}
+        <div className="mt-4 grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-5">
+          <DateBlock evento={evento} large />
+          <h3 className="font-display text-2xl leading-tight text-brand-blue sm:text-[1.9rem]">{evento.titulo}</h3>
+        </div>
+        <div className="mt-5"><EventMeta evento={evento} /></div>
+        {evento.descripcion && <p className="mt-4 text-sm leading-6 text-brand-blue/75 sm:text-[15px] sm:leading-7">{evento.descripcion}</p>}
+        <div className="mt-auto"><PlaceLink evento={evento} /></div>
       </div>
     </article>
   );
 };
+
+/** Fila compacta: fecha, datos y miniatura del lugar. */
+const EventRow = ({ evento }: { evento: Evento }) => (
+  <article className="group relative grid grid-cols-[3.5rem_minmax(0,1fr)] gap-x-4 border-b border-brand-sand py-5 sm:grid-cols-[4.5rem_minmax(0,1fr)_8.5rem] sm:gap-x-6 sm:py-6 lg:grid-cols-[5rem_minmax(0,1fr)_11rem]">
+    <DateBlock evento={evento} />
+    <div className="min-w-0">
+      <h4 className="font-display text-xl leading-tight text-brand-blue underline-offset-4 sm:text-2xl lg:group-hover:underline">{evento.titulo}</h4>
+      <div className="mt-2.5"><EventMeta evento={evento} /></div>
+      {evento.descripcion && <p className="mt-2.5 line-clamp-2 max-w-2xl text-sm leading-6 text-brand-blue/75">{evento.descripcion}</p>}
+      <PlaceLink evento={evento} />
+    </div>
+    {evento.lugar_imagen && (
+      <div className="relative aspect-[4/3] self-start overflow-hidden rounded-xl max-sm:hidden">
+        <Photo src={evento.lugar_imagen} alt={evento.lugar_nombre ?? ''} imgClassName="img-zoom" />
+      </div>
+    )}
+  </article>
+);

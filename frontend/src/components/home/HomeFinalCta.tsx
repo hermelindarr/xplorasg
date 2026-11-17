@@ -10,8 +10,8 @@ export const HomeFinalCta = ({ photo, name }: { photo: string | null; name?: str
   const m = useMessages(homeMessages);
   return (
     <section aria-labelledby="home-final">
-      <div className="mx-auto grid max-w-7xl items-center gap-10 px-5 pb-4 pt-20 lg:grid-cols-12 lg:gap-16 lg:px-8 lg:pb-12 lg:pt-28">
-        <div className="relative aspect-[4/3] overflow-hidden rounded-lg lg:col-span-6 lg:aspect-[5/4]">
+      <div className="mx-auto grid max-w-7xl items-center gap-8 px-5 pb-4 pt-14 md:grid-cols-2 lg:grid-cols-12 lg:gap-16 lg:px-8 lg:pb-12 lg:pt-24">
+        <div className="relative aspect-[16/10] overflow-hidden rounded-2xl md:aspect-[4/3] lg:col-span-6 lg:aspect-[5/4]">
           <Photo src={photo} name={name} nameClassName="text-3xl" />
         </div>
         <div className="lg:col-span-6 lg:max-w-lg">

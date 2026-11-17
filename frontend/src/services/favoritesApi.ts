@@ -1,7 +1,20 @@
 import { supabase } from '../supabaseClient';
 import type { Place } from '../types/catalog';
 
-const getAuthHeaders = async () => {
+// Usa el mismo token que AuthContext (login de desarrollo o sesión de Supabase).
+// Antes sólo leía la sesión de Supabase: con esa configuración los favoritos
+// se "marcaban" en pantalla pero nunca se enviaban al servidor.
+const readStoredToken = (): string | null => {
+  try {
+    return localStorage.getItem('token');
+  } catch {
+    return null;
+  }
+};
+
+const getAuthHeaders = async (): Promise<Record<string, string>> => {
+  const stored = readStoredToken();
+  if (stored) return { Authorization: `Bearer ${stored}` };
   if (!supabase) return {};
   const { data: { session } } = await supabase.auth.getSession();
   return session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {};
@@ -22,8 +35,8 @@ export const getFavorites = async (): Promise<Place[]> => {
 
 export const addFavorite = async (lugarId: number): Promise<void> => {
   const headers = await getAuthHeaders();
-  if (!headers.Authorization) return;
-  
+  if (!headers.Authorization) throw new Error('Sesión no disponible para guardar favoritos');
+
   const response = await fetch(`${getApiUrl()}/api/favoritos/${lugarId}`, {
     method: 'POST',
     headers,
@@ -33,8 +46,8 @@ export const addFavorite = async (lugarId: number): Promise<void> => {
 
 export const removeFavorite = async (lugarId: number): Promise<void> => {
   const headers = await getAuthHeaders();
-  if (!headers.Authorization) return;
-  
+  if (!headers.Authorization) throw new Error('Sesión no disponible para quitar favoritos');
+
   const response = await fetch(`${getApiUrl()}/api/favoritos/${lugarId}`, {
     method: 'DELETE',
     headers,

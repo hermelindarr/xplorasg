@@ -12,7 +12,8 @@ const chipClass = (active: boolean) => `inline-flex shrink-0 items-center gap-2 
   active ? 'border-brand-blue bg-brand-blue text-white' : 'border-brand-blue/15 bg-transparent text-brand-blue/75 hover:border-brand-blue/40 hover:text-brand-blue'
 }`;
 
-const GRID = 'mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 [&>*]:min-w-0';
+// Dos columnas compactas en móvil, tres en tableta y cuatro en escritorio.
+const GRID = 'mt-6 grid grid-cols-2 gap-3 sm:mt-8 sm:gap-5 md:grid-cols-3 lg:gap-6 xl:grid-cols-4 [&>*]:min-w-0';
 
 export const PlaceResults = ({ catalog }: { catalog: PlaceSearch }) => {
   const m = useMessages(catalogMessages);
@@ -26,7 +27,7 @@ export const PlaceResults = ({ catalog }: { catalog: PlaceSearch }) => {
 
   return (
     <>
-      <div className="mt-10 flex flex-col gap-4 border-y border-brand-sand py-4 lg:flex-row lg:items-center">
+      <div className="mt-6 flex flex-col gap-3 border-y border-brand-sand py-3 sm:mt-8 sm:py-4 lg:flex-row lg:items-center">
         <div role="group" aria-label={m.category} className="snap-rail -mx-5 flex gap-2 overflow-x-auto px-5 lg:mx-0 lg:flex-wrap lg:px-0">
           <button type="button" aria-pressed={!category} onClick={() => setCategory('')} className={chipClass(!category)}>
             {m.allCategories}
@@ -64,28 +65,36 @@ export const PlaceResults = ({ catalog }: { catalog: PlaceSearch }) => {
           {m.offline(offlineDate)}
         </p>
       )}
-      {error && <div role="alert" className="mt-8 rounded-xl border border-clay-200 bg-clay-50 p-4 text-sm font-medium text-clay-800">{m.loadError}</div>}
+      {error && (
+        <div role="alert" className="mt-8 flex flex-col items-start gap-3 rounded-2xl border border-clay-200 bg-clay-50 p-5 text-sm text-clay-800 sm:flex-row sm:items-center sm:justify-between">
+          <p className="font-medium">{m.loadError}</p>
+          <button type="button" onClick={catalog.retry} className="btn btn-secondary min-h-10 shrink-0 px-5">{c.retry}</button>
+        </div>
+      )}
 
       {loading && !places.length ? (
         <div className={GRID}>
-          {[0, 1, 2, 3].map((item) => <div key={item} className="h-[26rem] animate-pulse rounded-xl bg-brand-sand/50" />)}
+          {[0, 1, 2, 3].map((item) => <div key={item} className="aspect-[3/4] animate-pulse rounded-2xl bg-brand-sand/50 sm:aspect-auto sm:h-[26rem]" />)}
         </div>
       ) : places.length ? (
         <>
           <div className={GRID}>
             {places.map((place) => <PlaceCard key={place.id} place={place} />)}
           </div>
-          {hasMore && (
-            <div className="mt-12 flex justify-center">
-              <button type="button" onClick={loadMore} disabled={loading} className="btn btn-secondary min-h-12 px-9">
-                {loading ? c.loading : m.loadMore}
-              </button>
+          {totalPlaces > 0 && (
+            <div className="mt-10 flex flex-col items-center gap-4">
+              <p className="text-sm text-brand-blue/70">{m.showing(places.length, totalPlaces)}</p>
+              {hasMore && (
+                <button type="button" onClick={loadMore} disabled={loading} className="btn btn-secondary min-h-12 px-9">
+                  {loading ? c.loading : m.loadMore}
+                </button>
+              )}
             </div>
           )}
         </>
       ) : (
         !error && (
-          <div className="mt-10 rounded-xl bg-brand-light px-6 py-16 text-center">
+          <div className="mt-8 rounded-2xl bg-brand-light px-6 py-12 text-center sm:py-16">
             <h3 className="font-display text-2xl text-brand-blue">{m.emptyTitle}</h3>
             <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-brand-blue/70">{m.emptyText}</p>
             <div className="mt-6 flex flex-wrap justify-center gap-3">

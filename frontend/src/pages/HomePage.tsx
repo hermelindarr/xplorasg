@@ -100,7 +100,7 @@ export const HomePage = () => {
 
       {/* La lista de lugares sólo aparece al buscar o filtrar. */}
       {catalog.filtersActive && (
-        <section id="lugares" className="mx-auto max-w-7xl scroll-mt-24 px-5 py-20 lg:px-8 lg:py-28" aria-labelledby="home-places">
+        <section id="lugares" className="mx-auto max-w-7xl scroll-mt-24 px-5 py-14 lg:px-8 lg:py-24" aria-labelledby="home-places">
           <SectionHeading
             id="home-places"
             eyebrow={m.placesEyebrow}

@@ -129,7 +129,8 @@ export const AppShell = () => {
 
       <header className={`sticky top-0 z-[1000] border-b bg-brand-paper transition-colors duration-300 ${scrolled ? 'border-brand-sand' : 'border-transparent'}`}>
         <div className="mx-auto flex h-[72px] max-w-7xl items-center gap-3 px-5 sm:gap-4 lg:px-8">
-          <Link to="/" className="shrink-0 rounded-2xl transition-all duration-300 hover:opacity-85" aria-label={m.homeLabel}>
+          <Link to="/" className="shrink-0 rounded-2xl transition-all duration-300 hover:opacity-85">
+            <span className="sr-only">{m.homeHint}</span>
             <BrandLogo variant="horizontal" className="[&_.brand-tagline]:hidden sm:[&_.brand-tagline]:flex" />
           </Link>
 

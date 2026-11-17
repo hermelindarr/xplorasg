@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ServiceCard } from '../components/ServiceCard';
+import { agendaApi, type Promocion } from '../services/agendaApi';
+import { PromoCard } from '../components/agenda/PromoCard';
 import { catalogApi } from '../services/catalogApi';
 import type { TourismService } from '../types/catalog';
 import { usePageTitle } from '../hooks/usePageTitle';
@@ -12,7 +14,6 @@ import { PageHero } from '../components/ui/PageHero';
 const messages = defineMessages({
   title: 'Servicios locales',
   titleAccent: 'locales',
-  eyebrow: 'Planea tu visita',
   intro: 'Hospedaje, gastronomía, guías y experiencias ofrecidas por prestadores comunitarios verificados. Contacta directo a quien te recibe.',
   searchLabel: 'Buscar servicio',
   searchPlaceholder: 'Busca hospedaje, comida, guías…',
@@ -28,15 +29,15 @@ const messages = defineMessages({
   type: 'Tipo de servicio',
   allTypes: 'Todos',
   clearFilters: 'Limpiar filtros',
-  statServices: 'servicios verificados',
-  statMunicipalities: 'municipios con servicios',
+  promosTitle: 'Promociones vigentes',
+  promosText: 'Ofertas por tiempo limitado de los prestadores.',
+  hasPromo: 'Promoción',
   listHeading: 'Lista de servicios',
   directBooking: 'Sin comisiones ni intermediarios',
   filtersLabel: 'Filtrar servicios',
 }, {
   title: 'Local services',
   titleAccent: 'services',
-  eyebrow: 'Plan your visit',
   intro: 'Lodging, food, guides and experiences offered by verified community businesses. Contact your hosts directly.',
   searchLabel: 'Search services',
   searchPlaceholder: 'Search lodging, food, guides…',
@@ -52,12 +53,16 @@ const messages = defineMessages({
   type: 'Service type',
   allTypes: 'All',
   clearFilters: 'Clear filters',
-  statServices: 'verified services',
-  statMunicipalities: 'municipalities with services',
+  promosTitle: 'Current deals',
+  promosText: 'Limited-time offers from local businesses.',
+  hasPromo: 'Deal',
   listHeading: 'Service list',
   directBooking: 'No fees, no middlemen',
   filtersLabel: 'Filter services',
 });
+
+// Filas compactas en móvil; rejilla de 2 en tableta y de 3 en escritorio.
+const GRID = 'mt-6 grid grid-cols-1 gap-3 sm:mt-8 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3';
 
 const normalize = (value: string) => value.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
@@ -91,6 +96,19 @@ export const ServicesPage = () => {
     return () => controller.abort();
   }, []);
 
+  // Promociones vigentes: son un complemento, así que si fallan la página sigue igual.
+  const [promos, setPromos] = useState<Promocion[]>([]);
+  useEffect(() => {
+    const controller = new AbortController();
+    agendaApi.promociones(1, controller.signal).then((response) => setPromos(response.data)).catch(() => undefined);
+    return () => controller.abort();
+  }, []);
+  // Servicios con una promoción real vigente (las de demostración no marcan ningún servicio).
+  const promoSlugs = useMemo(
+    () => new Set(promos.filter((promo) => !promo.es_ejemplo && promo.servicio_slug).map((promo) => promo.servicio_slug as string)),
+    [promos],
+  );
+
   const offlineDate = storedAt ? new Date(storedAt).toLocaleString(locale) : '';
 
   const municipalities = useMemo(
@@ -111,8 +129,6 @@ export const ServicesPage = () => {
       (!term || normalize(`${service.nombre} ${service.tipoServicio ?? ''} ${service.categoria ?? ''} ${service.descripcion ?? ''} ${service.prestador}`).includes(term)));
   }, [services, query, municipality, type]);
 
-  const heroService = useMemo(() => services.find((service) => service.imagenPrincipal?.url), [services]);
-
   const filtersActive = Boolean(query || municipality || type);
   const clearFilters = () => {
     setQuery('');
@@ -120,32 +136,27 @@ export const ServicesPage = () => {
     setType('');
   };
 
-  const tabClass = (active: boolean) =>
-    `relative inline-flex shrink-0 items-center whitespace-nowrap py-4 text-sm transition-colors duration-300 after:absolute after:inset-x-0 after:-bottom-px after:h-px after:transition-colors after:duration-300 ${
-      active ? 'font-medium text-brand-blue after:bg-brand-blue' : 'text-brand-blue/70 after:bg-transparent hover:text-brand-blue'
-    }`;
+  // Mismos chips que el catálogo de lugares.
+  const tabClass = (active: boolean) => `inline-flex shrink-0 items-center whitespace-nowrap rounded-full border px-4 py-2 text-sm transition-colors duration-300 ${
+    active ? 'border-brand-blue bg-brand-blue text-white' : 'border-brand-blue/15 bg-transparent text-brand-blue/75 hover:border-brand-blue/40 hover:text-brand-blue'
+  }`;
 
   return (
     <>
       <PageHero
-        eyebrow={m.eyebrow}
+        compact
         title={<Accented text={m.title} accent={m.titleAccent} />}
         subtitle={m.intro}
-        image={loading || heroService ? { url: heroService?.imagenPrincipal?.url, alt: '' } : null}
-        actions={(
+        aside={(
           <p className="inline-flex items-center gap-2 text-sm text-brand-blue/70">
             <CommunityIcon className="size-4 text-brand-green" /> {m.directBooking}
           </p>
         )}
-        stats={[
-          { value: loading ? '—' : services.length, label: m.statServices },
-          { value: loading ? '—' : municipalities.length, label: m.statMunicipalities },
-        ]}
       />
 
-      <section className="mx-auto max-w-7xl px-5 pb-20 pt-14 lg:px-8 lg:pb-28 lg:pt-20">
+      <section className="mx-auto max-w-7xl px-5 pb-16 pt-2 lg:px-8 lg:pb-24">
         <div role="region" aria-label={m.filtersLabel}>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="grid grid-cols-1 gap-3 sm:flex sm:items-center">
             <label className="sr-only" htmlFor="service-search">{m.searchLabel}</label>
             <div className="relative min-w-0 flex-1 lg:max-w-md">
               <SearchIcon className="pointer-events-none absolute left-4 top-1/2 size-[18px] -translate-y-1/2 text-brand-blue/40" />
@@ -186,7 +197,7 @@ export const ServicesPage = () => {
           </div>
 
           {types.length > 1 && (
-            <div role="group" aria-label={m.type} className="snap-rail -mx-5 mt-6 flex scroll-px-5 gap-7 overflow-x-auto border-b border-brand-sand px-5 sm:mx-0 sm:scroll-px-0 sm:px-0">
+            <div role="group" aria-label={m.type} className="snap-rail -mx-5 mt-4 flex scroll-px-5 gap-2 overflow-x-auto border-y border-brand-sand px-5 py-3 sm:mx-0 sm:flex-wrap sm:scroll-px-0 sm:px-0">
               <button type="button" aria-pressed={!type} onClick={() => setType('')} className={tabClass(!type)}>
                 {m.allTypes}
               </button>
@@ -207,34 +218,44 @@ export const ServicesPage = () => {
             {m.offline(offlineDate)}
           </p>
         )}
-        {error && <div role="alert" className="mt-8 rounded-lg border border-clay-200 bg-clay-50 p-4 text-sm font-medium text-clay-800">{m.error}</div>}
+        {error && <div role="alert" className="mt-8 rounded-2xl border border-clay-200 bg-clay-50 p-4 text-sm font-medium text-clay-800">{m.error}</div>}
+
+        {promos.length > 0 && !filtersActive && (
+          <section className="mt-8" aria-labelledby="services-promos">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+              <h2 id="services-promos" className="font-display text-2xl text-brand-blue sm:text-[1.75rem]">{m.promosTitle}</h2>
+              <p className="text-sm text-brand-blue/70">{m.promosText}</p>
+            </div>
+            <ul tabIndex={0} aria-labelledby="services-promos" className="snap-rail -mx-5 mt-4 flex scroll-px-5 gap-4 overflow-x-auto px-5 pb-2 md:mx-0 md:grid md:grid-cols-2 md:gap-6 md:overflow-visible md:px-0 md:pb-0 xl:grid-cols-3">
+              {promos.map((promo) => (
+                <li key={promo.id} className="w-[84%] max-w-[22rem] shrink-0 md:w-auto md:max-w-none md:min-w-0">
+                  <PromoCard promocion={promo} compact />
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {loading ? (
-          <div className="mt-12 grid gap-x-6 gap-y-14 md:grid-cols-2 lg:grid-cols-3 lg:gap-x-8">
-            {[0, 1, 2].map((item) => (
-              <div key={item}>
-                <div className="aspect-[4/3] animate-pulse rounded-xl bg-brand-sand/60" />
-                <div className="mt-4 h-3 w-24 animate-pulse rounded-full bg-brand-sand/60" />
-                <div className="mt-3 h-6 w-3/4 animate-pulse rounded-full bg-brand-sand/50" />
-              </div>
-            ))}
+          <div className={GRID}>
+            {[0, 1, 2, 3].map((item) => <div key={item} className="h-32 animate-pulse rounded-2xl bg-brand-sand/60 sm:h-96" />)}
           </div>
         ) : visible.length ? (
           <>
           {/* Título oculto: las tarjetas usan h3 y necesitan un h2 que las agrupe (orden de encabezados). */}
           <h2 className="sr-only">{m.listHeading}</h2>
-          <div className="mt-12 grid grid-cols-1 gap-x-6 gap-y-14 md:grid-cols-2 lg:grid-cols-3 lg:gap-x-8">
+          <div className={GRID}>
             {visible.map((service) => (
               <div key={service.id} className="min-w-0">
-                <ServiceCard service={service} />
+                <ServiceCard service={service} compact promoLabel={service.slug && promoSlugs.has(service.slug) ? m.hasPromo : undefined} />
               </div>
             ))}
           </div>
           </>
         ) : (
           !error && (
-            <div className="mt-12 rounded-xl bg-brand-light px-6 py-16 text-center sm:py-20">
-              <h2 className="text-3xl leading-tight text-brand-blue sm:text-4xl">{services.length ? m.noResults : m.emptyDirectory}</h2>
+            <div className="mt-8 rounded-2xl bg-brand-light px-6 py-12 text-center sm:py-16">
+              <h2 className="text-2xl leading-tight text-brand-blue sm:text-3xl">{services.length ? m.noResults : m.emptyDirectory}</h2>
               <p className="mx-auto mt-3 max-w-lg text-[15px] leading-7 text-brand-blue/70">
                 {services.length ? m.noResultsText : m.emptyDirectoryText}
               </p>
