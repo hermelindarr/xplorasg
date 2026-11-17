@@ -19,6 +19,7 @@ const messages = defineMessages({
   viewOnMap: 'Ver ubicación en OpenStreetMap',
   newTab: '(se abre en otra pestaña)',
   disclaimer: 'Pronóstico de Open-Meteo. Puede cambiar; verifica las condiciones antes de viajar.',
+  updatedAt: 'Actualizado',
 }, {
   unavailable: 'Weather is not available right now.',
   feelsLike: 'Feels like',
@@ -35,6 +36,7 @@ const messages = defineMessages({
   viewOnMap: 'View location on OpenStreetMap',
   newTab: '(opens in a new tab)',
   disclaimer: 'Forecast by Open-Meteo. It may change; check conditions before you travel.',
+  updatedAt: 'Updated',
 });
 
 const WeatherGlyph = ({ code, className }: { code: number; className?: string }) => {
@@ -64,16 +66,28 @@ export const WeatherCard = ({ latitude, longitude, altitude = null }: WeatherCar
   const { lang } = useLanguage();
   const locale = lang === 'en' ? 'en-US' : 'es-MX';
 
+  // Lectura en vivo: se consulta Open-Meteo al abrir la ficha y cada 10 minutos mientras la pestaña esté visible.
+  const [refreshKey, setRefreshKey] = useState(0);
   useEffect(() => {
     const controller = new AbortController();
     travelApi.weather(latitude, longitude, controller.signal)
-      .then((response) => setWeather(response.data))
+      .then((response) => { setWeather(response.data); setError(false); })
       .catch((requestError) => {
         if (requestError instanceof DOMException && requestError.name === 'AbortError') return;
         setError(true);
       });
     return () => controller.abort();
-  }, [latitude, longitude]);
+  }, [latitude, longitude, refreshKey]);
+
+  useEffect(() => {
+    const tick = () => { if (document.visibilityState === 'visible') setRefreshKey((key) => key + 1); };
+    const id = window.setInterval(tick, 10 * 60 * 1000);
+    document.addEventListener('visibilitychange', tick);
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener('visibilitychange', tick);
+    };
+  }, []);
 
   const elevation = altitude ?? weather?.location?.elevation ?? null;
   const osmUrl = `https://www.openstreetmap.org/?mlat=${latitude.toFixed(5)}&mlon=${longitude.toFixed(5)}#map=14/${latitude.toFixed(5)}/${longitude.toFixed(5)}`;
@@ -138,7 +152,9 @@ export const WeatherCard = ({ latitude, longitude, altitude = null }: WeatherCar
         ))}
       </dl>
       {positionBlock}
-      <p className="mt-3 text-xs leading-4 text-brand-blue/70">{m.disclaimer}</p>
+      <p className="mt-3 text-xs leading-4 text-brand-blue/70">
+        {weather.current.time ? `${m.updatedAt} ${weather.current.time.slice(11, 16)} · ` : ''}{m.disclaimer}
+      </p>
     </div>
   );
 };

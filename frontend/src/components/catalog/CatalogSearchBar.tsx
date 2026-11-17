@@ -34,15 +34,30 @@ interface CatalogSearchBarProps {
   overlap?: boolean;
   /** Oculta el título visible (la página ya lo dice en su encabezado). */
   hideTitle?: boolean;
+  /** "card": tarjeta grande de la portada. "bar": barra compacta de filtros para Explorar. */
+  variant?: 'card' | 'bar';
 }
 
 const Chevron = () => (
   <svg aria-hidden="true" viewBox="0 0 24 24" className="pointer-events-none absolute right-4 top-1/2 size-4 -translate-y-1/2 text-brand-blue/70" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="m7 10 5 5 5-5" /></svg>
 );
 
-const SelectField = ({ id, label, children, value, onChange }: {
-  id: string; label: string; children: ReactNode; value: string; onChange: (value: string) => void;
-}) => (
+const SelectField = ({ id, label, children, value, onChange, compact = false }: {
+  id: string; label: string; children: ReactNode; value: string; onChange: (value: string) => void; compact?: boolean;
+}) => compact ? (
+  <div className="relative min-w-0 sm:w-52">
+    <label htmlFor={id} className="sr-only">{label}</label>
+    <select
+      id={id}
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      className="h-11 w-full cursor-pointer appearance-none truncate rounded-full border border-brand-blue/15 bg-white pl-4 pr-9 text-sm text-brand-blue outline-none transition-colors duration-300 hover:border-brand-blue/35 focus-visible:border-brand-green"
+    >
+      {children}
+    </select>
+    <Chevron />
+  </div>
+) : (
   <div className="relative min-w-0 border-t border-brand-sand lg:w-56 lg:border-l lg:border-t-0 [&+&]:border-l">
     <label htmlFor={id} className="pointer-events-none absolute left-4 top-2 label-quiet sm:left-5 sm:top-2.5">{label}</label>
     <select
@@ -59,9 +74,55 @@ const SelectField = ({ id, label, children, value, onChange }: {
 
 export const CatalogSearchBar = ({
   title, labels, value, onValueChange, municipality, onMunicipalityChange, category, onCategoryChange,
-  municipalities, categories, onSubmit, onQuickSearch, overlap = true, hideTitle = false,
+  municipalities, categories, onSubmit, onQuickSearch, overlap = true, hideTitle = false, variant = 'card',
 }: CatalogSearchBarProps) => {
   const { lang } = useLanguage();
+  if (variant === 'bar') {
+    return (
+      <section className="mx-auto max-w-7xl px-5 pt-6 lg:px-8" aria-labelledby="home-search">
+        <h2 id="home-search" className="sr-only">{title}</h2>
+        <form onSubmit={onSubmit} role="search" className="flex flex-wrap items-center gap-2">
+          <label className="sr-only" htmlFor="place-search">{labels.searchLabel}</label>
+          <div className="relative min-w-0 flex-1 basis-64">
+            <SearchIcon className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-brand-blue/70" />
+            <input
+              id="place-search"
+              type="search"
+              value={value}
+              onChange={(event) => onValueChange(event.target.value)}
+              placeholder={labels.searchPlaceholder}
+              maxLength={120}
+              className="h-11 w-full rounded-full border border-brand-blue/15 bg-white pl-10 pr-4 text-sm text-brand-blue outline-none transition-colors duration-300 placeholder:text-brand-blue/70 hover:border-brand-blue/35 focus-visible:border-brand-green"
+            />
+          </div>
+          <SelectField id="municipality-filter" label={labels.municipality} value={municipality} onChange={onMunicipalityChange} compact>
+            <option value="">{labels.allMunicipalities}</option>
+            {municipalities.map((item) => <option key={item.id} value={item.nombre}>{item.nombre}</option>)}
+          </SelectField>
+          <SelectField id="category-filter" label={labels.category} value={category} onChange={onCategoryChange} compact>
+            <option value="">{labels.allCategoriesLong}</option>
+            {categories.map((item) => <option key={item.id} value={item.nombre}>{categoryLabel(item.nombre, lang)}</option>)}
+          </SelectField>
+          <button type="submit" className="btn btn-accent h-11 min-h-0 rounded-full px-5 text-sm">
+            {labels.search}
+          </button>
+        </form>
+        <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs">
+          <span className="mr-1 text-brand-blue/70">{labels.popular}</span>
+          {labels.popularTerms.map((term) => (
+            <button
+              key={term}
+              type="button"
+              onClick={() => onQuickSearch(term)}
+              className="rounded-full px-3 py-1 text-brand-blue/80 transition-colors duration-300 hover:bg-brand-light hover:text-brand-green"
+            >
+              {term}
+            </button>
+          ))}
+        </div>
+      </section>
+    );
+  }
   return (
     <section className={`relative z-20 mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 ${overlap ? '-mt-10 lg:-mt-16' : 'mt-2'}`} aria-labelledby="home-search">
       <div className="rounded-[1.5rem] bg-white p-4 shadow-[0_24px_60px_-28px_rgba(31,44,36,.45)] ring-1 ring-brand-blue/5 sm:p-6">

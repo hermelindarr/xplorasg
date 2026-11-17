@@ -70,6 +70,7 @@ export const ExplorePage = () => {
         onQuickSearch={catalog.quickSearch}
         overlap={false}
         hideTitle
+        variant="bar"
       />
 
       <section id="lugares" className="mx-auto max-w-7xl scroll-mt-24 px-5 pb-16 lg:px-8 lg:pb-24" aria-labelledby="explore-places">

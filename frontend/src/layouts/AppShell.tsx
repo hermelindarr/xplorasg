@@ -141,14 +141,16 @@ export const AppShell = () => {
           </nav>
 
           <div className="ml-auto hidden items-center gap-1 lg:ml-0 lg:flex">
-            <span
-              role="status"
-              title={isOnline ? m.onlineTitle : m.offlineTitle}
-              className={`mr-1 inline-flex h-8 items-center gap-2 rounded-full px-2.5 text-xs ${isOnline ? 'text-brand-blue/70' : 'bg-ochre-100 font-medium text-ochre-950'}`}
-            >
-              <i className={`size-1.5 rounded-full ${isOnline ? 'bg-brand-green' : 'bg-ochre-600'}`} aria-hidden="true" />
-              <span className={`whitespace-nowrap ${isOnline ? 'sr-only xl:not-sr-only' : ''} ${isOnline && isAuthenticated ? 'xl:sr-only' : ''}`}>{isOnline ? m.online : m.offline}</span>
-            </span>
+            {!isOnline && (
+              <span
+                role="status"
+                title={m.offlineTitle}
+                className="mr-1 inline-flex h-8 items-center gap-2 rounded-full bg-ochre-100 px-2.5 text-xs font-medium text-ochre-950"
+              >
+                <i className="size-1.5 rounded-full bg-ochre-600" aria-hidden="true" />
+                <span className="whitespace-nowrap">{m.offline}</span>
+              </span>
+            )}
             {languageButton()}
             <NavLink to="/favoritos" aria-label={m.favorites} title={m.favorites} className={({ isActive }) => `${iconButton} ${isActive ? 'bg-brand-light text-brand-green' : ''}`}>
               <HeartIcon className="size-[18px]" />
@@ -173,10 +175,12 @@ export const AppShell = () => {
           </div>
 
           <div className="ml-auto flex items-center gap-1 lg:hidden">
-            <span role="status" title={isOnline ? m.onlineTitle : m.offlineTitle} className="hidden size-10 place-items-center min-[420px]:grid">
-              <i className={`size-2 rounded-full ${isOnline ? 'bg-brand-green' : 'bg-ochre-600'}`} aria-hidden="true" />
-              <span className="sr-only">{isOnline ? m.online : m.offline}</span>
-            </span>
+            {!isOnline && (
+              <span role="status" title={m.offlineTitle} className="hidden size-10 place-items-center min-[420px]:grid">
+                <i className="size-2 rounded-full bg-ochre-600" aria-hidden="true" />
+                <span className="sr-only">{m.offline}</span>
+              </span>
+            )}
             {languageButton()}
             <button
               type="button"

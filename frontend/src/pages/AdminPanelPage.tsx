@@ -224,10 +224,8 @@ export const AdminPanelPage = () => {
         />
         {t ? (
           <StatGrid className="mt-8 grid-cols-2 lg:grid-cols-4">
-            <KpiTile icon={PinIcon} label="Lugares publicados" value={t.lugares}
-              note={t.lugares >= 20 ? 'Meta del proyecto (20) cumplida' : `Meta del proyecto: 20 · faltan ${20 - t.lugares}`} noteTone={t.lugares >= 20 ? 'ok' : 'muted'} />
-            <KpiTile icon={StoreIcon} label="Servicios publicados" value={t.servicios}
-              note={t.servicios >= 15 ? 'Meta del proyecto (15) cumplida' : `Meta del proyecto: 15 · faltan ${15 - t.servicios}`} noteTone={t.servicios >= 15 ? 'ok' : 'muted'} />
+            <KpiTile icon={PinIcon} label="Lugares publicados" value={t.lugares} />
+            <KpiTile icon={StoreIcon} label="Servicios publicados" value={t.servicios} />
             <KpiTile icon={CalendarIcon} label="Eventos próximos" value={t.eventos_proximos} />
             <KpiTile icon={TagIcon} label="Promociones activas" value={t.promociones_activas}
               note={t.promociones_pendientes ? `${t.promociones_pendientes} en revisión` : 'Sin pendientes'} noteTone={t.promociones_pendientes ? 'warn' : 'muted'} />

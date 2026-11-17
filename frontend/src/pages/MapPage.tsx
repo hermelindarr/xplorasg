@@ -670,7 +670,26 @@ export const MapPage = () => {
                 </span>
               </div>
             )}
-            <MapContainer center={SIERRA_GORDA_CENTER} zoom={9} minZoom={7} maxZoom={18} scrollWheelZoom className="size-full" zoomControl={false}>
+            <MapContainer
+              center={SIERRA_GORDA_CENTER}
+              zoom={9}
+              minZoom={2}
+              maxZoom={18}
+              zoomSnap={0.25}
+              zoomDelta={0.5}
+              wheelPxPerZoomLevel={80}
+              wheelDebounceTime={30}
+              zoomAnimation
+              inertia
+              dragging
+              touchZoom
+              doubleClickZoom
+              boxZoom
+              keyboard
+              scrollWheelZoom
+              className="size-full"
+              zoomControl={false}
+            >
               <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

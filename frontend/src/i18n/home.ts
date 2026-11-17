@@ -49,7 +49,7 @@ export const homeMessages = defineMessages({
   // Destinos
   railEyebrow: 'Destinos imperdibles',
   railTitle: 'Lugares que te van a quedar en la memoria',
-  railText: 'Una selección de los rincones más fotografiados de los seis municipios de la Sierra Gorda.',
+  railText: 'Una selección de los rincones más fotografiados de la Sierra Gorda.',
   seeAll: 'Ver todos los lugares',
   // Temas
   themesEyebrow: 'Experiencias',
@@ -115,7 +115,7 @@ export const homeMessages = defineMessages({
   assistantText: 'Ask what to do based on weather, time and your route.',
   railEyebrow: 'Must-see destinations',
   railTitle: 'Places you’ll never forget',
-  railText: 'A selection of the most photographed corners of the six municipalities of the Sierra Gorda.',
+  railText: 'A selection of the most photographed corners of the Sierra Gorda.',
   seeAll: 'See all places',
   themesEyebrow: 'Experiences',
   themesTitle: 'Live the Sierra your way',
