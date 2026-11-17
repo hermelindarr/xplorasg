@@ -24,7 +24,7 @@ export const BrandLogo = ({ variant = 'horizontal', tone = 'dark', className = '
       <span className="flex flex-col">
         <img src={`/brand/xplorasg-wordmark${suffix}.webp`} alt="XploraSG" className="h-5 w-auto object-contain object-left sm:h-[22px]" width={572} height={120} />
         {tagline && (
-          <span className={`brand-tagline mt-1 flex items-center gap-1.5 text-[8px] font-medium uppercase tracking-[0.32em] ${tone === 'light' ? 'text-brand-light/80' : 'text-brand-blue/80'}`}>
+          <span className={`brand-tagline mt-1 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.2em] ${tone === 'light' ? 'text-brand-light/80' : 'text-brand-blue/80'}`}>
             <i className="h-px w-2.5 bg-brand-gold" aria-hidden="true" />
             Turismo inteligente
           </span>

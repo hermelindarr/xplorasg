@@ -102,9 +102,7 @@ export const DetailHero = ({ images, categoryText, title, municipio, backTo, bac
               className="animate-fade-up absolute inset-0 size-full object-cover"
             />
           ) : (
-            <span aria-hidden="true" className="font-display absolute inset-x-0 bottom-0 p-6 text-4xl font-normal italic leading-tight text-brand-blue/70 sm:p-10 sm:text-6xl">
-              {title}
-            </span>
+            <span aria-hidden="true" className="absolute inset-0 bg-brand-sand/50" />
           )}
         </div>
         {many && (

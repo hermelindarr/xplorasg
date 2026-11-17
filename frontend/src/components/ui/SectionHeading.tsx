@@ -15,13 +15,12 @@ interface SectionHeadingProps {
   align?: 'end' | 'start';
 }
 
-export const SectionHeading = ({ title, eyebrow, text, id, action, size = 'lg', align = 'end' }: SectionHeadingProps) => {
+export const SectionHeading = ({ title, text, id, action, size = 'lg', align = 'end' }: SectionHeadingProps) => {
   if (size === 'md') {
     return (
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div className="min-w-0">
-          {eyebrow && <p className="eyebrow">{eyebrow}</p>}
-          <h2 id={id} className={`${eyebrow ? 'mt-4' : ''} text-[2rem] leading-[1.08] text-brand-blue sm:text-[2.5rem]`}>{title}</h2>
+          <h2 id={id} className={`text-[2rem] leading-[1.08] text-brand-blue sm:text-[2.5rem]`}>{title}</h2>
         </div>
         {action && <div className="shrink-0">{action}</div>}
       </div>
@@ -30,8 +29,7 @@ export const SectionHeading = ({ title, eyebrow, text, id, action, size = 'lg', 
   return (
     <div className={`flex flex-col justify-between gap-6 md:flex-row ${align === 'end' ? 'md:items-end' : 'md:items-start'}`}>
       <div className="max-w-2xl">
-        {eyebrow && <p className="eyebrow">{eyebrow}</p>}
-        <h2 id={id} className={`section-title ${eyebrow ? 'mt-5' : ''}`}>{title}</h2>
+        <h2 id={id} className="section-title">{title}</h2>
         {text && <p className="mt-5 max-w-xl text-[15px] leading-7 text-brand-blue/75">{text}</p>}
       </div>
       {action && <div className="shrink-0">{action}</div>}

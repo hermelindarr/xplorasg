@@ -74,7 +74,7 @@
   outline: none;
   transition: all 300ms var(--ease-out-soft);
   &::placeholder {
-    color: color-mix(in oklab, var(--color-brand-blue) 40%, transparent);
+    color: color-mix(in oklab, var(--color-brand-blue) 72%, transparent);
   }
   &:hover {
     border-color: color-mix(in oklab, var(--color-brand-blue) 28%, transparent);
@@ -222,10 +222,10 @@ h1, h2, h3 {
   color: color-mix(in oklab, var(--color-brand-blue) 70%, transparent);
 }
 @utility font-display { font-family: var(--font-heading); font-optical-sizing: auto; }
-/* Acento editorial: fragmento de un titular en cursiva serif y verde. Sólo lo aplica <Accented>. */
+/* Acento editorial: fragmento de un titular en serif redonda y verde (sin cursiva). Sólo lo aplica <Accented>. */
 @utility accent {
   font-family: var(--font-accent);
-  font-style: italic;
+  font-style: normal;
   font-weight: 400;
   color: var(--color-brand-green);
 }

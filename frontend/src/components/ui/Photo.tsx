@@ -6,7 +6,7 @@ import { useState } from 'react';
  * Sin foto, o si no carga, queda un bloque crema con el nombre del lugar en serif: nunca un dibujo.
  */
 export const Photo = ({
-  src, name, alt = '', className = '', imgClassName = '', position, eager = false, nameClassName = 'text-2xl', onRatio,
+  src, alt = '', className = '', imgClassName = '', position, eager = false, onRatio,
 }: {
   src: string | null | undefined;
   name?: string | null;
@@ -39,11 +39,8 @@ export const Photo = ({
           className={`absolute inset-0 size-full object-cover ${imgClassName}`}
         />
       ) : (
-        name && (
-          <span aria-hidden="true" className={`font-display absolute inset-x-0 bottom-0 p-5 font-normal italic leading-tight text-brand-blue/70 sm:p-6 ${nameClassName}`}>
-            {name}
-          </span>
-        )
+        // Sin foto no se dibuja texto sobre el degradado: el fondo queda limpio hasta tener la imagen real.
+        <span aria-hidden="true" className="absolute inset-0 bg-brand-sand/50" />
       )}
     </div>
   );
