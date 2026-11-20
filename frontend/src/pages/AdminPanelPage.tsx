@@ -8,7 +8,6 @@ import {
   adminPanelApi,
   type SurveyResults,
   type UsageAnalytics,
-  type PendingPromotion,
   type ProviderOption,
   type Statistics,
 } from '../services/adminPanelApi';
@@ -16,7 +15,6 @@ import { CalendarIcon, CompassIcon, HeartIcon, MapIcon, PinIcon, SearchIcon } fr
 import {
   ChartIcon,
   ChatIcon,
-  CheckCircleIcon,
   ExternalIcon,
   EyeIcon,
   FileIcon,
@@ -45,8 +43,10 @@ import {
   StatGrid,
   StatusPill,
 } from '../components/admin/AdminUi';
-import { fieldLabel, panelSurface, quietAccent, quietButton, quietDanger, quietGhost, tabClass } from '../components/admin/classes';
+import { fieldLabel, quietButton, quietGhost, tabClass } from '../components/admin/classes';
 import { formatNumber, statusOf } from '../components/admin/status';
+import { moderationApi, type ModerationItem } from '../services/moderationApi';
+import { ReportsPanel } from '../components/admin/ReportsPanel';
 
 // Sólo aceptamos respuestas con la forma esperada (evita pantallas en blanco si la API cambia o falla).
 const isSurveyResults = (value: unknown): value is SurveyResults =>
@@ -75,8 +75,9 @@ const sections = [
   { id: 'validacion', label: 'Validación' },
   { id: 'uso', label: 'Uso' },
   { id: 'catalogo', label: 'Catálogo' },
-  { id: 'promociones', label: 'Promociones' },
+  { id: 'pendientes', label: 'Pendientes' },
   { id: 'prestadores', label: 'Prestadores' },
+  { id: 'reportes', label: 'Reportes' },
 ] as const;
 
 const useActiveSection = () => {
@@ -110,7 +111,7 @@ const SectionNav = ({ pendingCount }: { pendingCount: number }) => {
             <li key={id} className="shrink-0">
               <a href={`#${id}`} aria-current={current ? 'true' : undefined} className={tabClass(current)}>
                 {label}
-                {id === 'promociones' && pendingCount > 0 && (
+                {id === 'pendientes' && pendingCount > 0 && (
                   <span className="grid h-[18px] min-w-[18px] place-items-center rounded-full border border-brand-gold/50 px-1 text-xs font-medium tabular-nums text-brand-gold">
                     {pendingCount}
                     <span className="sr-only"> pendientes</span>
@@ -129,11 +130,10 @@ export const AdminPanelPage = () => {
   usePageTitle('Panel de administración');
   const { token, user } = useAuth();
   const [stats, setStats] = useState<Statistics | null>(null);
-  const [pending, setPending] = useState<PendingPromotion[]>([]);
+  const [queue, setQueue] = useState<ModerationItem[]>([]);
   const [providers, setProviders] = useState<ProviderOption[]>([]);
   const [survey, setSurvey] = useState<SurveyResults | null>(null);
   const [usage, setUsage] = useState<UsageAnalytics | null>(null);
-  const [reasons, setReasons] = useState<Record<number, string>>({});
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [now] = useState(() => new Date());
@@ -142,13 +142,14 @@ export const AdminPanelPage = () => {
     if (!token) return;
     setError('');
     try {
-      const [statsResponse, pendingResponse, providersResponse] = await Promise.all([
+      const [statsResponse, queueResponse, providersResponse] = await Promise.all([
         adminPanelApi.statistics(token),
-        adminPanelApi.pendingPromotions(token),
+        // Si la migración 018 aún no está aplicada, la bandeja falla sin bloquear el resto del panel.
+        moderationApi.queue(token).catch(() => ({ data: [] as ModerationItem[] })),
         adminPanelApi.providers(token),
       ]);
       setStats(isStatistics(statsResponse?.data) ? statsResponse.data : null);
-      setPending(asArray<PendingPromotion>(pendingResponse?.data));
+      setQueue(asArray<ModerationItem>(queueResponse?.data));
       setProviders(asArray<ProviderOption>(providersResponse?.data));
       // Validación y analítica: si las tablas aún no existen (migración 013) no se bloquea el panel.
       adminInsightsApi.survey(token).then((response) => setSurvey(isSurveyResults(response.data) ? response.data : null)).catch(() => setSurvey(null));
@@ -161,16 +162,6 @@ export const AdminPanelPage = () => {
   }, [token]);
 
   useEffect(() => { void load(); }, [load]);
-
-  const review = async (promotion: PendingPromotion, state: 'aprobado' | 'rechazado') => {
-    if (!token) return;
-    try {
-      await adminPanelApi.reviewPromotion(token, promotion.id, state, reasons[promotion.id]);
-      await load();
-    } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'No fue posible revisar la promoción.');
-    }
-  };
 
   const firstName = user?.nombre?.split(' ')[0];
 
@@ -193,13 +184,16 @@ export const AdminPanelPage = () => {
   return (
     <section className="mx-auto max-w-7xl px-5 pb-20 pt-10 lg:px-8">
       <PageHeader
-        eyebrow="Administración"
         title="Panel de XploraSG"
-        meta={<>{greeting()}{firstName ? `, ${firstName}` : ''} · {capitalize(longDate.format(now))}</>}
+        meta={<>{greeting()}{firstName ? `, ${firstName}` : ''}. {capitalize(longDate.format(now))}.</>}
         actions={
           <>
+            <Link to="/admin/moderacion" className="btn btn-primary min-h-9 px-4 py-1.5 !text-label">
+              <InboxIcon className="size-4" /> Solicitudes pendientes
+              {queue.length > 0 && <span className="tabular-nums">({queue.length})</span>}
+            </Link>
             <Link to="/admin/contenido" className={quietButton}>
-              <FileIcon className="size-4" /> Revisar contenido
+              <FileIcon className="size-4" /> Todo el contenido
             </Link>
             <Link to="/admin/agenda" className={quietButton}>
               <CalendarIcon className="size-4" /> Agenda
@@ -211,7 +205,7 @@ export const AdminPanelPage = () => {
         }
       />
 
-      <SectionNav pendingCount={pending.length} />
+      <SectionNav pendingCount={queue.length} />
 
       {error && <Notice tone="error" className="mt-6">{error}</Notice>}
 
@@ -224,10 +218,8 @@ export const AdminPanelPage = () => {
         />
         {t ? (
           <StatGrid className="mt-8 grid-cols-2 lg:grid-cols-4">
-            <KpiTile icon={PinIcon} label="Lugares publicados" value={t.lugares}
-              note={t.lugares >= 20 ? 'Meta del proyecto (20) cumplida' : `Meta del proyecto: 20 · faltan ${20 - t.lugares}`} noteTone={t.lugares >= 20 ? 'ok' : 'muted'} />
-            <KpiTile icon={StoreIcon} label="Servicios publicados" value={t.servicios}
-              note={t.servicios >= 15 ? 'Meta del proyecto (15) cumplida' : `Meta del proyecto: 15 · faltan ${15 - t.servicios}`} noteTone={t.servicios >= 15 ? 'ok' : 'muted'} />
+            <KpiTile icon={PinIcon} label="Lugares publicados" value={t.lugares} />
+            <KpiTile icon={StoreIcon} label="Servicios publicados" value={t.servicios} />
             <KpiTile icon={CalendarIcon} label="Eventos próximos" value={t.eventos_proximos} />
             <KpiTile icon={TagIcon} label="Promociones activas" value={t.promociones_activas}
               note={t.promociones_pendientes ? `${t.promociones_pendientes} en revisión` : 'Sin pendientes'} noteTone={t.promociones_pendientes ? 'warn' : 'muted'} />
@@ -247,7 +239,7 @@ export const AdminPanelPage = () => {
 
       {/* Catálogo */}
       <section id="catalogo" aria-labelledby="catalogo-title" className="mt-14 scroll-mt-32 border-t border-brand-sand pt-12">
-        <SectionHeading id="catalogo-title" eyebrow="Contenido" title="Catálogo publicado" description="Distribución de lugares y servicios aprobados por municipio y categoría." />
+        <SectionHeading id="catalogo-title" title="Catálogo publicado" description="Distribución de lugares y servicios aprobados por municipio y categoría." />
         {stats ? (
           <div className="mt-8 grid gap-4 lg:grid-cols-2">
             <BarChart
@@ -283,66 +275,54 @@ export const AdminPanelPage = () => {
         )}
       </section>
 
-      {/* Promociones */}
-      <section id="promociones" aria-labelledby="promociones-title" className="mt-14 scroll-mt-32 border-t border-brand-sand pt-12">
+      {/* Pendientes de validación */}
+      <section id="pendientes" aria-labelledby="pendientes-title" className="mt-14 scroll-mt-32 border-t border-brand-sand pt-12">
         <SectionHeading
-          id="promociones-title"
-          eyebrow="Moderación"
-          title="Promociones por revisar"
-          description="Las promociones aprobadas aparecen en la Agenda. Para rechazar escribe el motivo: el prestador lo verá en su panel."
-          action={<StatusPill tone={pending.length ? 'teal' : 'green'} label={pending.length ? `${pending.length} pendiente${pending.length === 1 ? '' : 's'}` : 'Al día'} />}
+          id="pendientes-title"
+          title="Pendientes de validación"
+          description="Servicios nuevos, cambios de prestadores, promociones y lugares que esperan tu revisión. Nada de esto se ve en la vista pública hasta que lo apruebes."
+          action={<Link to="/admin/moderacion" className={quietButton}><InboxIcon className="size-4" /> Abrir bandeja{queue.length ? ` (${queue.length})` : ''}</Link>}
         />
         <div className="mt-8">
-          {pending.length ? (
-            <ul className={`${panelSurface} divide-y divide-brand-sand overflow-hidden`}>
-              {pending.map((promotion) => (
-                <li key={promotion.id} className="grid gap-4 p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-8">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                      <h3 className="text-[15px] font-medium leading-6 text-brand-blue">{promotion.titulo}</h3>
-                      <StatusPill {...statusOf('en_revision')} />
-                    </div>
-                    <p className="mt-1 text-xs leading-5 text-brand-blue/70">
-                      {promotion.prestador ?? 'Sin prestador'}{promotion.servicio_nombre ? ` · ${promotion.servicio_nombre}` : ''} ·{' '}
-                      {dateFormatter.format(new Date(promotion.fecha_inicio))} – {dateFormatter.format(new Date(promotion.fecha_fin))}
-                    </p>
-                    {promotion.descripcion && <p className="mt-2.5 max-w-prose text-sm leading-6 text-brand-blue/80">{promotion.descripcion}</p>}
-                    {promotion.condiciones && <p className="mt-1 text-xs leading-5 text-brand-blue/70">Condiciones: {promotion.condiciones}</p>}
-                  </div>
-                  <div className="grid content-start gap-2.5">
-                    <label className="sr-only" htmlFor={`motivo-${promotion.id}`}>Motivo de rechazo para {promotion.titulo}</label>
-                    <input
-                      id={`motivo-${promotion.id}`}
-                      value={reasons[promotion.id] ?? ''}
-                      onChange={(event) => setReasons((current) => ({ ...current, [promotion.id]: event.target.value }))}
-                      placeholder="Motivo (obligatorio para rechazar)"
-                      className="field min-h-10 py-2"
-                    />
-                    <div className="flex gap-2 sm:justify-end">
-                      <button type="button" onClick={() => review(promotion, 'rechazado')} className={`${quietDanger} flex-1 sm:flex-none`}>
-                        Rechazar
-                      </button>
-                      <button type="button" onClick={() => review(promotion, 'aprobado')} className={`${quietAccent} flex-1 sm:flex-none`}>
-                        <CheckCircleIcon className="size-4" /> Aprobar
-                      </button>
-                    </div>
-                  </div>
+          {queue.length ? (
+            <ul className="divide-y divide-brand-sand border-y border-brand-sand">
+              {queue.slice(0, 5).map((item) => (
+                <li key={`${item.tipo}-${item.id}`} className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 py-3">
+                  <span className="min-w-0">
+                    <span className="font-medium text-brand-blue">{item.nombre}</span>
+                    <span className="ml-2 text-label text-brand-blue/70">
+                      {item.tipo === 'promocion' ? 'Promoción' : item.tipo === 'lugar' ? 'Lugar' : item.solicitud === 'cambios' ? 'Cambios a servicio' : 'Servicio nuevo'}
+                      {item.prestador ? `, ${item.prestador}` : ''}
+                    </span>
+                  </span>
+                  <span className="text-label text-brand-blue/70">enviada el {dateFormatter.format(new Date(item.enviadoAt))}</span>
                 </li>
               ))}
             </ul>
           ) : (
-            <EmptyState icon={InboxIcon} title="No hay promociones pendientes" text="Cuando un prestador envíe una promoción aparecerá aquí para su revisión." />
+            <EmptyState icon={InboxIcon} title="Todo al día" text="Cuando un prestador envíe un servicio, un cambio o una promoción, aparecerá aquí." />
           )}
+          {queue.length > 5 && <p className="mt-3 text-label text-brand-blue/70">y {queue.length - 5} más en la bandeja.</p>}
         </div>
       </section>
 
       {/* Prestadores */}
       <section id="prestadores" aria-labelledby="prestadores-title" className="mt-14 scroll-mt-32 border-t border-brand-sand pt-12">
-        <SectionHeading id="prestadores-title" eyebrow="Negocios locales" title="Prestadores" description="Negocios registrados y la cuenta que puede administrar cada uno desde «Mi negocio»." />
+        <SectionHeading id="prestadores-title" title="Prestadores" description="Negocios registrados y la cuenta que puede administrar cada uno desde «Mi negocio»." />
         <div className="mt-8 grid items-start gap-4 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
           <ProvidersTable providers={providers} />
           <LinkProviderForm providers={providers} token={token} onLinked={load} />
         </div>
+      </section>
+
+      {/* Reportes */}
+      <section id="reportes" aria-labelledby="reportes-title" className="mt-14 scroll-mt-32 border-t border-brand-sand pt-12">
+        <SectionHeading
+          id="reportes-title"
+          title="Reportes y exportación"
+          description="Lista de prestadores, lugares registrados, servicios, estatus, municipios y métricas de actividad."
+        />
+        <div className="mt-8">{token && <ReportsPanel token={token} />}</div>
       </section>
     </section>
   );
@@ -420,7 +400,7 @@ const LinkProviderForm = ({ providers, token, onLinked }: { providers: ProviderO
   return (
     <section className="rounded-xl border border-brand-sand bg-brand-light/45 p-5 sm:p-6" aria-labelledby="vincular-title">
       <h3 id="vincular-title" className="font-display text-xl font-normal text-brand-blue">Vincular cuenta de prestador</h3>
-      <p className="mt-2 text-[13px] leading-6 text-brand-blue/75">
+      <p className="mt-2 text-label leading-6 text-brand-blue/75">
         El prestador primero se registra en XploraSG. Después, elige su negocio y escribe su correo: su cuenta pasará a rol prestador y podrá editar sus servicios y publicar promociones.
       </p>
       <form onSubmit={submit} className="mt-5 grid gap-4">
@@ -462,7 +442,7 @@ const ResponsesProgress = ({ count, goal, repeated }: { count: number; goal: num
   return (
     <div className="flex min-w-0 flex-col bg-white p-5 sm:p-6 md:col-span-3 lg:col-span-2">
       <dt>
-        <span className="block text-[13px] font-medium text-brand-blue/80">Respuestas recolectadas</span>
+        <span className="block text-label font-medium text-brand-blue/80">Respuestas recolectadas</span>
         <span className="block text-xs leading-4 text-brand-blue/70">Encuesta pública de validación</span>
       </dt>
       <dd className="flex min-w-0 flex-1 flex-col">
@@ -496,10 +476,10 @@ const AverageScale = ({ label, value }: { label: string; value: number | null | 
   const has = typeof value === 'number' && Number.isFinite(value);
   return (
     <li className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1.5">
-      <span className="text-[13px] text-brand-blue/75">{label}</span>
+      <span className="text-label text-brand-blue/75">{label}</span>
       <span className="text-sm font-medium tabular-nums text-brand-blue">{has ? value.toFixed(1) : '—'}<span className="text-xs font-normal text-brand-blue/70"> / 5</span></span>
       <span className="col-span-2 h-1.5 rounded-[4px] bg-brand-green/12" aria-hidden="true">
-        <span className="block h-1.5 rounded-[4px] bg-[#2E7D4E]" style={{ width: `${has ? (value / 5) * 100 : 0}%` }} />
+        <span className="block h-1.5 rounded-[4px] bg-brand-green" style={{ width: `${has ? (value / 5) * 100 : 0}%` }} />
       </span>
     </li>
   );
@@ -511,7 +491,6 @@ const ValidationSection = ({ survey }: { survey: SurveyResults | null }) => {
     <section id="validacion" aria-labelledby="validacion-title" className="mt-14 scroll-mt-32 border-t border-brand-sand pt-12">
       <SectionHeading
         id="validacion-title"
-        eyebrow="Anexo 1"
         title="Validación del proyecto"
         description="Metas de aceptación medidas con la encuesta pública. Cada medidor compara el resultado con su línea de meta."
       />
@@ -604,10 +583,9 @@ const UsageSection = ({ usage }: { usage: UsageAnalytics | null }) => {
     <section id="uso" aria-labelledby="uso-title" className="mt-14 scroll-mt-32 border-t border-brand-sand pt-12">
       <SectionHeading
         id="uso-title"
-        eyebrow="Analítica"
         title="Uso de la plataforma"
         description="Interacciones registradas en los últimos 30 días."
-        action={usage ? <span className="inline-flex items-center gap-1.5 text-[13px] text-brand-blue/75"><ChartIcon className="size-4 text-brand-teal" /><b className="font-medium text-brand-blue">{formatNumber(grandTotal)}</b> interacciones</span> : undefined}
+        action={usage ? <span className="inline-flex items-center gap-1.5 text-label text-brand-blue/75"><ChartIcon className="size-4 text-brand-teal" /><b className="font-medium text-brand-blue">{formatNumber(grandTotal)}</b> interacciones</span> : undefined}
       />
       {usage ? (
         <>

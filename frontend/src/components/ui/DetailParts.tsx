@@ -7,6 +7,7 @@ import { defineMessages, useMessages } from '../../i18n';
 import { ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon } from './LineIcons';
 import { roundArrowClass } from './visuals';
 import { usePageTitle } from '../../hooks/usePageTitle';
+import { FULL_WIDTH_SIZES, photoSrcSet } from '../../utils/responsiveImage';
 
 type IconType = ComponentType<{ className?: string }>;
 
@@ -59,7 +60,7 @@ export const DetailHero = ({ images, categoryText, title, municipio, backTo, bac
 
   return (
     <header className="mx-auto max-w-7xl px-5 pt-6 lg:px-8 lg:pt-10">
-      <Link to={backTo} className="group inline-flex min-h-8 items-center gap-2 text-sm text-brand-blue/70 transition-colors duration-300 hover:text-brand-blue">
+      <Link to={backTo} className="group inline-flex min-h-8 pointer-coarse:min-h-11 items-center gap-2 text-sm text-brand-blue/70 transition-colors duration-300 hover:text-brand-blue">
         <ArrowLeftIcon className="size-4 transition-transform duration-300 group-hover:-translate-x-0.5" />
         {backLabel}
       </Link>
@@ -71,7 +72,7 @@ export const DetailHero = ({ images, categoryText, title, municipio, backTo, bac
             {title}
           </h1>
           {(municipio || notice) && (
-            <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-[15px] text-brand-blue/75">
+            <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-base text-brand-blue/75">
               {municipio && (
                 <span className="inline-flex items-center gap-2">
                   <PinIcon className="size-4 text-brand-teal" />
@@ -95,6 +96,8 @@ export const DetailHero = ({ images, categoryText, title, municipio, backTo, bac
             <img
               key={current.url}
               src={current.url}
+              srcSet={photoSrcSet(current.url)}
+              sizes={photoSrcSet(current.url) ? FULL_WIDTH_SIZES : undefined}
               alt={current.altText || title}
               onError={() => setFailed((list) => [...list, current.url])}
               decoding="async"
@@ -102,9 +105,7 @@ export const DetailHero = ({ images, categoryText, title, municipio, backTo, bac
               className="animate-fade-up absolute inset-0 size-full object-cover"
             />
           ) : (
-            <span aria-hidden="true" className="font-display absolute inset-x-0 bottom-0 p-6 text-4xl font-normal italic leading-tight text-brand-blue/70 sm:p-10 sm:text-6xl">
-              {title}
-            </span>
+            <span aria-hidden="true" className="absolute inset-0 bg-brand-sand/50" />
           )}
         </div>
         {many && (
@@ -121,7 +122,7 @@ export const DetailHero = ({ images, categoryText, title, municipio, backTo, bac
                       i === active ? 'opacity-100 ring-1 ring-brand-blue ring-offset-2 ring-offset-brand-paper' : 'opacity-55 hover:opacity-100'
                     }`}
                   >
-                    <img src={image.url} alt="" loading="lazy" decoding="async" className="size-full object-cover" />
+                    <img src={image.url} srcSet={photoSrcSet(image.url)} sizes={photoSrcSet(image.url) ? '96px' : undefined} alt="" loading="lazy" decoding="async" className="size-full object-cover" />
                   </button>
                 </li>
               ))}
@@ -146,19 +147,8 @@ export const HeroFact = ({ icon: Icon, label, children }: { icon: IconType; labe
     <Icon className="mt-0.5 size-[18px] shrink-0 text-brand-teal" />
     <div className="min-w-0">
       <p className="label-quiet">{label}</p>
-      <p className="mt-1 line-clamp-2 text-sm leading-6 text-brand-blue">{children}</p>
+      <p className="mt-1 text-sm leading-6 text-brand-blue">{children}</p>
     </div>
-  </div>
-);
-
-/** Encabezado de sección editorial: eyebrow terracota + titular en serif. */
-export const SectionHeading = ({ eyebrow, title, action }: { eyebrow?: string; title: ReactNode; action?: ReactNode }) => (
-  <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-    <div className="min-w-0">
-      {eyebrow && <p className="eyebrow">{eyebrow}</p>}
-      <h2 className={`${eyebrow ? 'mt-4' : ''} text-[2rem] leading-[1.08] text-brand-blue sm:text-[2.5rem]`}>{title}</h2>
-    </div>
-    {action && <div className="shrink-0">{action}</div>}
   </div>
 );
 
@@ -173,7 +163,7 @@ export const AmenityGrid = ({ items, label }: { items: Array<{ icon: IconType; t
     {items.map(({ icon: Icon, text }) => (
       <li key={text} className="flex items-center gap-3.5 border-b border-brand-sand py-4">
         <Icon className="size-5 shrink-0 text-brand-green" />
-        <span className="text-[15px] leading-6 text-brand-blue">{text}</span>
+        <span className="text-base leading-6 text-brand-blue">{text}</span>
       </li>
     ))}
   </ul>
@@ -188,11 +178,11 @@ const ACCENTS = {
 /** Bloque de información con filete superior: icono de línea, título y texto. */
 export const InfoBlock = ({ icon: Icon, title, children, accent = 'teal' }: { icon: IconType; title: string; children: ReactNode; accent?: keyof typeof ACCENTS }) => (
   <section className="border-t border-brand-sand pt-5">
-    <h3 className="flex items-center gap-2.5 text-[15px] font-medium text-brand-blue">
+    <h3 className="flex items-center gap-2.5 text-base font-medium text-brand-blue">
       <Icon className={`size-[18px] shrink-0 ${ACCENTS[accent]}`} />
       {title}
     </h3>
-    <div className="mt-2.5 whitespace-pre-line text-[15px] leading-7 text-brand-blue/70">{children}</div>
+    <div className="mt-2.5 whitespace-pre-line text-base leading-7 text-brand-blue/70">{children}</div>
   </section>
 );
 
@@ -206,7 +196,7 @@ export const PracticalItem = ({ label, children, inHero = false }: { icon?: Icon
 );
 
 export const DetailSkeleton = ({ label }: { label: string }) => (
-  <div aria-busy="true" className="mx-auto max-w-7xl px-5 pt-6 lg:px-8 lg:pt-10">
+  <div aria-busy="true" className="mx-auto min-h-[100svh] max-w-7xl px-5 pt-6 lg:px-8 lg:pt-10">
     <div className="h-4 w-20 animate-pulse rounded-full bg-brand-sand/70" />
     <div className="mt-10 h-3 w-32 animate-pulse rounded-full bg-brand-sand/70" />
     <div className="mt-6 h-14 w-3/4 max-w-2xl animate-pulse rounded-lg bg-brand-sand/60" />
@@ -219,9 +209,10 @@ export const DetailSkeleton = ({ label }: { label: string }) => (
 export const DetailUnavailable = ({ title, text, to, cta }: { title: string; text: string; to: string; cta: string }) => {
   usePageTitle(title);
   return (
-  <section className="mx-auto max-w-3xl px-5 py-24 text-center lg:py-32">
+  // Mismo alto mínimo que el esqueleto de carga: al cambiar de uno a otro el pie no salta (CLS).
+  <section className="mx-auto min-h-[100svh] max-w-3xl px-5 py-24 text-center lg:py-32">
     <h1 className="text-4xl leading-tight text-brand-blue sm:text-5xl">{title}</h1>
-    {text && <p className="mx-auto mt-4 max-w-md text-[15px] leading-7 text-brand-blue/75">{text}</p>}
+    {text && <p className="mx-auto mt-4 max-w-md text-base leading-7 text-brand-blue/75">{text}</p>}
     <Link to={to} className="btn btn-primary mt-8 min-h-12 px-7">{cta}</Link>
   </section>
   );

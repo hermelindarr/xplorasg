@@ -27,11 +27,10 @@ export const UnauthorizedPage = () => {
           </span>
         </div>
         <div className="max-w-xl md:col-span-8">
-          <p className="eyebrow">{m.eyebrow}</p>
           <h1 className="mt-5 text-[2.25rem] leading-[1.08] text-brand-blue sm:text-5xl">
             {needsLogin ? m.needsLoginTitle : m.noPermissionTitle}
           </h1>
-          <p className="mt-5 text-[15px] leading-7 text-brand-blue/75">
+          <p className="mt-5 text-base leading-7 text-brand-blue/75">
             {needsLogin ? m.needsLoginText : m.noPermissionText}
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-x-7 gap-y-4">

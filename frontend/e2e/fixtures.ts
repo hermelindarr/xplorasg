@@ -48,5 +48,10 @@ export const mockApi = async (page: Page, options: { places?: unknown[]; total?:
   });
   await page.route(/\/api\/catalogo\/servicios(\?.*)?$/, (route) => route.fulfill({ json: { data: [makeService(1), makeService(2)], pagination: { page: 1, limit: 50, total: 2 } } }));
   await page.route('**/api/viaje/clima**', (route) => route.fulfill({ json: { data: { timezone: null, current: { time: null, temperature: 24, apparentTemperature: 25, precipitation: 0, windSpeed: 8, weatherCode: 1, condition: 'Mayormente despejado' }, forecast: [] } } }));
+  // Altitud del terreno: 1,200 m para cada punto pedido (el perfil de la portada y las tarjetas la muestran).
+  await page.route('**/api/viaje/altitudes**', (route) => {
+    const points = new URL(route.request().url()).searchParams.get('puntos')?.split('|') ?? [];
+    return route.fulfill({ json: { data: points.map(() => 1200) } });
+  });
   await page.route('**/api/agenda/**', (route) => route.fulfill({ json: { data: [], pagination: { page: 1, limit: 12, total: 0 } } }));
 };

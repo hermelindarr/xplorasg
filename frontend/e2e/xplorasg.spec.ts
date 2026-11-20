@@ -2,10 +2,12 @@ import { expect, test } from '@playwright/test';
 import { makePlace, mockApi } from './fixtures';
 
 test.describe('Inicio', () => {
-  test('muestra el buscador, los lugares con actividades y los prestadores con WhatsApp', async ({ page }) => {
+  test('muestra el perfil de altitud, el buscador y los prestadores con WhatsApp', async ({ page }) => {
     await mockApi(page);
     await page.goto('/');
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('Sierra Gorda');
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('metros');
+    // Cada lugar es un punto del perfil, accesible con teclado y lector de pantalla.
+    await expect(page.getByRole('button', { name: /Lugar de Prueba 1, Jalpan de Serra, a 1,200 metros/ })).toBeVisible();
     await expect(page.getByRole('search')).toBeVisible();
     // La portada es una selección curada: la lista completa de lugares vive en /explorar.
     await expect(page.locator('#lugares')).toHaveCount(0);
@@ -14,13 +16,46 @@ test.describe('Inicio', () => {
     await expect(whatsapp).toHaveAttribute('href', /^https:\/\/wa\.me\/524412960445\?text=/);
   });
 
-  test('Explorar lista todos los lugares con sus actividades', async ({ page }) => {
+  test('perfil en móvil: un toque elige el lugar más cercano y la lista de 44 px también', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await mockApi(page);
+    await page.goto('/');
+    const figure = page.locator('figure');
+    await figure.scrollIntoViewIfNeeded();
+    const point = (name: string) => page.getByRole('button', { name: new RegExp(`^${name}, Jalpan de Serra`) });
+    const center = async (name: string) => {
+      const box = await point(name).locator('circle').boundingBox();
+      return { x: box!.x + box!.width / 2, y: box!.y + box!.height / 2 };
+    };
+
+    // Un clic a 20 px del punto lo elige sin abrir la ficha.
+    const p2 = await center('Lugar de Prueba 2');
+    await page.mouse.click(p2.x, p2.y - 20);
+    await expect(point('Lugar de Prueba 2')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page).toHaveURL(/\/$/);
+
+    // La lista elige el lugar con botones de al menos 44 px.
+    const rail = page.getByRole('group', { name: 'Lugares del perfil, de oeste a este' });
+    const chip = rail.getByRole('button', { name: /Lugar de Prueba 3/ });
+    expect((await chip.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    await chip.click();
+    await expect(chip).toHaveAttribute('aria-pressed', 'true');
+    await expect(point('Lugar de Prueba 3')).toHaveAttribute('aria-pressed', 'true');
+
+    // Un segundo toque sobre el lugar elegido abre su ficha.
+    const p3 = await center('Lugar de Prueba 3');
+    await page.mouse.click(p3.x, p3.y);
+    await expect(page).toHaveURL(/\/lugares\/lugar-3$/);
+  });
+
+  test('Explorar lista todos los lugares con su altitud', async ({ page }) => {
     await mockApi(page);
     await page.goto('/explorar');
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Sierra Gorda');
     const cards = page.locator('#lugares article');
     await expect(cards).toHaveCount(3);
-    await expect(cards.first().getByRole('list', { name: 'Actividades' })).toContainText('Senderismo');
+    await expect(cards.first()).toContainText('1,200 m');
+    await expect(cards.first().getByRole('link', { name: 'Lugar de Prueba 1' })).toHaveAttribute('href', '/lugares/lugar-1');
   });
 
   test('al buscar desde la portada aparecen los resultados', async ({ page }) => {
@@ -38,6 +73,26 @@ test.describe('Inicio', () => {
     await page.getByLabel('Buscar lugar').fill('cascada');
     await page.getByRole('button', { name: 'Buscar', exact: true }).click();
     await request;
+  });
+
+  test('"Ver todos los lugares" lleva la búsqueda de la portada a Explorar', async ({ page }) => {
+    await mockApi(page);
+    await page.goto('/');
+    await page.getByLabel('Buscar lugar').fill('cascada');
+    await page.getByRole('button', { name: 'Buscar', exact: true }).click();
+    const request = page.waitForRequest((req) => new URL(req.url()).pathname.endsWith('/catalogo/lugares') && req.url().includes('q=cascada'));
+    await page.locator('#lugares').getByRole('link', { name: 'Ver todos los lugares' }).click();
+    await expect(page).toHaveURL(/\/explorar\?q=cascada$/);
+    await request;
+    await expect(page.getByLabel('Buscar lugar')).toHaveValue('cascada');
+  });
+
+  test('Explorar no carga la portada: sin hero, sin mosaico y sin prestadores', async ({ page }) => {
+    await mockApi(page);
+    await page.goto('/explorar');
+    await expect(page.locator('#lugares article').first()).toBeVisible();
+    await expect(page.locator('#prestadores')).toHaveCount(0);
+    await expect(page.locator('#home-destinations')).toHaveCount(0);
   });
 
   test('paginación con "Cargar más"', async ({ page }) => {
@@ -68,7 +123,8 @@ test.describe('Favoritos anónimos', () => {
     const favorite = page.locator('article').filter({ hasText: 'Cascada E2E' });
     await expect(favorite).toBeVisible();
 
-    await favorite.getByRole('link', { name: /Ver lugar/ }).click();
+    // El nombre del lugar es el enlace de la tarjeta.
+    await favorite.getByRole('link', { name: 'Cascada E2E' }).click();
     const detailButton = page.getByRole('button', { name: 'Quitar de favoritos' });
     await expect(detailButton).toHaveAttribute('aria-pressed', 'true');
     await detailButton.click();

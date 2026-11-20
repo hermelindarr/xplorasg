@@ -39,7 +39,7 @@ const LegalLayout = ({ eyebrow, title, summary, children }: { eyebrow: string; t
   return (
     <section className="legal-doc mx-auto max-w-7xl px-5 py-12 lg:px-8 lg:py-16">
       <header className="rounded-[1.75rem] bg-brand-blue px-6 py-10 text-white sm:px-10 lg:px-14 lg:py-14">
-        <p className="flex items-center gap-3 text-[12px] font-medium uppercase tracking-[0.2em] text-white/75">
+        <p className="flex items-center gap-3 text-sm text-white/75">
           <ShieldIcon className="size-4" />
           {eyebrow}
         </p>
@@ -63,9 +63,9 @@ const LegalLayout = ({ eyebrow, title, summary, children }: { eyebrow: string; t
       </header>
 
       {summary && (
-        <aside className="mt-8 rounded-2xl border border-brand-green/25 bg-[#EEF4EF] px-6 py-6 sm:px-8" aria-label={m.summaryTitle}>
-          <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-brand-green">{m.summaryTitle}</p>
-          <div className="mt-3 text-[15px] leading-7 text-brand-blue/85 [&_a]:font-medium [&_a]:text-brand-green [&_a]:underline [&_a]:underline-offset-4">{summary}</div>
+        <aside className="mt-8 rounded-2xl border border-brand-green/25 bg-brand-light px-6 py-6 sm:px-8" aria-label={m.summaryTitle}>
+          <p className="text-sm font-semibold text-brand-green">{m.summaryTitle}</p>
+          <div className="mt-3 text-base leading-7 text-brand-blue/85 [&_a]:font-medium [&_a]:text-brand-green [&_a]:underline [&_a]:underline-offset-4">{summary}</div>
         </aside>
       )}
 
@@ -76,7 +76,7 @@ const LegalLayout = ({ eyebrow, title, summary, children }: { eyebrow: string; t
             <ol className="mt-4 rounded-2xl bg-white p-2 ring-1 ring-brand-blue/8">
               {toc.map(({ id, label }) => (
                 <li key={id}>
-                  <a href={`#${id}`} className="block rounded-xl px-3 py-2 text-[13px] leading-5 text-brand-blue/75 transition-colors duration-300 hover:bg-brand-light hover:text-brand-green">
+                  <a href={`#${id}`} className="block rounded-xl px-3 py-2 text-label leading-5 text-brand-blue/75 transition-colors duration-300 hover:bg-brand-light hover:text-brand-green">
                     {label}
                   </a>
                 </li>
@@ -87,7 +87,7 @@ const LegalLayout = ({ eyebrow, title, summary, children }: { eyebrow: string; t
 
         <div
           ref={contentRef}
-          className="grid max-w-[72ch] gap-4 text-[15px] leading-7 text-brand-blue/80 sm:text-base sm:leading-8 lg:col-span-8 lg:col-start-5 [&_a]:font-medium [&_a]:text-brand-green [&_a]:underline [&_a]:decoration-brand-green/30 [&_a]:underline-offset-4 [&_h2]:mt-8 [&_h2]:scroll-mt-28 [&_h2]:border-t [&_h2]:border-brand-sand [&_h2]:pt-8 [&_h2]:font-display [&_h2]:text-[1.45rem] [&_h2]:leading-tight [&_h2]:text-brand-blue [&_h3]:mt-2 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-brand-blue [&_li]:relative [&_li]:pl-6 [&_li]:before:absolute [&_li]:before:left-0 [&_li]:before:top-[0.8em] [&_li]:before:size-1.5 [&_li]:before:rounded-full [&_li]:before:bg-brand-gold [&_ol]:grid [&_ol]:gap-2 [&_strong]:font-semibold [&_strong]:text-brand-blue [&_ul]:grid [&_ul]:gap-2"
+          className="grid max-w-[72ch] gap-4 text-base leading-7 text-brand-blue/80 sm:leading-8 lg:col-span-8 lg:col-start-5 [&_a]:font-medium [&_a]:text-brand-green [&_a]:underline [&_a]:decoration-brand-green/30 [&_a]:underline-offset-4 [&_h2]:mt-8 [&_h2]:scroll-mt-28 [&_h2]:border-t [&_h2]:border-brand-sand [&_h2]:pt-8 [&_h2]:font-display [&_h2]:text-[1.45rem] [&_h2]:leading-tight [&_h2]:text-brand-blue [&_h3]:mt-2 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-brand-blue [&_li]:relative [&_li]:pl-6 [&_li]:before:absolute [&_li]:before:left-0 [&_li]:before:top-[0.8em] [&_li]:before:size-1.5 [&_li]:before:rounded-full [&_li]:before:bg-brand-gold [&_ol]:grid [&_ol]:gap-2 [&_strong]:font-semibold [&_strong]:text-brand-blue [&_ul]:grid [&_ul]:gap-2"
         >
           {children}
         </div>

@@ -94,7 +94,7 @@ test.describe('Sobre nosotros y pie de página', () => {
     await page.goto('/nosotros');
     await expect(page.getByRole('heading', { level: 1, name: 'Conoce al equipo detrás de XploraSG' })).toBeVisible();
     await expect(page.getByRole('img', { name: /equipo de XploraSG/ })).toBeVisible();
-    await expect(page.getByRole('link', { name: /xplora\.sg8@gmail\.com/ }).first()).toHaveAttribute('href', 'mailto:xplora.sg8@gmail.com');
+    await expect(page.getByRole('link', { name: /turismointeligente\.sg@gmail\.com/ }).first()).toHaveAttribute('href', 'mailto:turismointeligente.sg@gmail.com');
   });
 
   test('el pie de página enlaza las redes oficiales y los documentos legales', async ({ page }) => {

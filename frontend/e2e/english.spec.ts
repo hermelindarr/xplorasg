@@ -16,7 +16,7 @@ test.describe('English version', () => {
     await expect(whatsapp).toHaveAttribute('href', /text=Hello/);
     // La lista completa de lugares está en /explorar.
     await page.goto('/explorar');
-    await expect(page.locator('#lugares article').first().getByText('Nature')).toBeVisible();
+    await expect(page.locator('#lugares').getByRole('button', { name: 'Nature' })).toBeVisible();
   });
 
   test('the language button switches to Spanish and remembers it', async ({ page }) => {

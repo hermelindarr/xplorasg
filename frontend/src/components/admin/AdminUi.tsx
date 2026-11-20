@@ -48,7 +48,7 @@ export const PageHeader = ({ eyebrow, title, meta, actions, before }: { eyebrow?
 
 /** Enlace de regreso discreto sobre el encabezado. */
 export const BackLink = ({ to, children }: { to: string; children: ReactNode }) => (
-  <Link to={to} className="mb-7 flex min-h-8 w-fit items-center gap-1.5 text-[13px] text-brand-blue/70 transition-colors hover:text-brand-blue">
+  <Link to={to} className="mb-7 flex min-h-8 w-fit items-center gap-1.5 text-label text-brand-blue/70 transition-colors hover:text-brand-blue">
     <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
     {children}
   </Link>
@@ -231,7 +231,7 @@ export const BarChart = ({
                   onBlur={() => setActive(null)}
                   className={`relative grid gap-1 rounded-md outline-offset-4 transition-opacity duration-200 sm:grid-cols-[minmax(5rem,34%)_1fr] sm:items-center sm:gap-4 ${dimmed ? 'opacity-50' : ''}`}
                 >
-                  <span className="min-w-0 truncate text-[13px] text-brand-blue/80" title={row.label}>
+                  <span className="min-w-0 truncate text-label text-brand-blue/80" title={row.label}>
                     {row.to ? (
                       <Link to={row.to} tabIndex={-1} className="inline-block py-1 underline-offset-2 hover:text-brand-green hover:underline">{row.label}</Link>
                     ) : row.label}
@@ -320,7 +320,7 @@ export const DataTable = ({ id, caption, columns, rows }: { id?: string; caption
 export const MeterTrack = ({ fill, target, reached, targetLabel }: { fill: number; target?: number; reached: boolean; targetLabel?: string }) => (
   <div className={`relative ${targetLabel ? 'pb-5' : ''}`} aria-hidden="true">
     <div className={`h-1.5 rounded-[4px] ${reached ? 'bg-brand-green/12' : 'bg-brand-gold/15'}`}>
-      <div className={`h-1.5 rounded-[4px] transition-[width] duration-700 ${reached ? 'bg-[#2E7D4E]' : 'bg-brand-gold'}`} style={{ width: `${Math.max(0, Math.min(1, fill)) * 100}%` }} />
+      <div className={`h-1.5 rounded-[4px] transition-[width] duration-700 ${reached ? 'bg-brand-green' : 'bg-brand-gold'}`} style={{ width: `${Math.max(0, Math.min(1, fill)) * 100}%` }} />
     </div>
     {typeof target === 'number' && (
       <>
@@ -374,7 +374,7 @@ export const GoalMeter = ({
   return (
     <div className="flex min-w-0 flex-col bg-white p-5" title={`${label}: ${hasValue ? `${value}${suffix}` : 'sin datos'} · meta ${goal}${suffix}`}>
       <dt>
-        <span className="block text-[13px] font-medium text-brand-blue/80">{label}</span>
+        <span className="block text-label font-medium text-brand-blue/80">{label}</span>
         {hint && <span className="block text-xs leading-4 text-brand-blue/70">{hint}</span>}
       </dt>
       <dd className="flex min-w-0 flex-1 flex-col">

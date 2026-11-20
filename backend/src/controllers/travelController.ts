@@ -1,9 +1,12 @@
 import { Request, Response } from 'express';
 import {
+  getElevations,
   getRoute,
   getWeather,
+  MAX_ELEVATION_POINTS,
   parseCoordinate,
   parsePoint,
+  parsePointList,
   parseRouteProfile,
   TravelServiceError,
 } from '../services/travelService';
@@ -49,3 +52,19 @@ export const calculateRoute = async (req: Request, res: Response): Promise<void>
   }
 };
 
+
+/** GET /api/viaje/altitudes?puntos=lat,lon|lat,lon → { data: [metros | null, ...] } en el mismo orden. */
+export const elevations = async (req: Request, res: Response): Promise<void> => {
+  const points = parsePointList(req.query.puntos);
+  if (!points) {
+    res.status(400).json({ error: `Envía entre 1 y ${MAX_ELEVATION_POINTS} coordenadas válidas como "lat,lon|lat,lon".` });
+    return;
+  }
+  try {
+    // La altitud no cambia: el navegador puede guardarla un día.
+    res.set('Cache-Control', 'public, max-age=86400');
+    res.status(200).json({ data: await getElevations(points) });
+  } catch (error) {
+    respondWithError(res, error, 'No fue posible consultar la altitud.');
+  }
+};

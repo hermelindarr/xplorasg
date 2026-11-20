@@ -17,7 +17,11 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: isRemote ? { rejectUnauthorized: false } : undefined,
   // En Vercel cada función abre su propio grupo de conexiones: se mantiene pequeño.
-  max: process.env.VERCEL ? 3 : 10,
+  // El pooler de Supabase en modo sesión admite pocos clientes en total, así que en Vercel
+  // las conexiones inactivas se sueltan pronto para no agotar el cupo entre instancias.
+  max: process.env.VERCEL ? 2 : 10,
+  idleTimeoutMillis: process.env.VERCEL ? 5_000 : 30_000,
+  connectionTimeoutMillis: 10_000,
 });
 
 export const testConnection = async () => {

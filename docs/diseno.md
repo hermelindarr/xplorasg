@@ -11,10 +11,29 @@ Basado en la hoja de marca oficial (`Iconografia.pdf`, `png Logo.pdf`). Objetivo
 - **Ilustración**: `<SierraLandscape />` (sierra en capas + ruta con nodos + misión + agaves). Usar como cierre de secciones/hero, con moderación.
 
 ## Utilidades (src/index.css)
-- `surface` tarjeta blanca (radio 24px, borde 1px, sombra suave) · `bento` similar · `lift` hover que eleva.
-- `btn` + `btn-primary` (azul → verde al hover) · `btn-accent` (verde) · `btn-secondary` (blanco con borde) · `btn-ghost`.
-- `chip` etiqueta suave · `eyebrow` (mayúsculas verdes con línea dorada) · `section-title` (titular de sección fluido) · `field` (inputs) · `bg-topo` (curvas de nivel sutiles para fondos).
-- `img-zoom` dentro de un `.group` para zoom suave de fotos.
+- `btn` + `btn-primary` · `btn-accent` · `btn-secondary` · `btn-ghost`.
+- `eyebrow` (antetítulo en mayúsculas con línea) · `section-title` (titular de sección fluido) · `field` (inputs) · `meta` (metadato de tarjeta) · `label-quiet` (rótulo de dato) · `font-display` (familia de titulares) · `accent` (acento editorial).
+- `img-zoom` dentro de un `.group` para zoom suave de fotos · `reveal` (aparición al entrar en pantalla; se desactiva sola dentro de `.snap-rail`) · `snap-rail` (carril horizontal con scroll-snap).
+- Retiradas en la Fase 2 por no tener usos: `bento`, `surface`, `chip`, `bg-topo`, `rule`, `legend-dot`.
+
+## Sistema visual (Fase 2)
+**Color** (tokens en `@theme`): verde `brand-green` #2F5D3E · terracota `brand-gold` #9E552F · crema `brand-paper` #FAF7F1 · tinta `brand-blue` #1F2C24. Las escalas `clay-*` (errores, avisos de cierre) y `ochre-*` (modo sin conexión, advertencias) se conservan.
+
+**Tipografía por roles**: los componentes usan el rol, no la familia.
+- `--font-sans` (Poppins 400/500/600/700): todo el contenido y la interfaz.
+- `--font-heading`: h1, h2, `section-title`, `font-display`. Hoy apunta a Fraunces; cambiar esta línea a `var(--font-sans)` pasa todos los titulares a Poppins.
+- `--font-accent` (Fraunces 400 cursiva): sólo la utilidad `accent`.
+- Fraunces cargada: 400, 500 y 400 cursiva.
+
+**Cursivas**: no hay cursivas automáticas. El único camino es `<Accented text accent>` (`components/ui/Accented.tsx`); el fragmento se elige a mano por idioma en una clave `…Accent` junto al título. El eslogan de la portada y del pie usa `sloganAccent` (`i18n/common.ts`); `stacked` lo pone en su propia línea y `accentClassName` cambia el color sobre fondos oscuros.
+
+**Piezas compartidas** (`components/ui`):
+- `SectionHeading` (`size="lg"` secciones de página, `size="md"` bloques de ficha; `eyebrow` opcional).
+- `PageHero` (encabezado de página interior; `eyebrow` opcional).
+- `Card`: `CardFrame` (marco blanco con elevación y foco), `CardMedia` (foto + velo `strong`/`soft` + etiqueta + contenido encima), `CardBadge`, `CardPlace`. Las usan `PlaceCard`, `ServiceCard` y el mosaico de la portada.
+- `Photo` (foto que llena su contenedor, con nombre de respaldo), `TextLink` (enlace subrayado con flecha), `RelatedRail`.
+
+**Catálogo** (`components/catalog`, `hooks/usePlaceSearch.ts`, `i18n/catalog.ts`): `CatalogSearchBar` y `PlaceResults` son comunes a la portada (`pages/HomePage.tsx`) y a Explorar (`pages/ExplorePage.tsx`). Explorar acepta `?q=&municipio=&categoria=` como filtros iniciales.
 
 ## Principios de layout
 - Contenedor `mx-auto max-w-7xl px-5 lg:px-8`; secciones `py-16 lg:py-24`.
@@ -47,3 +66,13 @@ Referencia: plataformas de turismo premium y composición editorial tipo Pintere
 - **Chatboot** (asistente): único nombre en todo el sitio. Ícono `BirdMark` (guacamaya a una línea, 1.5 px). Voz manos libres opcional con la Web Speech API (`useVoice`: dictado + lectura en voz alta); si el navegador no la soporta, los botones no aparecen.
 - **Clima de montaña** (`WeatherCard`): temperatura en serif, sensación térmica, viento, humedad e índice UV (escala OMS) y la posición del lugar (latitud, longitud y altitud en m.s.n.m.; la altitud sale de la ficha o del modelo de elevación de Open-Meteo).
 - **Guías descargables** (`public/guias`): se generan con `scripts/guias` a partir de las fichas aprobadas; nunca con datos inventados.
+
+## v4 · La sierra en corte (vigente desde nov-2026)
+Misma paleta v3. Cambia cómo se usa y qué se dice.
+- **Idea central**: lo que distingue a la Sierra Gorda es el desnivel (≈500 m a ≈2,700 m). La portada abre con el **corte real del terreno** de Peñamiller a Landa (`components/home/sierraTerrain.ts`, datos del modelo de elevación de Open-Meteo) y cada lugar del catálogo como un punto en su longitud y altitud (`HomeHero.tsx`). Tocar/enfocar un punto muestra el lugar.
+- **La altitud es dato de primera clase**: tarjetas de lugar, mosaico de la portada y ficha (cifra grande en la cabecera). Fuente: `altitud` de la ficha o, si falta, `GET /api/viaje/altitudes?puntos=lat,lon|…` (caché en memoria en el servidor y en `localStorage` en el navegador; `services/elevationApi.ts`).
+- **Se retiraron los tics de plantilla**: antetítulos en mayúsculas espaciadas (la utilidad `eyebrow` ahora es un rótulo en minúsculas y `SectionHeading`/`PageHero` ya no lo pintan), la palabra en cursiva de cada titular (`Accented` muestra el texto parejo), numeración 01/02/03 en cosas que no son pasos, flechas en todos los enlaces (`TextLink` sin flecha por defecto), etiquetas de categoría en mayúsculas sobre las fotos y bloques de cifras de relleno.
+- **Tarjetas**: foto limpia arriba (sin velo ni etiquetas encima), texto debajo; el nombre es el enlace y se estira sobre la tarjeta. Sin botón-flecha extra.
+- **Contenido**: no mostrar lo que no ayuda a decidir — precios tipo "Consultar tarifa vigente" (`informativePrice` en `utils/text.ts`), coordenadas en grados, URL crudas (se muestran como enlace con el dominio), textos repetidos en la misma pantalla. Nunca truncar horario o costo con "…".
+- **Clima**: lecturas actuales + pronóstico de 3 días (decidir cuándo ir), sin bloque de coordenadas.
+- **Movimiento**: un solo momento orquestado — el terreno se dibuja de oeste a este al cargar (`.terrain-reveal`, desactivado con "reducir movimiento").

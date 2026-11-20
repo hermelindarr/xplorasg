@@ -131,12 +131,27 @@ export const BirdMark = ({ className = 'size-8', title }: { className?: string; 
 );
 
 /** Icono y color según la categoría (los nombres vienen en español desde la base). */
+
+// ---- Flora de la Sierra Gorda (misma línea fina redondeada) ----
+/** Pino de los bosques altos (Pinal de Amoles, San Joaquín). Categoría Naturaleza. */
+export const PineIcon = (p: IconProps) => (
+  <Svg strokeWidth={1.5} {...p}><path d="M12 3 7.5 9.5h2.8L6 15.5h3.5L5.5 20h13l-4-4.5H18l-4.3-6h2.8Z" /><path d="M12 20v1.5" /></Svg>
+);
+/** Agave (maguey): mezcal, pulque y cocina serrana. Categoría Gastronomía. */
+export const AgaveIcon = (p: IconProps) => (
+  <Svg strokeWidth={1.5} {...p}><path d="M12 20.5V5" /><path d="M12 20.5c-1-5-3.6-8.6-7.5-10.5 1 4.6 3.6 8.2 7.5 10.5Z" /><path d="M12 20.5c1-5 3.6-8.6 7.5-10.5-1 4.6-3.6 8.2-7.5 10.5Z" /><path d="M12 20.5C9.8 17.6 6.2 16 2.5 16.5c2.2 2.6 5.8 4 9.5 4ZM12 20.5c2.2-2.9 5.8-4.5 9.5-4-2.2 2.6-5.8 4-9.5 4Z" /></Svg>
+);
+/** Biznaga del semidesierto (Peñamiller). Para estados vacíos y sin resultados. */
+export const BiznagaIcon = (p: IconProps) => (
+  <Svg strokeWidth={1.5} {...p}><path d="M6 20.5c-1.2-2-1.5-4.4-1-6.7C5.8 9.6 8.6 7 12 7s6.2 2.6 7 6.8c.5 2.3.2 4.7-1 6.7Z" /><path d="M12 7v13.5M8.6 8.2c-.9 3.6-.9 8.2.4 12.3M15.4 8.2c.9 3.6.9 8.2-.4 12.3" /><path d="M10.5 5.2c.4-1.2 1-1.9 1.5-1.9s1.1.7 1.5 1.9" /><path d="M4 20.5h16" /></Svg>
+);
+
 export const categoryVisual = (categoria: string | null | undefined) => {
   const name = (categoria ?? '').toLowerCase();
-  if (name.includes('natura')) return { Icon: NatureIcon, tone: 'text-brand-green', bg: 'bg-brand-green/10', solid: 'bg-brand-green' };
+  if (name.includes('natura')) return { Icon: PineIcon, tone: 'text-brand-green', bg: 'bg-brand-green/10', solid: 'bg-brand-green' };
   if (name.includes('cultura') || name.includes('arqueo')) return { Icon: CultureIcon, tone: 'text-brand-gold', bg: 'bg-brand-gold/12', solid: 'bg-brand-gold' };
   if (name.includes('aventura')) return { Icon: AdventureIcon, tone: 'text-brand-teal', bg: 'bg-brand-teal/10', solid: 'bg-brand-teal' };
-  if (name.includes('gastro') || name.includes('comida') || name.includes('aliment')) return { Icon: FoodIcon, tone: 'text-brand-gold', bg: 'bg-brand-gold/12', solid: 'bg-brand-gold' };
+  if (name.includes('gastro') || name.includes('comida') || name.includes('aliment')) return { Icon: AgaveIcon, tone: 'text-brand-gold', bg: 'bg-brand-gold/12', solid: 'bg-brand-gold' };
   if (name.includes('hosped')) return { Icon: LodgingIcon, tone: 'text-brand-teal', bg: 'bg-brand-teal/10', solid: 'bg-brand-teal' };
   if (name.includes('comunit')) return { Icon: CommunityIcon, tone: 'text-brand-green', bg: 'bg-brand-green/10', solid: 'bg-brand-green' };
   return { Icon: CompassIcon, tone: 'text-brand-blue', bg: 'bg-brand-blue/8', solid: 'bg-brand-blue' };

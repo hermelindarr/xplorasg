@@ -17,8 +17,9 @@ interface FavoriteButtonProps {
 }
 
 const SIZES = {
-  sm: 'size-9',
-  md: 'size-10',
+  // En pantallas táctiles crecen a 44 px.
+  sm: 'size-9 pointer-coarse:size-11',
+  md: 'size-10 pointer-coarse:size-11',
   lg: 'size-12',
 };
 

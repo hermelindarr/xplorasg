@@ -16,6 +16,13 @@
      ochre-*  ocre     (avisos, sin conexión)            · 900 sobre 50 = 9.9:1
    Los nombres de los tokens se conservan para no romper componentes.
    ========================================================================== */
+/* Fuentes de respaldo calibradas: mientras Fraunces y Poppins descargan, el texto se pinta con Georgia/Times/Arial
+   escaladas a las mismas proporciones (medidas en Chromium), así el cambio de fuente no mueve la página (CLS).
+   size-adjust = ancho real / ancho del respaldo; ascent/descent = métricas reales ÷ size-adjust. */
+@font-face { font-family: 'Fraunces Fallback'; src: local('Georgia'); size-adjust: 104.33%; ascent-override: 93.93%; descent-override: 24.92%; line-gap-override: 0%; }
+@font-face { font-family: 'Fraunces Fallback TNR'; src: local('Times New Roman'); size-adjust: 115.4%; ascent-override: 84.92%; descent-override: 22.53%; line-gap-override: 0%; }
+@font-face { font-family: 'Poppins Fallback'; src: local('Arial'); size-adjust: 109.38%; ascent-override: 96%; descent-override: 32%; line-gap-override: 0%; }
+
 @theme {
   --color-brand-blue: #1F2C24;
   --color-brand-green: #2F5D3E;
@@ -24,6 +31,8 @@
   --color-brand-light: #F3EDE2;
   --color-brand-sand: #E6DCCB;
   --color-brand-paper: #FAF7F1;
+  /* Bosque nocturno: el tono más profundo de la tinta, sólo para el velo oscuro sobre fotos con texto encima. */
+  --color-brand-night: #0F1A13;
 
   /* Estados: arcilla (error) y ocre (aviso) */
   --color-clay-50: #FBF1EC;
@@ -47,8 +56,23 @@
   --color-ochre-900: #503915;
   --color-ochre-950: #35260F;
 
-  --font-sans: 'Poppins', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-serif: 'Fraunces', 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Poppins', 'Poppins Fallback', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-serif: 'Fraunces', 'Fraunces Fallback', 'Fraunces Fallback TNR', 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+  /* Roles tipográficos. Los componentes usan el rol, no la familia:
+     --font-heading  titulares (h1, h2, .section-title, .font-display)
+     --font-accent   acento editorial en cursiva (.accent, componente <Accented>)
+     Para pasar los titulares a Poppins basta con cambiar --font-heading a var(--font-sans). */
+  --font-heading: var(--font-serif);
+
+  /* Escala de texto por roles (además de text-xs/sm/base/lg de Tailwind):
+     label  13 px · municipio, altitud en tarjetas, rótulos de datos y metadatos
+     title  1.35 rem · nombre de lugar o servicio en tarjetas (Fraunces)
+     El texto de lectura usa text-base (16 px); las descripciones de tarjeta, text-sm (14 px). */
+  --text-label: 0.8125rem;
+  --text-label--line-height: 1.5;
+  --text-title: 1.35rem;
+  --text-title--line-height: 1.25;
+  --font-accent: var(--font-serif);
 
   /* Sombras casi imperceptibles: el diseño se apoya en espacio y bordes finos, no en elevación */
   --shadow-soft: 0 1px 2px rgb(31 44 36 / 0.04), 0 6px 18px -12px rgb(31 44 36 / 0.10);
@@ -56,15 +80,6 @@
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Tarjeta Bento: borde fino de 1px, fondo limpio y sombra suave */
-@utility bento {
-  border-radius: 1rem;
-  border: 1px solid color-mix(in oklab, var(--color-brand-blue) 10%, transparent);
-  background-color: #fff;
-  box-shadow: var(--shadow-soft);
-}
-
-/* Campo de formulario de marca */
 @utility field {
   min-height: 3rem;
   width: 100%;
@@ -77,7 +92,7 @@
   outline: none;
   transition: all 300ms var(--ease-out-soft);
   &::placeholder {
-    color: color-mix(in oklab, var(--color-brand-blue) 40%, transparent);
+    color: color-mix(in oklab, var(--color-brand-blue) 72%, transparent);
   }
   &:hover {
     border-color: color-mix(in oklab, var(--color-brand-blue) 28%, transparent);
@@ -88,17 +103,16 @@
   }
 }
 
-/* Etiqueta pequeña en mayúsculas (eyebrow), con la línea dorada de la marca */
+/* Rótulo de contexto: minúsculas naturales, sin tracking ni línea (las mayúsculas espaciadas
+   sobre cada sección hacían que el sitio pareciera plantilla). Usar sólo si aporta información. */
 @utility eyebrow {
   display: inline-flex;
   align-items: center;
-  gap: 0.6rem;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   font-weight: 500;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--color-brand-gold);
+  color: var(--color-brand-green);
   &::before {
+    display: none;
     content: '';
     width: 1.5rem;
     height: 1px;
@@ -106,15 +120,6 @@
   }
 }
 
-/* Superficie estándar: tarjeta blanca con borde de 1px y sombra suave */
-@utility surface {
-  border-radius: 1rem;
-  border: 1px solid color-mix(in oklab, var(--color-brand-blue) 8%, transparent);
-  background-color: #fff;
-  box-shadow: var(--shadow-soft);
-}
-
-/* Botones de marca */
 @utility btn {
   display: inline-flex;
   align-items: center;
@@ -150,28 +155,9 @@
   &:hover:not(:disabled) { background: color-mix(in oklab, var(--color-brand-blue) 6%, transparent); }
 }
 
-/* Chip / etiqueta */
-@utility chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  border-radius: 999px;
-  padding: 0.3rem 0.7rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-  background: color-mix(in oklab, var(--color-brand-light) 75%, #fff);
-  color: color-mix(in oklab, var(--color-brand-blue) 80%, transparent);
-  border: 1px solid color-mix(in oklab, var(--color-brand-blue) 7%, transparent);
-}
-
-/* Antes: curvas de nivel. En v3 no hay texturas decorativas: se conserva el nombre como no-op. */
-@utility bg-topo {
-  background-image: none;
-}
-
 /* Título de sección */
 @utility section-title {
-  font-family: var(--font-serif);
+  font-family: var(--font-heading);
   font-size: clamp(2rem, 1.3rem + 2.2vw, 3.25rem);
   line-height: 1.05;
   font-weight: 500;
@@ -213,11 +199,22 @@ body {
   }
 }
 
+@layer base {
+  p, li, dd, figcaption { text-wrap: pretty; }
+  /* Al saltar a un encabezado (enlaces internos, scrollIntoView) no queda debajo del encabezado fijo. */
+  h1, h2, h3, [id] { scroll-margin-top: 5.5rem; }
+}
+
 button,
 a,
 select {
   -webkit-tap-highlight-color: transparent;
 }
+
+/* Superficies del navegador con la paleta: selección de texto, cursor de escritura y controles nativos
+   (casillas, radios, barras de rango) en verde bosque en lugar del azul del sistema. */
+::selection { background: color-mix(in oklab, var(--color-brand-green) 22%, transparent); color: var(--color-brand-blue); }
+:root { accent-color: var(--color-brand-green); caret-color: var(--color-brand-green); }
 
 :focus-visible {
   outline: 2px solid var(--color-brand-green);
@@ -231,7 +228,7 @@ h1, h2, h3 {
 /* Titulares editoriales en serif (Fraunces). Los textos y la interfaz siguen en Poppins. */
 @layer base {
   h1, h2 {
-    font-family: var(--font-serif);
+    font-family: var(--font-heading);
     font-weight: 500;
     letter-spacing: -0.02em;
     font-optical-sizing: auto;
@@ -252,8 +249,14 @@ h1, h2, h3 {
   font-weight: 500;
   color: color-mix(in oklab, var(--color-brand-blue) 70%, transparent);
 }
-@utility font-display { font-family: var(--font-serif); font-optical-sizing: auto; }
-@utility rule { height: 1px; background: var(--color-brand-sand); }
+@utility font-display { font-family: var(--font-heading); font-optical-sizing: auto; }
+/* Acento editorial: fragmento de un titular en cursiva serif y verde. Sólo lo aplica <Accented>. */
+@utility accent {
+  font-family: var(--font-accent);
+  font-style: normal;
+  font-weight: 400;
+  color: var(--color-brand-green);
+}
 
 ::selection {
   background: color-mix(in oklab, var(--color-brand-gold) 35%, transparent);
@@ -280,6 +283,14 @@ h1, h2, h3 {
 .xplora-marker-wrap {
   background: transparent;
   border: 0;
+}
+/* En pantallas táctiles, área de toque invisible de 44 px alrededor de cada marcador (el pin dibujado mide 28–40 px). */
+@media (pointer: coarse) {
+  .xplora-marker-wrap::before {
+    content: '';
+    position: absolute;
+    inset: calc((100% - 44px) / 2);
+  }
 }
 
 .xplora-marker {
@@ -330,14 +341,6 @@ h1, h2, h3 {
   background: var(--color-brand-blue);
 }
 
-.legend-dot {
-  display: inline-block;
-  width: 9px;
-  height: 9px;
-  margin-right: 5px;
-  border-radius: 999px;
-}
-
 @keyframes xplora-fade-up {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: none; }
@@ -374,34 +377,29 @@ h1, h2, h3 {
 
 /* Imagen con zoom suave al pasar el cursor por la tarjeta */
 .group:hover .img-zoom { transform: scale(1.06); }
-.img-zoom { transition: transform 900ms var(--ease-out-soft); }
+/* Se declaran juntas la transformación del zoom y la opacidad del fundido de carga de <Photo>:
+   antes el zoom pisaba la transición y las fotos con zoom aparecían de golpe. */
+.img-zoom { transition: transform 900ms var(--ease-out-soft), opacity 500ms ease-out; }
 
+/* ---------- Reducir movimiento ----------
+   Antes se apagaban todas las transiciones y animaciones (0.01 ms), y con ellas los fundidos que avisan que algo
+   cambió. Ahora se quita sólo el desplazamiento (deslizar, elevar, acercar, desplazamiento suave) y se conservan
+   los cambios de opacidad y color que comunican estado: foto cargada, asistente abierto, botón activo. */
+@keyframes xplora-fade-in { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  *, *::before, *::after {
-    scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-  }
+  html, * { scroll-behavior: auto !important; }
+  /* Entradas: fundido corto en lugar de subir. */
+  .animate-fade-up, .assistant-panel:not([hidden]) { animation-name: xplora-fade-in; animation-duration: 200ms; }
+  /* Sin elevaciones ni escalas al pasar el cursor o al presionar (utilidades translate/scale de Tailwind). */
+  *:hover, *:active, *:focus-visible { translate: none !important; scale: none !important; }
+  .img-zoom { transition: opacity 500ms ease-out; }
+  .group:hover .img-zoom { transform: none; }
 }
 
 .leaflet-container a {
   color: var(--color-brand-green);
 }
 
-/* Acercamiento lento de la foto activa del hero (Ken Burns). Se omite con "reducir movimiento". */
-@keyframes xplora-kenburns { from { transform: scale(1.02); } to { transform: scale(1.1); } }
-.hero-kenburns { animation: xplora-kenburns 9s var(--ease-out-soft) both; }
-@media (prefers-reduced-motion: reduce) { .hero-kenburns { animation: none; } }
-
-/* Aparición suave al entrar en pantalla (sólo navegadores con scroll-driven animations). */
-@keyframes xplora-reveal { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .reveal { animation: xplora-reveal linear both; animation-timeline: view(); animation-range: entry 0% entry 60%; }
-  }
-}
 
 /* Impresión de documentos legales: sólo el documento, sin navegación ni botones. */
 @media print {
@@ -412,3 +410,9 @@ h1, h2, h3 {
   .legal-doc header * { color: #1F2C24 !important; }
   .legal-noprint { display: none !important; }
 }
+
+/* Portada: el corte de la sierra se dibuja de oeste a este una sola vez al cargar (el único momento coreografiado).
+   Con "reducir movimiento" el terreno aparece con un fundido, sin barrido. */
+@keyframes terrain-reveal { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+.terrain-reveal { animation: terrain-reveal 1.6s var(--ease-out-soft) both; }
+@media (prefers-reduced-motion: reduce) { .terrain-reveal { animation: xplora-fade-in 300ms ease-out both; } }

@@ -26,7 +26,7 @@ const asSearch = (value: unknown): string | null => {
   return search ? search.slice(0, 120) : null;
 };
 
-const placeReviewQuery = `
+export const placeReviewQuery = `
   SELECT
     l.id, l.nombre, l.slug, mu.nombre AS municipio, ca.nombre AS categoria,
     l.estado_aprobacion, l.motivo_revision, l.updated_at,
@@ -53,7 +53,7 @@ const placeReviewQuery = `
   ORDER BY l.updated_at DESC, l.nombre
   LIMIT $3 OFFSET $4`;
 
-const serviceReviewQuery = `
+export const serviceReviewQuery = `
   SELECT
     s.id, s.nombre, s.slug, mu.nombre AS municipio, ca.nombre AS categoria,
     s.estado_aprobacion, s.motivo_revision, s.updated_at,

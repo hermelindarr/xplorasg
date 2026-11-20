@@ -39,7 +39,7 @@ export const WhatsAppButton = ({ serviceName, serviceId, contacto, size = 'md', 
         target="_blank"
         rel="noopener noreferrer"
         aria-label={m.ariaLabel(serviceName)}
-        className={`inline-flex min-h-9 items-center gap-1.5 whitespace-nowrap rounded-full border border-brand-green/35 px-3.5 text-[13px] font-medium text-brand-green transition-colors duration-300 hover:border-brand-green hover:bg-brand-green hover:text-white ${className}`}
+        className={`inline-flex min-h-9 pointer-coarse:min-h-11 items-center gap-1.5 whitespace-nowrap rounded-full border border-brand-green/35 px-3.5 text-label font-medium text-brand-green transition-colors duration-300 hover:border-brand-green hover:bg-brand-green hover:text-white ${className}`}
       >
         <WhatsAppIcon className="size-4" />
         WhatsApp

@@ -5,14 +5,14 @@ import type { TourismService } from '../types/catalog';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { defineMessages, useLanguage, useMessages } from '../i18n';
 import { categoryLabel } from '../i18n/common';
-import { CloseIcon, PinIcon, SearchIcon, CommunityIcon } from '../components/brand/icons';
-import { ItalicTail } from '../components/home/HomeUi';
+import { CloseIcon, PinIcon, SearchIcon } from '../components/brand/icons';
 import { PageHero } from '../components/ui/PageHero';
 
 const messages = defineMessages({
   title: 'Servicios locales',
+  titleAccent: 'locales',
   eyebrow: 'Planea tu visita',
-  intro: 'Hospedaje, gastronomía, guías y experiencias ofrecidas por prestadores comunitarios verificados. Contacta directo a quien te recibe.',
+  intro: 'Dónde dormir, comer y con quién recorrer la sierra. Escribes directo a la familia o cooperativa que te recibe, sin comisiones.',
   searchLabel: 'Buscar servicio',
   searchPlaceholder: 'Busca hospedaje, comida, guías…',
   municipality: 'Municipio',
@@ -34,8 +34,9 @@ const messages = defineMessages({
   filtersLabel: 'Filtrar servicios',
 }, {
   title: 'Local services',
+  titleAccent: 'services',
   eyebrow: 'Plan your visit',
-  intro: 'Lodging, food, guides and experiences offered by verified community businesses. Contact your hosts directly.',
+  intro: 'Where to sleep, eat and who to explore the sierra with. You write directly to the family or co-op hosting you, with no commissions.',
   searchLabel: 'Search services',
   searchPlaceholder: 'Search lodging, food, guides…',
   municipality: 'Municipality',
@@ -119,26 +120,16 @@ export const ServicesPage = () => {
   };
 
   const tabClass = (active: boolean) =>
-    `relative inline-flex shrink-0 items-center whitespace-nowrap py-4 text-sm transition-colors duration-300 after:absolute after:inset-x-0 after:-bottom-px after:h-px after:transition-colors after:duration-300 ${
+    `relative inline-flex min-w-11 shrink-0 items-center justify-center whitespace-nowrap py-4 text-sm transition-colors duration-300 after:absolute after:inset-x-0 after:-bottom-px after:h-px after:transition-colors after:duration-300 ${
       active ? 'font-medium text-brand-blue after:bg-brand-blue' : 'text-brand-blue/70 after:bg-transparent hover:text-brand-blue'
     }`;
 
   return (
     <>
       <PageHero
-        eyebrow={m.eyebrow}
-        title={<ItalicTail text={m.title} words={1} />}
+        title={m.title}
         subtitle={m.intro}
         image={loading || heroService ? { url: heroService?.imagenPrincipal?.url, alt: '' } : null}
-        actions={(
-          <p className="inline-flex items-center gap-2 text-sm text-brand-blue/70">
-            <CommunityIcon className="size-4 text-brand-green" /> {m.directBooking}
-          </p>
-        )}
-        stats={[
-          { value: loading ? '—' : services.length, label: m.statServices },
-          { value: loading ? '—' : municipalities.length, label: m.statMunicipalities },
-        ]}
       />
 
       <section className="mx-auto max-w-7xl px-5 pb-20 pt-14 lg:px-8 lg:pb-28 lg:pt-20">
@@ -233,7 +224,7 @@ export const ServicesPage = () => {
           !error && (
             <div className="mt-12 rounded-xl bg-brand-light px-6 py-16 text-center sm:py-20">
               <h2 className="text-3xl leading-tight text-brand-blue sm:text-4xl">{services.length ? m.noResults : m.emptyDirectory}</h2>
-              <p className="mx-auto mt-3 max-w-lg text-[15px] leading-7 text-brand-blue/70">
+              <p className="mx-auto mt-3 max-w-lg text-base leading-7 text-brand-blue/70">
                 {services.length ? m.noResultsText : m.emptyDirectoryText}
               </p>
               {filtersActive && (

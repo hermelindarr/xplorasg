@@ -10,15 +10,11 @@ const messages = defineMessages({
   humidity: 'Humedad',
   uv: 'Índice UV',
   uvLevels: ['bajo', 'moderado', 'alto', 'muy alto', 'extremo'],
-  location: 'Ubicación',
-  latitude: 'Latitud',
-  longitude: 'Longitud',
-  altitude: 'Altitud',
-  north: 'N', south: 'S', east: 'E', west: 'O',
-  altitudeUnit: 'm.s.n.m.',
-  viewOnMap: 'Ver ubicación en OpenStreetMap',
-  newTab: '(se abre en otra pestaña)',
+  nextDays: 'Próximos días',
+  today: 'Hoy',
+  rain: (p: number) => `${p} % lluvia`,
   disclaimer: 'Pronóstico de Open-Meteo. Puede cambiar; verifica las condiciones antes de viajar.',
+  updatedAt: 'Actualizado',
 }, {
   unavailable: 'Weather is not available right now.',
   feelsLike: 'Feels like',
@@ -26,15 +22,11 @@ const messages = defineMessages({
   humidity: 'Humidity',
   uv: 'UV index',
   uvLevels: ['low', 'moderate', 'high', 'very high', 'extreme'],
-  location: 'Location',
-  latitude: 'Latitude',
-  longitude: 'Longitude',
-  altitude: 'Altitude',
-  north: 'N', south: 'S', east: 'E', west: 'W',
-  altitudeUnit: 'm a.s.l.',
-  viewOnMap: 'View location on OpenStreetMap',
-  newTab: '(opens in a new tab)',
+  nextDays: 'Next days',
+  today: 'Today',
+  rain: (p: number) => `${p}% rain`,
   disclaimer: 'Forecast by Open-Meteo. It may change; check conditions before you travel.',
+  updatedAt: 'Updated',
 });
 
 const WeatherGlyph = ({ code, className }: { code: number; className?: string }) => {
@@ -56,59 +48,43 @@ interface WeatherCardProps {
 }
 
 // Clima de montaña en formato de bitácora: temperatura en serif, cuatro lecturas con filetes de 1 px
-// y la posición del lugar (latitud, longitud y altitud).
-export const WeatherCard = ({ latitude, longitude, altitude = null }: WeatherCardProps) => {
+// y el pronóstico de los próximos días (la altitud y la ubicación viven en la ficha del lugar).
+export const WeatherCard = ({ latitude, longitude }: WeatherCardProps) => {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [error, setError] = useState(false);
   const m = useMessages(messages);
   const { lang } = useLanguage();
   const locale = lang === 'en' ? 'en-US' : 'es-MX';
 
+  // Lectura en vivo: se consulta Open-Meteo al abrir la ficha y cada 10 minutos mientras la pestaña esté visible.
+  const [refreshKey, setRefreshKey] = useState(0);
   useEffect(() => {
     const controller = new AbortController();
     travelApi.weather(latitude, longitude, controller.signal)
-      .then((response) => setWeather(response.data))
+      .then((response) => { setWeather(response.data); setError(false); })
       .catch((requestError) => {
         if (requestError instanceof DOMException && requestError.name === 'AbortError') return;
         setError(true);
       });
     return () => controller.abort();
-  }, [latitude, longitude]);
+  }, [latitude, longitude, refreshKey]);
 
-  const elevation = altitude ?? weather?.location?.elevation ?? null;
-  const osmUrl = `https://www.openstreetmap.org/?mlat=${latitude.toFixed(5)}&mlon=${longitude.toFixed(5)}#map=14/${latitude.toFixed(5)}/${longitude.toFixed(5)}`;
+  useEffect(() => {
+    const tick = () => { if (document.visibilityState === 'visible') setRefreshKey((key) => key + 1); };
+    const id = window.setInterval(tick, 10 * 60 * 1000);
+    document.addEventListener('visibilitychange', tick);
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener('visibilitychange', tick);
+    };
+  }, []);
 
-  const coordinate = (value: number, positive: string, negative: string) => `${Math.abs(value).toFixed(4)}° ${value >= 0 ? positive : negative}`;
-  // La altitud solo aparece si existe; las coordenadas abren el lugar en OpenStreetMap.
-  const position = [
-    { label: m.latitude, value: coordinate(latitude, m.north, m.south) },
-    { label: m.longitude, value: coordinate(longitude, m.east, m.west) },
-    ...(elevation === null ? [] : [{ label: m.altitude, value: `${Math.round(elevation).toLocaleString(locale)} ${m.altitudeUnit}` }]),
-  ];
-
-  const positionBlock = (
-    <div className="mt-5">
-      <p className="label-quiet">{m.location}</p>
-      <dl className={`mt-2 grid border-y border-brand-sand ${position.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
-        {position.map((item, index) => (
-          <div key={item.label} className={`min-w-0 py-3 ${index ? 'border-l border-brand-sand pl-3' : 'pr-3'}`}>
-            <dt className="text-xs leading-4 text-brand-blue/70">{item.label}</dt>
-            <dd className="font-display mt-1 text-[15px] leading-5 tabular-nums text-brand-blue">{item.value}</dd>
-          </div>
-        ))}
-      </dl>
-      <a href={osmUrl} target="_blank" rel="noreferrer" className="mt-2 inline-flex min-h-7 items-center text-sm font-medium text-brand-green underline decoration-brand-green/30 underline-offset-4 hover:decoration-brand-green">
-        {m.viewOnMap}<span className="sr-only"> {m.newTab}</span>
-      </a>
-    </div>
-  );
+  // Pronóstico de los próximos días: es lo que sirve para decidir cuándo ir (lluvia = ríos crecidos, caminos lodosos).
+  const dayName = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString(locale, { weekday: 'short' }).replace('.', '');
 
   if (error) {
     return (
-      <div className="mt-4">
-        <p className="text-sm text-brand-blue/70">{m.unavailable}</p>
-        {positionBlock}
-      </div>
+      <p className="mt-4 text-sm text-brand-blue/70">{m.unavailable}</p>
     );
   }
   if (!weather) return <div className="mt-4 h-56 animate-pulse rounded-lg bg-brand-sand/50" />;
@@ -137,8 +113,28 @@ export const WeatherCard = ({ latitude, longitude, altitude = null }: WeatherCar
           </div>
         ))}
       </dl>
-      {positionBlock}
-      <p className="mt-3 text-xs leading-4 text-brand-blue/70">{m.disclaimer}</p>
+      {weather.forecast.length > 0 && (
+        <div className="mt-5">
+          <p className="label-quiet">{m.nextDays}</p>
+          <ul className="mt-2 grid grid-cols-3 border-y border-brand-sand">
+            {weather.forecast.slice(0, 3).map((day, index) => (
+              <li key={day.date} className={`min-w-0 py-3 ${index ? 'border-l border-brand-sand pl-3' : 'pr-3'}`} title={day.condition}>
+                <p className="text-xs capitalize text-brand-blue/70">{index === 0 ? m.today : dayName(day.date)}</p>
+                <p className="mt-1 flex items-center gap-1.5 text-base tabular-nums text-brand-blue">
+                  <WeatherGlyph code={day.weatherCode} className="size-4 shrink-0 text-brand-teal" />
+                  {round(day.temperatureMax)}<span className="text-brand-blue/70">/{round(day.temperatureMin)}</span>
+                </p>
+                {day.precipitationProbability !== null && (
+                  <p className="mt-0.5 text-xs tabular-nums text-brand-blue/70">{m.rain(day.precipitationProbability)}</p>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <p className="mt-3 text-xs leading-4 text-brand-blue/70">
+        {weather.current.time ? `${m.updatedAt} ${weather.current.time.slice(11, 16)} · ` : ''}{m.disclaimer}
+      </p>
     </div>
   );
 };

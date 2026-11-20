@@ -7,7 +7,7 @@ import { common } from '../i18n/common';
 import {
   ArrowRightIcon, CalendarIcon, HeartIcon, MapIcon, ShieldIcon, SparkleIcon,
 } from '../components/brand/icons';
-import { ItalicTail } from '../components/home/HomeUi';
+import { Accented } from '../components/ui/Accented';
 
 const extraMessages = defineMessages({
   pageTitle: 'Mi cuenta',
@@ -56,9 +56,8 @@ export const Dashboard = () => {
           {firstName.charAt(0).toUpperCase()}
         </span>
         <div className="min-w-0">
-          <p className="eyebrow">{m.eyebrow}</p>
-          <h1 className="mt-4 break-words text-[2.5rem] leading-[1.05] text-brand-blue sm:text-5xl"><ItalicTail text={m.greeting(firstName)} words={1} /></h1>
-          <p className="mt-3 text-[15px] leading-7 text-brand-blue/75">{m.intro}</p>
+          <h1 className="mt-4 break-words text-[2.5rem] leading-[1.05] text-brand-blue sm:text-5xl"><Accented text={m.greeting(firstName)} accent={firstName} /></h1>
+          <p className="mt-3 text-base leading-7 text-brand-blue/75">{m.intro}</p>
         </div>
       </div>
 
@@ -73,12 +72,12 @@ export const Dashboard = () => {
             ].map((row) => (
               <div key={row.key} className="grid gap-1 border-t border-brand-sand py-4 sm:grid-cols-[9rem_minmax(0,1fr)] sm:items-baseline sm:gap-4">
                 <dt className={label}>{row.label}</dt>
-                <dd className="truncate text-[15px] text-brand-blue">{row.value}</dd>
+                <dd className="truncate text-base text-brand-blue">{row.value}</dd>
               </div>
             ))}
             <div className="grid gap-1 border-t border-brand-sand py-4 sm:grid-cols-[9rem_minmax(0,1fr)] sm:items-baseline sm:gap-4">
               <dt className={label}>{m.role}</dt>
-              <dd className="text-[15px] capitalize text-brand-green">{roleLabel(user?.rol, lang)}</dd>
+              <dd className="text-base capitalize text-brand-green">{roleLabel(user?.rol, lang)}</dd>
             </div>
           </dl>
           <button type="button" onClick={handleLogout} className="btn btn-secondary mt-7 px-6">
@@ -88,7 +87,6 @@ export const Dashboard = () => {
 
         {/* Estado de la cuenta */}
         <div className="rounded-xl bg-brand-light p-7 sm:p-9 lg:col-span-5 lg:self-start">
-          <p className="eyebrow">{m.statusEyebrow}</p>
           <h2 className="mt-5 flex items-center gap-3 text-2xl text-brand-blue sm:text-[1.75rem]">
             <ShieldIcon className="size-5 shrink-0 text-brand-green" />
             {m.statusTitle}

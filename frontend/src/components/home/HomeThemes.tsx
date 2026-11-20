@@ -5,9 +5,11 @@ import { Link } from 'react-router-dom';
 import type { Category, Place, TourismService } from '../../types/catalog';
 import { useMessages } from '../../i18n';
 import { homeMessages } from '../../i18n/home';
-import { ArrowRightIcon } from '../brand/icons';
 import { firstWithPhoto, isMission, isNature, photoOf, serviceIn } from './homeData';
-import { HomeHeading, ItalicTail, Photo, TextLink } from './HomeUi';
+import { Accented } from '../ui/Accented';
+import { Photo } from '../ui/Photo';
+import { SectionHeading } from '../ui/SectionHeading';
+import { TextLink } from '../ui/TextLink';
 
 interface HomeThemesProps {
   places: Place[];
@@ -55,19 +57,18 @@ export const HomeThemes = ({ places, services, categories, presentCategories, ac
     { key: 'flavors', label: m.themeFlavors, hint: m.themeFlavorsHint, photo: photoOf(picks.flavors), to: '/servicios' },
   ];
 
-  const tileBody = (tile: Tile, index: number, active: boolean): ReactNode => (
+  const tileBody = (tile: Tile, active: boolean): ReactNode => (
     <>
       <span className="relative block aspect-[3/4] overflow-hidden rounded-lg">
         <Photo src={tile.photo} name={tile.label} imgClassName="img-zoom" nameClassName="text-2xl" />
       </span>
       <span className="mt-4 flex items-baseline gap-3 border-t border-brand-sand pt-4">
-        <span className="font-display text-sm italic text-brand-gold" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+
         <span className="min-w-0">
           <span className="font-display block text-xl leading-tight text-brand-blue sm:text-2xl">{tile.label}</span>
-          <span className="mt-1 block text-[13px] leading-5 text-brand-blue/70 sm:text-sm">{tile.hint}</span>
-          <span className={`mt-3 inline-flex items-center gap-1.5 text-[13px] font-medium transition-colors duration-300 ${active ? 'text-brand-green' : 'text-brand-blue/70 group-hover:text-brand-green'}`}>
+          <span className="mt-1 block text-label leading-5 text-brand-blue/70 sm:text-sm">{tile.hint}</span>
+          <span className={`mt-3 inline-flex items-center gap-1.5 text-label font-medium transition-colors duration-300 ${active ? 'text-brand-green' : 'text-brand-blue/70 group-hover:text-brand-green'}`}>
             {active ? m.themeActive : tile.filter ? m.themeFilter : m.themeServices}
-            <ArrowRightIcon className="size-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
           </span>
         </span>
       </span>
@@ -78,10 +79,10 @@ export const HomeThemes = ({ places, services, categories, presentCategories, ac
 
   return (
     <section className="mx-auto max-w-7xl px-5 pb-20 lg:px-8 lg:pb-28" aria-labelledby="home-themes">
-      <HomeHeading
+      <SectionHeading
         id="home-themes"
         eyebrow={m.themesEyebrow}
-        title={<ItalicTail text={m.themesTitle} words={2} />}
+        title={<Accented text={m.themesTitle} accent={m.themesTitleAccent} />}
         text={m.themesText}
         action={<TextLink to="/mapa">{m.themesCta}</TextLink>}
       />
@@ -93,13 +94,13 @@ export const HomeThemes = ({ places, services, categories, presentCategories, ac
             const active = activeCategory === filter;
             return (
               <button key={tile.key} type="button" aria-pressed={active} onClick={() => onSelectCategory(filter)} className={tileClass(index)}>
-                {tileBody(tile, index, active)}
+                {tileBody(tile, active)}
               </button>
             );
           }
           return (
             <Link key={tile.key} to={tile.to} className={tileClass(index)}>
-              {tileBody(tile, index, false)}
+              {tileBody(tile, false)}
             </Link>
           );
         })}

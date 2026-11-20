@@ -5,7 +5,7 @@ import { usePageTitle } from '../hooks/usePageTitle';
 import { messagesNow, useMessages } from '../i18n';
 import { loginMessages } from '../i18n/auth';
 import { ArrowRightIcon, ShieldIcon } from '../components/brand/icons';
-import { supabase } from '../supabaseClient';
+import { supabaseEnabled as supabase } from '../supabaseClient';
 
 type Mode = 'login' | 'registro' | 'recuperar';
 
@@ -202,7 +202,7 @@ export const Login = () => {
             <div className="flex items-center justify-between gap-3">
               <label htmlFor="login-password" className="text-sm font-medium text-brand-blue/80">{m.password}</label>
               {mode === 'login' && (
-                <button type="button" onClick={() => switchMode('recuperar')} className="-my-1 py-1 text-sm font-medium text-brand-green underline decoration-brand-green/30 underline-offset-4 transition-colors duration-300 hover:decoration-brand-green">
+                <button type="button" onClick={() => switchMode('recuperar')} className="-my-1 py-1 pointer-coarse:-my-3 pointer-coarse:py-3 text-sm font-medium text-brand-green underline decoration-brand-green/30 underline-offset-4 transition-colors duration-300 hover:decoration-brand-green">
                   {m.forgotPassword}
                 </button>
               )}
@@ -223,7 +223,7 @@ export const Login = () => {
                 onClick={() => setShowPassword((value) => !value)}
                 aria-label={showPassword ? m.hidePassword : m.showPassword}
                 aria-pressed={showPassword}
-                className="absolute right-2 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-full text-brand-blue/70 transition-colors duration-300 hover:bg-brand-light hover:text-brand-blue"
+                className="absolute right-1 top-1/2 grid size-9 pointer-coarse:size-11 -translate-y-1/2 place-items-center rounded-full text-brand-blue/70 transition-colors duration-300 hover:bg-brand-light hover:text-brand-blue"
               >
                 <EyeIcon open={showPassword} />
               </button>
@@ -252,15 +252,15 @@ export const Login = () => {
       <div className="mt-9 grid gap-3 border-t border-brand-sand pt-6 text-center text-sm text-brand-blue/75">
         {mode === 'login' && (
           <p>{m.noAccount}{' '}
-            <button type="button" onClick={() => switchMode('registro')} className="inline-block py-1 font-medium text-brand-green underline decoration-brand-green/30 underline-offset-4 transition-colors duration-300 hover:text-brand-blue">{m.signUpFree}</button>
+            <button type="button" onClick={() => switchMode('registro')} className="inline-block py-1 pointer-coarse:py-3 font-medium text-brand-green underline decoration-brand-green/30 underline-offset-4 transition-colors duration-300 hover:text-brand-blue">{m.signUpFree}</button>
           </p>
         )}
         {mode !== 'login' && (
           <p>{mode === 'registro' ? m.haveAccount : m.remembered}
-            <button type="button" onClick={() => switchMode('login')} className="inline-block py-1 font-medium text-brand-green underline decoration-brand-green/30 underline-offset-4 transition-colors duration-300 hover:text-brand-blue">{m.signIn}</button>
+            <button type="button" onClick={() => switchMode('login')} className="inline-block py-1 pointer-coarse:py-3 font-medium text-brand-green underline decoration-brand-green/30 underline-offset-4 transition-colors duration-300 hover:text-brand-blue">{m.signIn}</button>
           </p>
         )}
-        <p className="text-xs"><Link to="/" className="inline-flex min-h-7 items-center text-brand-blue/70 transition-colors duration-300 hover:text-brand-blue">{m.backHome}</Link></p>
+        <p className="text-xs"><Link to="/" className="inline-flex min-h-7 pointer-coarse:min-h-11 items-center text-brand-blue/70 transition-colors duration-300 hover:text-brand-blue">{m.backHome}</Link></p>
       </div>
     </AuthLayout>
   );

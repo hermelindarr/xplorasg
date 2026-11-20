@@ -39910,7 +39910,11 @@ var pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: isRemote ? { rejectUnauthorized: false } : void 0,
   // En Vercel cada función abre su propio grupo de conexiones: se mantiene pequeño.
-  max: process.env.VERCEL ? 3 : 10
+  // El pooler de Supabase en modo sesión admite pocos clientes en total, así que en Vercel
+  // las conexiones inactivas se sueltan pronto para no agotar el cupo entre instancias.
+  max: process.env.VERCEL ? 2 : 10,
+  idleTimeoutMillis: process.env.VERCEL ? 5e3 : 3e4,
+  connectionTimeoutMillis: 1e4
 });
 var testConnection = async () => {
   try {
@@ -41205,6 +41209,40 @@ var getRoute = async (origin, destination, profile, lang = "es") => {
     fallbackNotice: lang === "en" ? "Route calculated with local fallback. Tap Google Maps for detailed turn-by-turn routing." : 'Ruta trazada con respaldo local. Toca "Abrir en Google Maps" para navegaci\xF3n detallada.'
   };
 };
+var MAX_ELEVATION_POINTS = 60;
+var elevationCache = /* @__PURE__ */ new Map();
+var elevationKey = (point) => `${point.latitud.toFixed(4)},${point.longitud.toFixed(4)}`;
+var parsePointList = (value) => {
+  if (typeof value !== "string" || !value.trim()) return null;
+  const parts = value.split("|");
+  if (parts.length > MAX_ELEVATION_POINTS) return null;
+  const points = [];
+  for (const part of parts) {
+    const [lat, lon] = part.split(",");
+    const latitud = parseCoordinate(lat, -90, 90);
+    const longitud = parseCoordinate(lon, -180, 180);
+    if (latitud === null || longitud === null) return null;
+    points.push({ latitud, longitud });
+  }
+  return points;
+};
+var getElevations = async (points) => {
+  const missing = [...new Map(points.filter((p) => !elevationCache.has(elevationKey(p))).map((p) => [elevationKey(p), p])).values()];
+  if (missing.length) {
+    const query = new URLSearchParams({
+      latitude: missing.map((p) => p.latitud.toFixed(4)).join(","),
+      longitude: missing.map((p) => p.longitud.toFixed(4)).join(",")
+    });
+    const response = await fetchWithTimeout(`https://api.open-meteo.com/v1/elevation?${query}`);
+    if (!response.ok) throw new TravelServiceError("Open-Meteo rechaz\xF3 la consulta de altitud.", 502);
+    const data = await response.json();
+    missing.forEach((point, index) => {
+      const value = data.elevation?.[index];
+      if (typeof value === "number" && Number.isFinite(value)) elevationCache.set(elevationKey(point), Math.round(value));
+    });
+  }
+  return points.map((point) => elevationCache.get(elevationKey(point)) ?? null);
+};
 
 // src/controllers/travelController.ts
 var respondWithError = (res, error, fallback) => {
@@ -41242,10 +41280,24 @@ var calculateRoute = async (req, res) => {
     respondWithError(res, error, "No fue posible calcular la ruta.");
   }
 };
+var elevations = async (req, res) => {
+  const points = parsePointList(req.query.puntos);
+  if (!points) {
+    res.status(400).json({ error: `Env\xEDa entre 1 y ${MAX_ELEVATION_POINTS} coordenadas v\xE1lidas como "lat,lon|lat,lon".` });
+    return;
+  }
+  try {
+    res.set("Cache-Control", "public, max-age=86400");
+    res.status(200).json({ data: await getElevations(points) });
+  } catch (error) {
+    respondWithError(res, error, "No fue posible consultar la altitud.");
+  }
+};
 
 // src/routes/travelRoutes.ts
 var router4 = (0, import_express4.Router)();
 router4.get("/clima", currentWeather);
+router4.get("/altitudes", elevations);
 router4.post("/ruta", calculateRoute);
 var travelRoutes_default = router4;
 
@@ -42208,6 +42260,139 @@ var agendaRoutes_default = router7;
 // src/routes/providerRoutes.ts
 var import_express8 = __toESM(require_express2());
 
+// src/services/moderationService.ts
+var PROVIDER_FIELDS = ["descripcion", "horario", "rango_precio", "contacto", "reservacion", "imagen_url"];
+var PROPOSAL_COLUMNS = ["descripcion", "horario", "rango_precio", "contacto", "reservacion"];
+var ADMIN_SERVICE_FIELDS = [
+  "nombre",
+  "descripcion",
+  "horario",
+  "rango_precio",
+  "contacto",
+  "reservacion",
+  "tipo_servicio",
+  "ubicacion",
+  "fuente_verificacion"
+];
+var ADMIN_PLACE_FIELDS = [
+  "nombre",
+  "descripcion",
+  "horarios",
+  "costo",
+  "direccion",
+  "info_acceso",
+  "actividades",
+  "servicios_disponibles",
+  "accesibilidad",
+  "recomendaciones",
+  "contacto",
+  "fuente_verificacion"
+];
+var LIMITS = {
+  nombre: 120,
+  descripcion: 4e3,
+  horario: 500,
+  horarios: 500,
+  rango_precio: 500,
+  costo: 500,
+  contacto: 500,
+  reservacion: 1e3,
+  tipo_servicio: 200,
+  ubicacion: 500,
+  direccion: 500,
+  info_acceso: 2e3,
+  actividades: 2e3,
+  servicios_disponibles: 2e3,
+  accesibilidad: 2e3,
+  recomendaciones: 2e3,
+  fuente_verificacion: 1e3,
+  imagen_url: 1e3
+};
+var cleanField = (value, max) => {
+  if (value === void 0) return void 0;
+  if (value === null) return null;
+  if (typeof value !== "string") return void 0;
+  const text = value.replace(/\r\n/g, "\n").trim().slice(0, max);
+  return text || null;
+};
+var digitCount = (text) => (text.match(/\d/g) ?? []).length;
+var isUsableContact = (text) => digitCount(text) >= 10 || /[^\s@]+@[^\s@]+\.[^\s@]+/.test(text);
+var isAcceptableImageUrl = (text) => {
+  let url;
+  try {
+    url = new URL(text);
+  } catch {
+    return false;
+  }
+  if (url.protocol !== "https:" || url.username || url.password) return false;
+  const knownHost = /(^|\.)((upload|thumb)\.wikimedia\.org|supabase\.co|googleusercontent\.com|imgur\.com)$/i.test(url.hostname);
+  return knownHost || /\.(jpe?g|png|webp|avif)$/i.test(url.pathname);
+};
+var validateProviderService = (body, { isNew }) => {
+  const source = body ?? {};
+  const errors = {};
+  const values = {};
+  for (const field of PROVIDER_FIELDS) {
+    const value = cleanField(source[field], LIMITS[field]);
+    if (value !== void 0) values[field] = value;
+  }
+  if (isNew) {
+    const nombre = cleanField(source.nombre, LIMITS.nombre);
+    if (!nombre || nombre.length < 3) errors.nombre = "Escribe el nombre del servicio (m\xEDnimo 3 letras).";
+    else values.nombre = nombre;
+    const tipo = cleanField(source.tipo_servicio, LIMITS.tipo_servicio);
+    if (tipo) values.tipo_servicio = tipo;
+    const municipio = Number.parseInt(String(source.municipio_id ?? ""), 10);
+    if (!Number.isInteger(municipio) || municipio <= 0) errors.municipio_id = "Elige el municipio donde est\xE1 tu servicio.";
+    else values.municipio_id = municipio;
+    const categoria = Number.parseInt(String(source.categoria_id ?? ""), 10);
+    if (!Number.isInteger(categoria) || categoria <= 0) errors.categoria_id = "Elige el tipo de servicio.";
+    else values.categoria_id = categoria;
+    if (!values.descripcion) errors.descripcion = "Describe tu servicio para que los turistas sepan qu\xE9 ofreces.";
+    if (!values.contacto) errors.contacto = "Agrega un tel\xE9fono, WhatsApp o correo para que te contacten.";
+  }
+  if (values.descripcion && values.descripcion.length < 40) {
+    errors.descripcion = "La descripci\xF3n es muy corta: cuenta qu\xE9 ofreces en al menos 40 caracteres.";
+  }
+  if (values.contacto && !isUsableContact(values.contacto)) {
+    errors.contacto = "Escribe un tel\xE9fono de 10 d\xEDgitos o un correo electr\xF3nico v\xE1lido.";
+  }
+  if (values.imagen_url && !isAcceptableImageUrl(values.imagen_url)) {
+    errors.imagen_url = "El enlace de la foto debe empezar con https:// y terminar en .jpg, .png o .webp.";
+  }
+  return { values, errors };
+};
+var mergeProposal = (pending, incoming, live) => {
+  const merged = { ...pending ?? {} };
+  for (const field of PROVIDER_FIELDS) {
+    if (!(field in incoming)) continue;
+    const next = incoming[field] ?? null;
+    const current = field === "imagen_url" ? null : live[field] ?? null;
+    if (next === current) delete merged[field];
+    else merged[field] = next;
+  }
+  return Object.keys(merged).length ? merged : null;
+};
+var splitProposal = (proposal) => {
+  const columns = {};
+  for (const column of PROPOSAL_COLUMNS) {
+    if (proposal && column in proposal) columns[column] = proposal[column] ?? null;
+  }
+  const imageUrl = proposal?.imagen_url ?? null;
+  return { columns, imageUrl };
+};
+var pickAdminFields = (body, allowed) => {
+  const values = {};
+  const errors = {};
+  for (const field of allowed) {
+    const value = cleanField(body?.[field], LIMITS[field] ?? 2e3);
+    if (value !== void 0) values[field] = value;
+  }
+  if ("nombre" in values && (!values.nombre || values.nombre.length < 3)) errors.nombre = "El nombre debe tener al menos 3 caracteres.";
+  return { values, errors };
+};
+var slugify = (text) => text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80) || "servicio";
+
 // src/controllers/providerController.ts
 var cleanText = (value, max = 2e3) => {
   if (value === void 0) return void 0;
@@ -42221,6 +42406,7 @@ var parseDate = (value) => {
   const date = /* @__PURE__ */ new Date(`${value}T00:00:00-06:00`);
   return Number.isNaN(date.getTime()) ? null : date;
 };
+var PENDING_MESSAGE = "Tu solicitud qued\xF3 en espera de validaci\xF3n. El equipo de XploraSG la revisar\xE1 antes de publicarla.";
 var getMyBusiness = async (req, res) => {
   try {
     const providers = await db_default.query(
@@ -42234,10 +42420,12 @@ var getMyBusiness = async (req, res) => {
     const [services, promotions] = ids.length ? await Promise.all([
       db_default.query(
         `SELECT s.id, s.prestador_id, s.nombre, s.slug, s.descripcion, s.horario, s.rango_precio,
-                    s.contacto, s.reservacion, s.estado_aprobacion, s.updated_at,
-                    COALESCE(mu.nombre, '') AS municipio
+                    s.contacto, s.reservacion, s.tipo_servicio, s.estado_aprobacion, s.motivo_revision,
+                    s.cambios_propuestos, s.cambios_enviados_at, s.updated_at,
+                    COALESCE(mu.nombre, '') AS municipio, ca.nombre AS categoria
              FROM public.servicios AS s
              LEFT JOIN public.municipios AS mu ON mu.id = s.municipio_id
+             LEFT JOIN public.categorias AS ca ON ca.id = s.categoria_id
              WHERE s.prestador_id = ANY($1::int[]) AND s.deleted_at IS NULL
              ORDER BY s.nombre`,
         [ids]
@@ -42259,46 +42447,178 @@ var getMyBusiness = async (req, res) => {
     res.status(500).json({ error: "No fue posible cargar la informaci\xF3n de tu negocio." });
   }
 };
+var createMyService = async (req, res) => {
+  const { values, errors } = validateProviderService(req.body, { isNew: true });
+  if (Object.keys(errors).length) {
+    res.status(400).json({ error: "Revisa los campos marcados.", campos: errors });
+    return;
+  }
+  const client = await db_default.connect();
+  try {
+    await client.query("BEGIN");
+    const provider = await client.query(
+      `SELECT id FROM public.prestadores
+       WHERE usuario_id = $1 AND deleted_at IS NULL
+         AND ($2::INT IS NULL OR id = $2)
+       ORDER BY id LIMIT 1`,
+      [req.user.id, Number.parseInt(String(req.body?.prestador_id ?? ""), 10) || null]
+    );
+    if (!provider.rows[0]) {
+      await client.query("ROLLBACK");
+      res.status(403).json({ error: "Tu cuenta todav\xEDa no est\xE1 vinculada a un negocio." });
+      return;
+    }
+    const base = slugify(values.nombre);
+    const taken = await client.query(
+      `SELECT slug FROM public.servicios WHERE slug = $1 OR slug LIKE $1 || '-%'`,
+      [base]
+    );
+    const used = new Set(taken.rows.map((row) => row.slug));
+    let slug = base;
+    for (let n = 2; used.has(slug); n += 1) slug = `${base}-${n}`;
+    const proposal = values.imagen_url ? { imagen_url: values.imagen_url } : null;
+    const created = await client.query(
+      `INSERT INTO public.servicios
+         (prestador_id, municipio_id, categoria_id, nombre, slug, tipo_servicio, descripcion, horario,
+          rango_precio, contacto, reservacion, estado_aprobacion, cambios_propuestos, cambios_enviados_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'en_revision', $12, CURRENT_TIMESTAMP)
+       RETURNING id, nombre, slug, estado_aprobacion, cambios_enviados_at`,
+      [
+        provider.rows[0].id,
+        values.municipio_id,
+        values.categoria_id,
+        values.nombre,
+        slug,
+        values.tipo_servicio ?? null,
+        values.descripcion ?? null,
+        values.horario ?? null,
+        values.rango_precio ?? null,
+        values.contacto ?? null,
+        values.reservacion ?? null,
+        proposal ? JSON.stringify(proposal) : null
+      ]
+    );
+    await client.query("COMMIT");
+    res.status(201).json({ data: { ...created.rows[0], pendiente: true }, message: PENDING_MESSAGE });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    const code = error.code;
+    if (code === "23503") {
+      res.status(400).json({ error: "El municipio o el tipo de servicio no existe." });
+      return;
+    }
+    console.error("Error creando servicio del prestador:", error);
+    res.status(500).json({ error: "No fue posible registrar tu servicio." });
+  } finally {
+    client.release();
+  }
+};
 var updateMyService = async (req, res) => {
   const id = Number.parseInt(String(req.params.id), 10);
   if (!Number.isFinite(id) || id <= 0) {
     res.status(400).json({ error: "Servicio inv\xE1lido." });
     return;
   }
-  const fields = {
-    descripcion: cleanText(req.body?.descripcion, 4e3),
-    horario: cleanText(req.body?.horario, 500),
-    rango_precio: cleanText(req.body?.rango_precio, 500),
-    contacto: cleanText(req.body?.contacto, 500),
-    reservacion: cleanText(req.body?.reservacion, 1e3)
-  };
-  const entries = Object.entries(fields).filter(([, value]) => value !== void 0);
-  if (!entries.length) {
+  const { values, errors } = validateProviderService(req.body, { isNew: false });
+  if (Object.keys(errors).length) {
+    res.status(400).json({ error: "Revisa los campos marcados.", campos: errors });
+    return;
+  }
+  if (!Object.keys(values).length) {
     res.status(400).json({ error: "No hay cambios para guardar." });
     return;
   }
-  const sets = entries.map(([column], index) => `${column} = $${index + 1}`);
-  const values = entries.map(([, value]) => value);
+  const client = await db_default.connect();
   try {
-    const result = await db_default.query(
-      `UPDATE public.servicios AS s
-       SET ${sets.join(", ")}, updated_at = CURRENT_TIMESTAMP
-       FROM public.prestadores AS p
-       WHERE s.id = $${values.length + 1}
-         AND p.id = s.prestador_id
-         AND p.usuario_id = $${values.length + 2}
-         AND s.deleted_at IS NULL
-       RETURNING s.id, s.descripcion, s.horario, s.rango_precio, s.contacto, s.reservacion, s.updated_at`,
-      [...values, id, req.user.id]
+    await client.query("BEGIN");
+    const current = await client.query(
+      `SELECT s.id, s.estado_aprobacion, s.descripcion, s.horario, s.rango_precio, s.contacto,
+              s.reservacion, s.cambios_propuestos
+       FROM public.servicios AS s
+       JOIN public.prestadores AS p ON p.id = s.prestador_id
+       WHERE s.id = $1 AND p.usuario_id = $2 AND s.deleted_at IS NULL
+       FOR UPDATE OF s`,
+      [id, req.user.id]
     );
-    if (!result.rows[0]) {
+    const service = current.rows[0];
+    if (!service) {
+      await client.query("ROLLBACK");
       res.status(404).json({ error: "No encontramos ese servicio en tu negocio." });
       return;
     }
-    res.json({ data: result.rows[0] });
+    if (service.estado_aprobacion === "suspendido") {
+      await client.query("ROLLBACK");
+      res.status(409).json({ error: "Este servicio est\xE1 suspendido. Escribe al equipo de XploraSG para reactivarlo." });
+      return;
+    }
+    let result;
+    if (service.estado_aprobacion === "aprobado") {
+      const proposal = mergeProposal(service.cambios_propuestos, values, service);
+      if (!proposal) {
+        await client.query("ROLLBACK");
+        res.status(400).json({ error: "No hay cambios respecto a lo que ya est\xE1 publicado." });
+        return;
+      }
+      result = await client.query(
+        `UPDATE public.servicios
+         SET cambios_propuestos = $1, cambios_enviados_at = CURRENT_TIMESTAMP, motivo_revision = NULL
+         WHERE id = $2
+         RETURNING id, estado_aprobacion, cambios_propuestos, cambios_enviados_at`,
+        [JSON.stringify(proposal), id]
+      );
+    } else {
+      const { imagen_url: imageUrl, ...columns } = values;
+      const entries = Object.entries(columns);
+      const sets = entries.map(([column], index) => `${column} = $${index + 1}`);
+      const params = entries.map(([, value]) => value);
+      const imageProposal = imageUrl !== void 0 ? mergeProposal(service.cambios_propuestos, { imagen_url: imageUrl }, {}) : service.cambios_propuestos;
+      params.push(imageProposal ? JSON.stringify(imageProposal) : null, id);
+      result = await client.query(
+        `UPDATE public.servicios
+         SET ${sets.length ? `${sets.join(", ")}, ` : ""}
+             cambios_propuestos = $${params.length - 1},
+             estado_aprobacion = 'en_revision', motivo_revision = NULL,
+             cambios_enviados_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+         WHERE id = $${params.length}
+         RETURNING id, estado_aprobacion, descripcion, horario, rango_precio, contacto, reservacion,
+                   cambios_propuestos, cambios_enviados_at, updated_at`,
+        params
+      );
+    }
+    await client.query("COMMIT");
+    res.json({ data: { ...result.rows[0], pendiente: true }, message: PENDING_MESSAGE });
   } catch (error) {
+    await client.query("ROLLBACK");
     console.error("Error actualizando servicio del prestador:", error);
     res.status(500).json({ error: "No fue posible guardar los cambios." });
+  } finally {
+    client.release();
+  }
+};
+var withdrawMyServiceChanges = async (req, res) => {
+  const id = Number.parseInt(String(req.params.id), 10);
+  if (!Number.isFinite(id) || id <= 0) {
+    res.status(400).json({ error: "Servicio inv\xE1lido." });
+    return;
+  }
+  try {
+    const result = await db_default.query(
+      `UPDATE public.servicios AS s
+       SET cambios_propuestos = NULL, cambios_enviados_at = NULL
+       FROM public.prestadores AS p
+       WHERE s.id = $1 AND p.id = s.prestador_id AND p.usuario_id = $2
+         AND s.deleted_at IS NULL AND s.estado_aprobacion = 'aprobado' AND s.cambios_propuestos IS NOT NULL
+       RETURNING s.id`,
+      [id, req.user.id]
+    );
+    if (!result.rows[0]) {
+      res.status(404).json({ error: "No hay cambios pendientes que retirar en ese servicio." });
+      return;
+    }
+    res.json({ data: { id } });
+  } catch (error) {
+    console.error("Error retirando cambios del prestador:", error);
+    res.status(500).json({ error: "No fue posible retirar los cambios." });
   }
 };
 var createMyPromotion = async (req, res) => {
@@ -42336,7 +42656,7 @@ var createMyPromotion = async (req, res) => {
       res.status(404).json({ error: "No encontramos ese servicio en tu negocio." });
       return;
     }
-    res.status(201).json({ data: result.rows[0] });
+    res.status(201).json({ data: result.rows[0], message: PENDING_MESSAGE });
   } catch (error) {
     console.error("Error creando promoci\xF3n:", error);
     res.status(500).json({ error: "No fue posible registrar la promoci\xF3n." });
@@ -42372,7 +42692,9 @@ var deleteMyPromotion = async (req, res) => {
 var router8 = (0, import_express8.Router)();
 router8.use(requireAuth, requireRole(["prestador"]));
 router8.get("/mi-negocio", getMyBusiness);
+router8.post("/servicios", createMyService);
 router8.patch("/servicios/:id", updateMyService);
+router8.delete("/servicios/:id/cambios", withdrawMyServiceChanges);
 router8.post("/promociones", createMyPromotion);
 router8.delete("/promociones/:id", deleteMyPromotion);
 var providerRoutes_default = router8;
@@ -42735,10 +43057,478 @@ var deleteEvent = async (req, res) => {
   }
 };
 
+// src/controllers/moderationController.ts
+var parseKind = (value) => value === "lugar" || value === "servicio" || value === "promocion" ? value : null;
+var parseId = (value) => {
+  const id = Number.parseInt(String(value), 10);
+  return Number.isInteger(id) && id > 0 ? id : null;
+};
+var reasonOf = (body) => {
+  const value = body?.motivo;
+  return typeof value === "string" ? value.trim().slice(0, 1e3) : "";
+};
+var TABLES = { lugar: "lugares_turisticos", servicio: "servicios", promocion: "promociones" };
+var listModerationQueue = async (_req, res) => {
+  try {
+    const [services, places, promotions] = await Promise.all([
+      db_default.query(
+        `SELECT s.id, s.nombre, s.slug, s.estado_aprobacion, s.motivo_revision,
+                s.descripcion, s.horario, s.rango_precio, s.contacto, s.reservacion, s.tipo_servicio,
+                s.cambios_propuestos, COALESCE(s.cambios_enviados_at, s.updated_at) AS enviado_at,
+                p.nombre_comercial AS prestador, mu.nombre AS municipio, ca.nombre AS categoria
+         FROM public.servicios AS s
+         JOIN public.prestadores AS p ON p.id = s.prestador_id
+         LEFT JOIN public.municipios AS mu ON mu.id = s.municipio_id
+         LEFT JOIN public.categorias AS ca ON ca.id = s.categoria_id
+         WHERE s.deleted_at IS NULL
+           AND (s.estado_aprobacion = 'en_revision' OR s.cambios_propuestos IS NOT NULL)
+         ORDER BY enviado_at ASC
+         LIMIT 200`
+      ),
+      db_default.query(
+        `SELECT l.id, l.nombre, l.slug, l.estado_aprobacion, l.motivo_revision, l.updated_at AS enviado_at,
+                mu.nombre AS municipio, ca.nombre AS categoria
+         FROM public.lugares_turisticos AS l
+         JOIN public.municipios AS mu ON mu.id = l.municipio_id
+         JOIN public.categorias AS ca ON ca.id = l.categoria_id
+         WHERE l.deleted_at IS NULL AND l.estado_aprobacion = 'en_revision'
+         ORDER BY l.updated_at ASC
+         LIMIT 200`
+      ),
+      db_default.query(
+        `SELECT pr.id, pr.titulo AS nombre, pr.descripcion, pr.condiciones, pr.fecha_inicio, pr.fecha_fin,
+                pr.estado_aprobacion, pr.motivo_revision, pr.created_at AS enviado_at,
+                s.nombre AS servicio, p.nombre_comercial AS prestador
+         FROM public.promociones AS pr
+         LEFT JOIN public.servicios AS s ON s.id = pr.servicio_id
+         LEFT JOIN public.prestadores AS p ON p.id = pr.prestador_id
+         WHERE pr.deleted_at IS NULL AND pr.estado_aprobacion = 'en_revision'
+         ORDER BY pr.created_at ASC
+         LIMIT 200`
+      )
+    ]);
+    const readiness = async (kind, ids) => {
+      if (!ids.length) return /* @__PURE__ */ new Map();
+      const query = (kind === "lugar" ? placeReviewQuery : serviceReviewQuery).replace("LIMIT $3 OFFSET $4", "");
+      const rows = await db_default.query(
+        `SELECT * FROM (${query}) AS content WHERE id = ANY($3::int[])`,
+        [null, null, ids]
+      );
+      return new Map(rows.rows.map((row) => [row.id, approvalRequirements(kind, row)]));
+    };
+    const [serviceMissing, placeMissing] = await Promise.all([
+      readiness("servicio", services.rows.map((row) => row.id)),
+      readiness("lugar", places.rows.map((row) => row.id))
+    ]);
+    const items = [
+      ...services.rows.map((row) => {
+        const isChange = row.estado_aprobacion === "aprobado" && row.cambios_propuestos;
+        const proposal = row.cambios_propuestos ?? null;
+        const missing = (serviceMissing.get(row.id) ?? []).filter((item) => !(proposal?.imagen_url && item.startsWith("multimedia")));
+        return {
+          tipo: "servicio",
+          solicitud: isChange ? "cambios" : "nuevo",
+          id: row.id,
+          nombre: row.nombre,
+          slug: row.slug,
+          estado: row.estado_aprobacion,
+          prestador: row.prestador,
+          municipio: row.municipio,
+          categoria: row.categoria ?? row.tipo_servicio,
+          enviadoAt: row.enviado_at,
+          motivoRevision: row.motivo_revision,
+          faltantes: isChange ? [] : missing,
+          // Para comparar: lo publicado contra lo propuesto (sólo los campos que cambian).
+          cambios: proposal ? Object.entries(proposal).map(([campo, propuesto]) => ({
+            campo,
+            actual: campo === "imagen_url" ? null : row[campo] ?? null,
+            propuesto
+          })) : []
+        };
+      }),
+      ...places.rows.map((row) => ({
+        tipo: "lugar",
+        solicitud: "nuevo",
+        id: row.id,
+        nombre: row.nombre,
+        slug: row.slug,
+        estado: row.estado_aprobacion,
+        prestador: null,
+        municipio: row.municipio,
+        categoria: row.categoria,
+        enviadoAt: row.enviado_at,
+        motivoRevision: row.motivo_revision,
+        faltantes: placeMissing.get(row.id) ?? [],
+        cambios: []
+      })),
+      ...promotions.rows.map((row) => ({
+        tipo: "promocion",
+        solicitud: "nuevo",
+        id: row.id,
+        nombre: row.nombre,
+        slug: null,
+        estado: row.estado_aprobacion,
+        prestador: row.prestador,
+        municipio: null,
+        categoria: row.servicio,
+        enviadoAt: row.enviado_at,
+        motivoRevision: row.motivo_revision,
+        faltantes: [],
+        cambios: [],
+        detalle: { descripcion: row.descripcion, condiciones: row.condiciones, fechaInicio: row.fecha_inicio, fechaFin: row.fecha_fin }
+      }))
+    ].sort((a, b) => new Date(a.enviadoAt).getTime() - new Date(b.enviadoAt).getTime());
+    res.json({ data: items });
+  } catch (error) {
+    console.error("Error consultando la bandeja de moderaci\xF3n:", error);
+    res.status(500).json({ error: "No fue posible cargar las solicitudes pendientes." });
+  }
+};
+var getContentForEdit = async (req, res) => {
+  const kind = parseKind(req.params.tipo);
+  const id = parseId(req.params.id);
+  if (!kind || kind === "promocion" || !id) {
+    res.status(400).json({ error: "Contenido inv\xE1lido." });
+    return;
+  }
+  const fields = kind === "servicio" ? ADMIN_SERVICE_FIELDS : ADMIN_PLACE_FIELDS;
+  try {
+    const result = await db_default.query(
+      `SELECT id, slug, estado_aprobacion, ${fields.join(", ")}${kind === "servicio" ? ", cambios_propuestos" : ""}
+       FROM public.${TABLES[kind]}
+       WHERE id = $1 AND deleted_at IS NULL`,
+      [id]
+    );
+    if (!result.rows[0]) {
+      res.status(404).json({ error: "Contenido no encontrado." });
+      return;
+    }
+    res.json({ data: result.rows[0] });
+  } catch (error) {
+    console.error("Error cargando contenido para editar:", error);
+    res.status(500).json({ error: "No fue posible cargar la ficha." });
+  }
+};
+var attachServiceImage = async (client, serviceId, url, alt, userId) => {
+  const media = await client.query(
+    `INSERT INTO public.multimedia (tipo, url, alt_text, titulo, subido_por)
+     VALUES ('image', $1, $2, $2, $3)
+     RETURNING id`,
+    [url, alt.slice(0, 255), userId ?? null]
+  );
+  await client.query("UPDATE public.servicio_multimedia SET es_principal = FALSE WHERE servicio_id = $1", [serviceId]);
+  await client.query(
+    `INSERT INTO public.servicio_multimedia (servicio_id, multimedia_id, orden, es_principal)
+     VALUES ($1, $2, 0, TRUE)
+     ON CONFLICT (servicio_id, multimedia_id) DO UPDATE SET es_principal = TRUE`,
+    [serviceId, media.rows[0].id]
+  );
+};
+var updateContentAsAdmin = async (req, res) => {
+  const kind = parseKind(req.params.tipo);
+  const id = parseId(req.params.id);
+  if (!kind || kind === "promocion" || !id) {
+    res.status(400).json({ error: "Contenido inv\xE1lido." });
+    return;
+  }
+  const { values, errors } = pickAdminFields(req.body, kind === "servicio" ? ADMIN_SERVICE_FIELDS : ADMIN_PLACE_FIELDS);
+  const imageUrl = kind === "servicio" && typeof req.body?.imagen_url === "string" ? req.body.imagen_url.trim() : "";
+  if (imageUrl && !isAcceptableImageUrl(imageUrl)) errors.imagen_url = "El enlace de la foto debe ser https y terminar en .jpg, .png o .webp.";
+  if (Object.keys(errors).length) {
+    res.status(400).json({ error: "Revisa los campos marcados.", campos: errors });
+    return;
+  }
+  const entries = Object.entries(values);
+  if (!entries.length && !imageUrl) {
+    res.status(400).json({ error: "No hay cambios para guardar." });
+    return;
+  }
+  const client = await db_default.connect();
+  try {
+    await client.query("BEGIN");
+    let row;
+    if (entries.length) {
+      const sets = entries.map(([column], index) => `${column} = $${index + 1}`);
+      const result = await client.query(
+        `UPDATE public.${TABLES[kind]}
+         SET ${sets.join(", ")}, updated_at = CURRENT_TIMESTAMP
+         WHERE id = $${entries.length + 1} AND deleted_at IS NULL
+         RETURNING id, nombre, estado_aprobacion`,
+        [...entries.map(([, value]) => value), id]
+      );
+      row = result.rows[0];
+    } else {
+      const result = await client.query(
+        `SELECT id, nombre, estado_aprobacion FROM public.${TABLES[kind]} WHERE id = $1 AND deleted_at IS NULL`,
+        [id]
+      );
+      row = result.rows[0];
+    }
+    if (!row) {
+      await client.query("ROLLBACK");
+      res.status(404).json({ error: "Contenido no encontrado." });
+      return;
+    }
+    if (imageUrl) await attachServiceImage(client, id, imageUrl, row.nombre, req.user?.id);
+    await client.query("COMMIT");
+    res.json({ data: row });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("Error editando contenido como administrador:", error);
+    res.status(500).json({ error: "No fue posible guardar los cambios." });
+  } finally {
+    client.release();
+  }
+};
+var approveModeration = async (req, res) => {
+  const kind = parseKind(req.params.tipo);
+  const id = parseId(req.params.id);
+  if (!kind || !id) {
+    res.status(400).json({ error: "Solicitud inv\xE1lida." });
+    return;
+  }
+  const client = await db_default.connect();
+  try {
+    await client.query("BEGIN");
+    if (kind === "promocion") {
+      const result = await client.query(
+        `UPDATE public.promociones
+         SET estado_aprobacion = 'aprobado', motivo_revision = NULL, revisado_por = $1,
+             revisado_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+         WHERE id = $2 AND deleted_at IS NULL
+         RETURNING id, estado_aprobacion`,
+        [req.user?.id ?? null, id]
+      );
+      if (!result.rows[0]) throw Object.assign(new Error("not-found"), { status: 404 });
+      await client.query("COMMIT");
+      res.json({ data: result.rows[0] });
+      return;
+    }
+    if (kind === "servicio") {
+      const current = await client.query(
+        `SELECT id, nombre, cambios_propuestos FROM public.servicios WHERE id = $1 AND deleted_at IS NULL FOR UPDATE`,
+        [id]
+      );
+      const service = current.rows[0];
+      if (!service) throw Object.assign(new Error("not-found"), { status: 404 });
+      const { columns, imageUrl } = splitProposal(service.cambios_propuestos);
+      const entries = Object.entries(columns);
+      if (entries.length) {
+        const sets = entries.map(([column], index) => `${column} = $${index + 1}`);
+        await client.query(
+          `UPDATE public.servicios SET ${sets.join(", ")} WHERE id = $${entries.length + 1}`,
+          [...entries.map(([, value]) => value), id]
+        );
+      }
+      if (imageUrl) await attachServiceImage(client, id, imageUrl, service.nombre, req.user?.id);
+      await client.query(
+        "UPDATE public.servicios SET cambios_propuestos = NULL, cambios_enviados_at = NULL WHERE id = $1",
+        [id]
+      );
+    }
+    const query = (kind === "lugar" ? placeReviewQuery : serviceReviewQuery).replace("LIMIT $3 OFFSET $4", "");
+    const check2 = await client.query(
+      `SELECT * FROM (${query}) AS content WHERE id = $3 LIMIT 1`,
+      [null, null, id]
+    );
+    if (!check2.rows[0]) throw Object.assign(new Error("not-found"), { status: 404 });
+    const missing = approvalRequirements(kind, check2.rows[0]);
+    if (missing.length) {
+      await client.query("ROLLBACK");
+      res.status(409).json({
+        error: "Todav\xEDa no se puede publicar. Edita la ficha y completa lo que falta.",
+        faltantes: missing
+      });
+      return;
+    }
+    const updated = await client.query(
+      `UPDATE public.${TABLES[kind]}
+       SET estado_aprobacion = 'aprobado', motivo_revision = NULL, revisado_por = $1,
+           revisado_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $2
+       RETURNING id, slug, estado_aprobacion`,
+      [req.user?.id ?? null, id]
+    );
+    if (kind === "servicio") {
+      await client.query(
+        `UPDATE public.prestadores AS p
+         SET estado_aprobacion = 'aprobado', updated_at = CURRENT_TIMESTAMP
+         FROM public.servicios AS s
+         WHERE s.id = $1 AND p.id = s.prestador_id AND p.estado_aprobacion <> 'aprobado'`,
+        [id]
+      );
+    }
+    await client.query("COMMIT");
+    res.json({ data: updated.rows[0] });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    if (error.status === 404) {
+      res.status(404).json({ error: "La solicitud ya no existe o fue eliminada." });
+      return;
+    }
+    console.error("Error aprobando contenido:", error);
+    res.status(500).json({ error: "No fue posible aprobar la solicitud." });
+  } finally {
+    client.release();
+  }
+};
+var rejectModeration = async (req, res) => {
+  const kind = parseKind(req.params.tipo);
+  const id = parseId(req.params.id);
+  const reason = reasonOf(req.body);
+  if (!kind || !id) {
+    res.status(400).json({ error: "Solicitud inv\xE1lida." });
+    return;
+  }
+  if (reason.length < 5) {
+    res.status(400).json({ error: "Escribe el motivo del rechazo para que el prestador sepa qu\xE9 corregir." });
+    return;
+  }
+  try {
+    if (kind === "servicio") {
+      const change = await db_default.query(
+        `UPDATE public.servicios
+         SET cambios_propuestos = NULL, cambios_enviados_at = NULL, motivo_revision = $1,
+             revisado_por = $2, revisado_at = CURRENT_TIMESTAMP
+         WHERE id = $3 AND deleted_at IS NULL AND estado_aprobacion = 'aprobado' AND cambios_propuestos IS NOT NULL
+         RETURNING id, estado_aprobacion`,
+        [reason, req.user?.id ?? null, id]
+      );
+      if (change.rows[0]) {
+        res.json({ data: { ...change.rows[0], descartado: "cambios" } });
+        return;
+      }
+    }
+    const result = await db_default.query(
+      `UPDATE public.${TABLES[kind]}
+       SET estado_aprobacion = 'rechazado', motivo_revision = $1, revisado_por = $2,
+           revisado_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+           ${kind === "servicio" ? ", cambios_propuestos = NULL, cambios_enviados_at = NULL" : ""}
+       WHERE id = $3 AND deleted_at IS NULL
+       RETURNING id, estado_aprobacion`,
+      [reason, req.user?.id ?? null, id]
+    );
+    if (!result.rows[0]) {
+      res.status(404).json({ error: "La solicitud ya no existe o fue eliminada." });
+      return;
+    }
+    res.json({ data: result.rows[0] });
+  } catch (error) {
+    console.error("Error rechazando contenido:", error);
+    res.status(500).json({ error: "No fue posible rechazar la solicitud." });
+  }
+};
+var deleteContentAsAdmin = async (req, res) => {
+  const kind = parseKind(req.params.tipo);
+  const id = parseId(req.params.id);
+  if (!kind || !id) {
+    res.status(400).json({ error: "Contenido inv\xE1lido." });
+    return;
+  }
+  try {
+    const result = await db_default.query(
+      `UPDATE public.${TABLES[kind]}
+       SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $1 AND deleted_at IS NULL
+       RETURNING id`,
+      [id]
+    );
+    if (!result.rows[0]) {
+      res.status(404).json({ error: "Contenido no encontrado o ya eliminado." });
+      return;
+    }
+    res.json({ data: { id, eliminado: true } });
+  } catch (error) {
+    console.error("Error eliminando contenido:", error);
+    res.status(500).json({ error: "No fue posible eliminar el contenido." });
+  }
+};
+var getReportData = async (_req, res) => {
+  try {
+    const [providers, places, services, municipalities, activity] = await Promise.all([
+      db_default.query(
+        `SELECT p.nombre_comercial AS prestador, p.estado_aprobacion AS estado, p.telefono, p.correo,
+                COALESCE(u.email, '') AS cuenta,
+                COUNT(s.id) FILTER (WHERE s.deleted_at IS NULL)::INT AS servicios,
+                COUNT(s.id) FILTER (WHERE s.deleted_at IS NULL AND s.estado_aprobacion = 'aprobado')::INT AS publicados,
+                COUNT(s.id) FILTER (WHERE s.deleted_at IS NULL AND (s.estado_aprobacion = 'en_revision' OR s.cambios_propuestos IS NOT NULL))::INT AS pendientes,
+                STRING_AGG(DISTINCT mu.nombre, ', ') AS municipios,
+                p.created_at AS registrado
+         FROM public.prestadores AS p
+         LEFT JOIN public.usuarios AS u ON u.id = p.usuario_id
+         LEFT JOIN public.servicios AS s ON s.prestador_id = p.id
+         LEFT JOIN public.municipios AS mu ON mu.id = s.municipio_id
+         WHERE p.deleted_at IS NULL
+         GROUP BY p.id, u.email
+         ORDER BY p.nombre_comercial`
+      ),
+      db_default.query(
+        `SELECT l.nombre, mu.nombre AS municipio, ca.nombre AS categoria, l.estado_aprobacion AS estado,
+                l.altitud, (l.latitud IS NOT NULL AND l.longitud IS NOT NULL) AS con_coordenadas,
+                (SELECT COUNT(*)::INT FROM public.favoritos f WHERE f.lugar_id = l.id) AS favoritos,
+                l.updated_at AS actualizado
+         FROM public.lugares_turisticos AS l
+         JOIN public.municipios AS mu ON mu.id = l.municipio_id
+         JOIN public.categorias AS ca ON ca.id = l.categoria_id
+         WHERE l.deleted_at IS NULL
+         ORDER BY mu.nombre, l.nombre`
+      ),
+      db_default.query(
+        `SELECT s.nombre, p.nombre_comercial AS prestador, mu.nombre AS municipio,
+                COALESCE(ca.nombre, s.tipo_servicio) AS tipo, s.estado_aprobacion AS estado,
+                (s.cambios_propuestos IS NOT NULL) AS cambios_pendientes, s.contacto, s.updated_at AS actualizado
+         FROM public.servicios AS s
+         JOIN public.prestadores AS p ON p.id = s.prestador_id
+         LEFT JOIN public.municipios AS mu ON mu.id = s.municipio_id
+         LEFT JOIN public.categorias AS ca ON ca.id = s.categoria_id
+         WHERE s.deleted_at IS NULL
+         ORDER BY mu.nombre NULLS LAST, s.nombre`
+      ),
+      db_default.query(
+        `SELECT mu.nombre AS municipio,
+                (SELECT COUNT(*)::INT FROM public.lugares_turisticos l WHERE l.municipio_id = mu.id AND l.deleted_at IS NULL) AS lugares,
+                (SELECT COUNT(*)::INT FROM public.lugares_turisticos l WHERE l.municipio_id = mu.id AND l.deleted_at IS NULL AND l.estado_aprobacion = 'aprobado') AS lugares_publicados,
+                (SELECT COUNT(*)::INT FROM public.servicios s WHERE s.municipio_id = mu.id AND s.deleted_at IS NULL) AS servicios,
+                (SELECT COUNT(*)::INT FROM public.servicios s WHERE s.municipio_id = mu.id AND s.deleted_at IS NULL AND s.estado_aprobacion = 'aprobado') AS servicios_publicados
+         FROM public.municipios AS mu
+         ORDER BY mu.nombre`
+      ),
+      db_default.query(
+        `SELECT
+           (SELECT COUNT(*)::INT FROM public.usuarios WHERE deleted_at IS NULL) AS usuarios,
+           (SELECT COUNT(*)::INT FROM public.favoritos) AS favoritos,
+           (SELECT COUNT(*)::INT FROM public.promociones WHERE deleted_at IS NULL AND estado_aprobacion = 'aprobado' AND fecha_fin >= NOW()) AS promociones_activas,
+           (SELECT COUNT(*)::INT FROM public.eventos WHERE deleted_at IS NULL AND estado_aprobacion = 'aprobado' AND fecha_fin >= NOW()) AS eventos_proximos,
+           (SELECT COUNT(*)::INT FROM public.servicios WHERE deleted_at IS NULL AND (estado_aprobacion = 'en_revision' OR cambios_propuestos IS NOT NULL)) AS solicitudes_pendientes`
+      )
+    ]);
+    res.json({
+      data: {
+        generadoEn: (/* @__PURE__ */ new Date()).toISOString(),
+        actividad: activity.rows[0],
+        prestadores: providers.rows,
+        lugares: places.rows,
+        servicios: services.rows,
+        municipios: municipalities.rows
+      }
+    });
+  } catch (error) {
+    console.error("Error generando el reporte:", error);
+    res.status(500).json({ error: "No fue posible generar el reporte." });
+  }
+};
+
 // src/routes/adminRoutes.ts
 var router9 = (0, import_express9.Router)();
 router9.use(requireAuth, requireRole(["administrador"]));
 router9.get("/estadisticas", getStatistics);
+router9.get("/moderacion", listModerationQueue);
+router9.post("/moderacion/:tipo/:id/aprobar", approveModeration);
+router9.post("/moderacion/:tipo/:id/rechazar", rejectModeration);
+router9.get("/contenido/:tipo/:id", getContentForEdit);
+router9.patch("/contenido/:tipo/:id", updateContentAsAdmin);
+router9.delete("/contenido/:tipo/:id", deleteContentAsAdmin);
+router9.get("/reportes", getReportData);
 router9.get("/promociones", listPromotionsForReview);
 router9.patch("/promociones/:id", reviewPromotion);
 router9.get("/prestadores", listProviders);

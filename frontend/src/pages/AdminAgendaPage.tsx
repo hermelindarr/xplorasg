@@ -1,5 +1,6 @@
 /* eslint-disable react/set-state-in-effect -- carga de datos al montar la vista */
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { useAuth } from '../contexts/AuthContext';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { adminInsightsApi, type AdminEvent, type EventInput } from '../services/adminPanelApi';
@@ -10,6 +11,7 @@ import { ClockIcon, EditIcon, PlusIcon, TrashIcon } from '../components/admin/Ad
 import { BackLink, EmptyState, Notice, PageHeader, StatGrid, StatusPill } from '../components/admin/AdminUi';
 import { fieldLabel, panelSurface, tabClass } from '../components/admin/classes';
 import { statusOf } from '../components/admin/status';
+import { scrollBehavior } from '../utils/motion';
 
 const toLocalInput = (iso: string) => {
   const date = new Date(iso);
@@ -44,6 +46,9 @@ export const AdminAgendaPage = () => {
   const [when, setWhen] = useState<When>('proximos');
   const [stateFilter, setStateFilter] = useState('');
   const [now] = useState(() => Date.now());
+  const [toDelete, setToDelete] = useState<AdminEvent | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   const load = useCallback(async () => {
     if (!token) return;
@@ -70,7 +75,7 @@ export const AdminAgendaPage = () => {
       fecha_inicio: toLocalInput(event.fecha_inicio), fecha_fin: toLocalInput(event.fecha_fin),
     });
     setMessage(null);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: scrollBehavior() });
   };
 
   const submit = async (event: FormEvent) => {
@@ -97,13 +102,19 @@ export const AdminAgendaPage = () => {
     }
   };
 
-  const remove = async (event: AdminEvent) => {
-    if (!token || !window.confirm(`¿Eliminar "${event.nombre}" de la agenda?`)) return;
+  // Confirmación con modal (antes era window.confirm del navegador).
+  const remove = async () => {
+    if (!token || !toDelete) return;
+    setDeleting(true);
+    setDeleteError('');
     try {
-      await adminInsightsApi.deleteEvent(token, event.id);
+      await adminInsightsApi.deleteEvent(token, toDelete.id);
+      setToDelete(null);
       await load();
     } catch (error) {
-      setMessage({ tone: 'error', text: error instanceof Error ? error.message : 'No fue posible eliminarlo.' });
+      setDeleteError(error instanceof Error ? error.message : 'No fue posible eliminarlo.');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -216,7 +227,7 @@ export const AdminAgendaPage = () => {
             </div>
             <label className="mb-2 flex w-full items-center gap-2 text-xs text-brand-blue/70 sm:w-auto">
               <span className="sr-only sm:not-sr-only">Estado</span>
-              <select value={stateFilter} onChange={(event) => setStateFilter(event.target.value)} className="field min-h-9 w-full py-1.5 text-[13px] sm:w-auto">
+              <select value={stateFilter} onChange={(event) => setStateFilter(event.target.value)} className="field min-h-9 w-full py-1.5 text-label sm:w-auto">
                 {stateFilters.map(([value, label]) => <option key={value || 'todos'} value={value}>{label}</option>)}
               </select>
             </label>
@@ -237,7 +248,7 @@ export const AdminAgendaPage = () => {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1.5">
-                        <h3 className="min-w-0 text-[15px] font-medium leading-6 text-brand-blue">{event.nombre}</h3>
+                        <h3 className="min-w-0 text-base font-medium leading-6 text-brand-blue">{event.nombre}</h3>
                         <StatusPill {...statusOf(event.estado_aprobacion, stateLabel)} />
                       </div>
                       <p className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs leading-5 text-brand-blue/70">
@@ -249,7 +260,7 @@ export const AdminAgendaPage = () => {
                         <button type="button" onClick={() => startEdit(event)} className="btn btn-ghost min-h-8 px-3 py-1 !text-xs">
                           <EditIcon className="size-3.5" /> Editar
                         </button>
-                        <button type="button" onClick={() => void remove(event)} className="btn min-h-8 px-3 py-1 !text-xs text-clay-700 hover:bg-clay-50">
+                        <button type="button" onClick={() => { setDeleteError(''); setToDelete(event); }} className="btn min-h-8 px-3 py-1 !text-xs text-clay-700 hover:bg-clay-50 pointer-coarse:min-h-11">
                           <TrashIcon className="size-3.5" /> Eliminar
                         </button>
                       </div>
@@ -270,6 +281,17 @@ export const AdminAgendaPage = () => {
           )}
         </div>
       </div>
+      <ConfirmDialog
+        open={Boolean(toDelete)}
+        title="¿Eliminar este evento de la agenda?"
+        confirmLabel="Eliminar evento"
+        busy={deleting}
+        error={deleteError}
+        onConfirm={() => void remove()}
+        onCancel={() => setToDelete(null)}
+      >
+        <p>“{toDelete?.nombre}” dejará de aparecer en la Agenda pública.</p>
+      </ConfirmDialog>
     </section>
   );
 };

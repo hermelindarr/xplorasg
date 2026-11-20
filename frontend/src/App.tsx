@@ -7,17 +7,14 @@ import { LanguageProvider, useMessages } from './i18n';
 import { common } from './i18n/common';
 import { FavoritesProvider } from './contexts/FavoritesContext';
 import { AppShell } from './layouts/AppShell';
-import { ExplorePage } from './pages/ExplorePage';
-import { PlaceDetailPage } from './pages/PlaceDetailPage';
-import { ServicesPage } from './pages/ServicesPage';
-import { FavoritesPage } from './pages/FavoritesPage';
-import { ServiceDetailPage } from './pages/ServiceDetailPage';
+import { HomePage } from './pages/HomePage';
 import { UnauthorizedPage } from './pages/UnauthorizedPage';
 import { ArrowRightIcon, MapIcon } from './components/brand/icons';
 
 // Paneles internos: se descargan sólo cuando un administrador o prestador los abre.
 const AdminPanelPage = lazy(() => import('./pages/AdminPanelPage').then((module) => ({ default: module.AdminPanelPage })));
 const AdminContentPage = lazy(() => import('./pages/AdminContentPage').then((module) => ({ default: module.AdminContentPage })));
+const AdminModerationPage = lazy(() => import('./pages/AdminModerationPage').then((module) => ({ default: module.AdminModerationPage })));
 const AdminAgendaPage = lazy(() => import('./pages/AdminAgendaPage').then((module) => ({ default: module.AdminAgendaPage })));
 const ProviderPage = lazy(() => import('./pages/ProviderPage').then((module) => ({ default: module.ProviderPage })));
 
@@ -33,6 +30,12 @@ const PanelFallback = () => (
 const panel = (element: ReactNode) => <Suspense fallback={<PanelFallback />}>{element}</Suspense>;
 
 // Páginas que no se necesitan al abrir la app: se descargan al visitarlas (el service worker las guarda igual).
+// Catálogo: la portada va en el paquete principal; el resto de las vistas públicas se descargan al visitarlas.
+const ExplorePage = lazy(() => import('./pages/ExplorePage').then((module) => ({ default: module.ExplorePage })));
+const PlaceDetailPage = lazy(() => import('./pages/PlaceDetailPage').then((module) => ({ default: module.PlaceDetailPage })));
+const ServicesPage = lazy(() => import('./pages/ServicesPage').then((module) => ({ default: module.ServicesPage })));
+const ServiceDetailPage = lazy(() => import('./pages/ServiceDetailPage').then((module) => ({ default: module.ServiceDetailPage })));
+const FavoritesPage = lazy(() => import('./pages/FavoritesPage').then((module) => ({ default: module.FavoritesPage })));
 const Dashboard = lazy(() => import('./pages/Dashboard').then((module) => ({ default: module.Dashboard })));
 const Login = lazy(() => import('./pages/Login').then((module) => ({ default: module.Login })));
 const AssistantPage = lazy(() => import('./pages/AssistantPage').then((module) => ({ default: module.AssistantPage })));
@@ -93,7 +96,7 @@ const MessagePage = ({ title, message, action, secondary }: { title: string; mes
       <p className="font-display text-[5.5rem] font-normal italic leading-none text-brand-gold md:col-span-4 lg:text-[8rem]" aria-hidden="true">404</p>
       <div className="max-w-xl md:col-span-8 md:pt-3">
         <h1 className="text-[2.25rem] leading-[1.08] text-brand-blue sm:text-5xl">{title}</h1>
-        <p className="mt-5 text-[15px] leading-7 text-brand-blue/75">{message}</p>
+        <p className="mt-5 text-base leading-7 text-brand-blue/75">{message}</p>
         <div className="mt-9 flex flex-wrap items-center gap-x-7 gap-y-4">
           <Link to="/explorar" className="btn btn-accent min-h-12 px-7">{action}<ArrowRightIcon className="size-4" /></Link>
           <Link to="/mapa" className="group inline-flex items-center gap-2 border-b border-brand-blue/25 pb-1 text-sm font-medium text-brand-blue transition-colors duration-300 hover:border-brand-green hover:text-brand-green">
@@ -113,15 +116,15 @@ function App() {
         <BrowserRouter>
         <Routes>
           <Route element={<AppShell />}>
-            <Route index element={<ExplorePage />} />
-            <Route path="/explorar" element={<ExplorePage />} />
+            <Route index element={<HomePage />} />
+            <Route path="/explorar" element={page(<ExplorePage />)} />
             <Route path="/mapa" element={<MapRoute />} />
-            <Route path="/servicios" element={<ServicesPage />} />
-            <Route path="/servicios/:slug" element={<ServiceDetailPage />} />
-            <Route path="/favoritos" element={<FavoritesPage />} />
+            <Route path="/servicios" element={page(<ServicesPage />)} />
+            <Route path="/servicios/:slug" element={page(<ServiceDetailPage />)} />
+            <Route path="/favoritos" element={page(<FavoritesPage />)} />
             <Route path="/agenda" element={page(<AgendaPage />)} />
             <Route path="/asistente" element={page(<AssistantPage />)} />
-            <Route path="/lugares/:slug" element={<PlaceDetailPage />} />
+            <Route path="/lugares/:slug" element={page(<PlaceDetailPage />)} />
             <Route path="/login" element={page(<Login />)} />
             <Route path="/encuesta" element={page(<SurveyPage />)} />
             <Route path="/nosotros" element={page(<AboutUs />)} />
@@ -141,6 +144,7 @@ function App() {
 
             <Route element={<ProtectedRoute allowedRoles={['administrador']} />}>
               <Route path="/admin" element={panel(<AdminPanelPage />)} />
+              <Route path="/admin/moderacion" element={panel(<AdminModerationPage />)} />
               <Route path="/admin/contenido" element={panel(<AdminContentPage />)} />
               <Route path="/admin/agenda" element={panel(<AdminAgendaPage />)} />
             </Route>

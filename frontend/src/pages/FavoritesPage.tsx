@@ -7,12 +7,14 @@ import { catalogApi } from '../services/catalogApi';
 import type { Place } from '../types/catalog';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { defineMessages, useMessages } from '../i18n';
-import { ItalicTail, TextLink } from '../components/home/HomeUi';
+import { Accented } from '../components/ui/Accented';
+import { TextLink } from '../components/ui/TextLink';
 import { PageHero } from '../components/ui/PageHero';
 
 const messages = defineMessages({
   pageTitle: 'Mis favoritos',
   title: 'Tus favoritos',
+  titleAccent: 'favoritos',
   subtitle: 'Lugares que has guardado para visitar.',
   loading: 'Cargando favoritos...',
   emptyTitle: 'Tus favoritos están vacíos',
@@ -29,6 +31,7 @@ const messages = defineMessages({
 }, {
   pageTitle: 'My favorites',
   title: 'Your favorites',
+  titleAccent: 'favorites',
   subtitle: 'Places you have saved to visit.',
   loading: 'Loading favorites...',
   emptyTitle: 'You have no favorites yet',
@@ -87,7 +90,7 @@ export const FavoritesPage = () => {
   const hasPlaces = !isLoading && places.length > 0;
 
   const syncNote = !isAuthenticated && (
-    <p className="text-[13px] leading-6 text-brand-blue/70">
+    <p className="text-label leading-6 text-brand-blue/70">
       {m.localNote}{' '}
       <Link to="/login" className="inline-block py-1 font-medium text-brand-green underline decoration-brand-green/30 underline-offset-4 hover:decoration-brand-green">{m.signIn}</Link>{' '}
       {m.syncNote}
@@ -98,7 +101,7 @@ export const FavoritesPage = () => {
     <>
       <PageHero
         eyebrow={m.eyebrow}
-        title={<ItalicTail text={m.title} words={1} />}
+        title={<Accented text={m.title} accent={m.titleAccent} />}
         subtitle={m.subtitle}
         image={heroPhoto ? { url: heroPhoto.url, alt: '' } : null}
         actions={hasPlaces && <TextLink to="/mapa">{m.openMap}</TextLink>}
@@ -113,9 +116,8 @@ export const FavoritesPage = () => {
           </div>
         ) : places.length === 0 ? (
           <div className="rounded-xl bg-brand-light px-6 py-16 text-center sm:px-12 sm:py-24">
-            <p className="eyebrow">{m.emptyEyebrow}</p>
-            <h2 className="mx-auto mt-5 max-w-xl text-[2rem] leading-[1.1] text-brand-blue sm:text-[2.75rem]">{m.emptyTitle}</h2>
-            <p className="mx-auto mt-4 max-w-md text-[15px] leading-7 text-brand-blue/75">{m.emptyText}</p>
+            <h2 className="mx-auto max-w-xl text-[2rem] leading-[1.1] text-brand-blue sm:text-[2.75rem]">{m.emptyTitle}</h2>
+            <p className="mx-auto mt-4 max-w-md text-base leading-7 text-brand-blue/75">{m.emptyText}</p>
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
               <Link to="/explorar" className="btn btn-primary min-h-12 px-7">{m.explorePlaces}</Link>
               <Link to="/mapa" className="btn btn-secondary min-h-12 px-7">{m.openMap}</Link>

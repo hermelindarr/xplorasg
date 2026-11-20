@@ -297,3 +297,43 @@ export const getRoute = async (origin: Coordinate, destination: Coordinate, prof
 };
 
 
+
+// --- Altitud del terreno (modelo digital de elevación de Open-Meteo) ---
+// La altitud no cambia: se guarda en memoria por coordenada redondeada (≈11 m) y sólo se piden las que faltan.
+export const MAX_ELEVATION_POINTS = 60;
+const elevationCache = new Map<string, number>();
+const elevationKey = (point: Coordinate) => `${point.latitud.toFixed(4)},${point.longitud.toFixed(4)}`;
+
+/** Convierte "lat,lon|lat,lon" en coordenadas válidas. Devuelve null si alguna es inválida o son demasiadas. */
+export const parsePointList = (value: unknown): Coordinate[] | null => {
+  if (typeof value !== 'string' || !value.trim()) return null;
+  const parts = value.split('|');
+  if (parts.length > MAX_ELEVATION_POINTS) return null;
+  const points: Coordinate[] = [];
+  for (const part of parts) {
+    const [lat, lon] = part.split(',');
+    const latitud = parseCoordinate(lat, -90, 90);
+    const longitud = parseCoordinate(lon, -180, 180);
+    if (latitud === null || longitud === null) return null;
+    points.push({ latitud, longitud });
+  }
+  return points;
+};
+
+export const getElevations = async (points: Coordinate[]): Promise<Array<number | null>> => {
+  const missing = [...new Map(points.filter((p) => !elevationCache.has(elevationKey(p))).map((p) => [elevationKey(p), p])).values()];
+  if (missing.length) {
+    const query = new URLSearchParams({
+      latitude: missing.map((p) => p.latitud.toFixed(4)).join(','),
+      longitude: missing.map((p) => p.longitud.toFixed(4)).join(','),
+    });
+    const response = await fetchWithTimeout(`https://api.open-meteo.com/v1/elevation?${query}`);
+    if (!response.ok) throw new TravelServiceError('Open-Meteo rechazó la consulta de altitud.', 502);
+    const data = await response.json() as { elevation?: unknown[] };
+    missing.forEach((point, index) => {
+      const value = data.elevation?.[index];
+      if (typeof value === 'number' && Number.isFinite(value)) elevationCache.set(elevationKey(point), Math.round(value));
+    });
+  }
+  return points.map((point) => elevationCache.get(elevationKey(point)) ?? null);
+};

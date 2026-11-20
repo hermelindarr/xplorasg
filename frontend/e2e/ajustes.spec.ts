@@ -67,29 +67,34 @@ test('el inicio ya no muestra la sección "Cómo funciona"', async ({ page }) =>
   await expect(page.getByRole('heading', { name: 'Cómo funciona' })).toHaveCount(0);
 });
 
-test('el clima de la ficha muestra lecturas de montaña y la posición del lugar', async ({ page }) => {
+test('la ficha muestra la altitud, las lecturas de montaña y el pronóstico, sin coordenadas', async ({ page }) => {
   await mockApi(page, { places: [makePlace(1, { latitud: '21.2183', longitud: '-99.5297', altitud: null })] });
   await page.route('**/api/viaje/clima**', (route) => route.fulfill({ json: { data: {
     timezone: null,
     location: { latitude: 21.2183, longitude: -99.5297, elevation: 1050 },
     current: { time: null, temperature: 24, apparentTemperature: 25, precipitation: 0, windSpeed: 8, humidity: 62, uvIndex: 7, weatherCode: 1, condition: 'Mayormente despejado' },
-    forecast: [],
+    forecast: [
+      { date: '2026-11-17', weatherCode: 1, condition: 'Despejado', temperatureMax: 26, temperatureMin: 12, precipitationProbability: 10 },
+      { date: '2026-11-18', weatherCode: 61, condition: 'Lluvia ligera', temperatureMax: 22, temperatureMin: 11, precipitationProbability: 70 },
+    ],
   } } }));
   await page.goto('/lugares/lugar-1');
-  for (const text of ['21.2183° N', '99.5297° O', '1,050 m.s.n.m.', '62 %', '7 · alto', '25°', '8 km/h']) {
+  await expect(page.getByText('1,200 m s. n. m.', { exact: true })).toBeVisible();
+  for (const text of ['62 %', '7 · alto', '25°', '8 km/h', 'Hoy', '70 % lluvia']) {
     await expect(page.getByText(text, { exact: true })).toBeVisible();
   }
-  for (const label of ['Latitud', 'Longitud', 'Altitud', 'Índice UV', 'Sensación térmica', 'Viento', 'Humedad']) {
-    await expect(page.getByText(label, { exact: true })).toBeVisible();
+  for (const label of ['Altitud', 'Índice UV', 'Sensación térmica', 'Viento', 'Humedad', 'Próximos días']) {
+    await expect(page.getByText(label, { exact: true }).first()).toBeVisible();
   }
-  await expect(page.getByRole('link', { name: /Ver ubicación en OpenStreetMap/ })).toHaveAttribute('href', /openstreetmap\.org\/\?mlat=21\.2183/);
+  await expect(page.getByText('Latitud', { exact: true })).toHaveCount(0);
 });
 
 test('sin altitud no se muestra un guion vacío', async ({ page }) => {
   await mockApi(page, { places: [makePlace(1, { latitud: '21.2183', longitud: '-99.5297', altitud: null })] });
+  await page.route('**/api/viaje/altitudes**', (route) => route.fulfill({ status: 502, json: { error: 'sin servicio' } }));
   await page.route('**/api/viaje/clima**', (route) => route.fulfill({ status: 502, json: { error: 'sin servicio' } }));
   await page.goto('/lugares/lugar-1');
-  await expect(page.getByText('Latitud', { exact: true })).toBeVisible();
+  await expect(page.getByText('El clima no está disponible en este momento.')).toBeVisible();
   await expect(page.getByText('Altitud', { exact: true })).toHaveCount(0);
 });
 

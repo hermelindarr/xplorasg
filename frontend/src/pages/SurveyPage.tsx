@@ -7,7 +7,8 @@ import { defineMessages, useMessages } from '../i18n';
 import {
   ArrowRightIcon, CommunityIcon, CompassIcon, HeartIcon, LodgingIcon, ShieldIcon, SparkleIcon,
 } from '../components/brand/icons';
-import { ItalicTail } from '../components/home/HomeUi';
+import { Accented } from '../components/ui/Accented';
+import { scrollBehavior } from '../utils/motion';
 
 // Los valores (turista, mapa, satisfaccion…) se guardan tal cual y se agregan en el panel admin:
 // sólo se traducen las etiquetas visibles.
@@ -35,6 +36,7 @@ const surveyMessages = defineMessages({
   keepExploring: 'Seguir explorando',
   eyebrow: 'Validación del prototipo',
   title: '¿Cómo fue tu experiencia?',
+  titleAccent: 'experiencia?',
   intro: 'Encuesta anónima de 2 minutos. Es parte de la evaluación del proyecto Nuevos Talentos Científicos y Tecnológicos 2026.',
   alreadyAnswered: 'Ya respondiste desde este dispositivo. Puedes enviar otra respuesta solo si eres otra persona.',
   otherPerson: 'Soy otra persona y no he respondido antes esta encuesta.',
@@ -92,6 +94,7 @@ const surveyMessages = defineMessages({
   keepExploring: 'Keep exploring',
   eyebrow: 'Prototype validation',
   title: 'How was your experience?',
+  titleAccent: 'experience?',
   intro: 'Anonymous 2-minute survey. It is part of the evaluation of the Nuevos Talentos Científicos y Tecnológicos 2026 project.',
   alreadyAnswered: 'You already answered from this device. Only send another response if you are a different person.',
   otherPerson: 'I am a different person and have not answered this survey before.',
@@ -265,7 +268,7 @@ export const SurveyPage = () => {
       setError(m.incomplete);
       // Lleva el foco a la primera pregunta obligatoria sin responder.
       const pending = (event.currentTarget as HTMLFormElement).querySelector<HTMLElement>('fieldset[data-pending="true"]');
-      pending?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      pending?.scrollIntoView({ behavior: scrollBehavior(), block: 'center' });
       pending?.querySelector<HTMLElement>('button, input')?.focus({ preventScroll: true });
       return;
     }
@@ -290,7 +293,7 @@ export const SurveyPage = () => {
       }, token);
       try { localStorage.setItem(DONE_KEY, new Date().toISOString()); } catch { /* sin almacenamiento */ }
       setDone(true);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: scrollBehavior() });
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : m.sendFailed);
     } finally {
@@ -304,7 +307,7 @@ export const SurveyPage = () => {
         <div className="animate-fade-up mx-auto max-w-xl border-t border-brand-sand pt-12 text-center">
           <span className="mx-auto grid size-14 place-items-center rounded-full border border-brand-green/35 text-brand-green" aria-hidden="true"><CheckIcon className="size-6" /></span>
           <h1 className="mt-7 text-[2.25rem] leading-[1.08] text-brand-blue sm:text-5xl">{m.thanksTitle}</h1>
-          <p className="mx-auto mt-5 max-w-md text-[15px] leading-7 text-brand-blue/75">{m.thanksMessage}</p>
+          <p className="mx-auto mt-5 max-w-md text-base leading-7 text-brand-blue/75">{m.thanksMessage}</p>
           <Link to="/" className="btn btn-accent mt-9 min-h-12 px-7">{m.keepExploring}<ArrowRightIcon className="size-4" /></Link>
         </div>
       </section>
@@ -319,9 +322,8 @@ export const SurveyPage = () => {
       <div className="grid gap-10 lg:grid-cols-12 lg:gap-8">
         {/* Introducción */}
         <div className="lg:sticky lg:top-28 lg:col-span-4 lg:h-fit">
-          <p className="eyebrow">{m.eyebrow}</p>
-          <h1 className="mt-5 text-[2.5rem] leading-[1.05] text-brand-blue sm:text-5xl"><ItalicTail text={m.title} words={1} /></h1>
-          <p className="mt-5 max-w-md text-[15px] leading-7 text-brand-blue/75">{m.intro}</p>
+          <h1 className="mt-5 text-[2.5rem] leading-[1.05] text-brand-blue sm:text-5xl"><Accented text={m.title} accent={m.titleAccent} /></h1>
+          <p className="mt-5 max-w-md text-base leading-7 text-brand-blue/75">{m.intro}</p>
           <p className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-brand-blue/70">
             <span className="inline-flex items-center gap-1.5"><ShieldIcon className="size-3.5 text-brand-green" />{m.anonymous}</span>
             <span className="inline-flex items-center gap-1.5"><span className="size-1 rounded-full bg-brand-gold" aria-hidden="true" />{m.duration}</span>
@@ -371,8 +373,7 @@ export const SurveyPage = () => {
                   const label = m.questions[key];
                   return (
                     <fieldset key={key} data-pending={scores[key] > 0 ? undefined : 'true'} aria-invalid={Boolean(error) && !scores[key] ? true : undefined} className="border-t border-brand-sand py-6 first:border-t-0 first:pt-2 last:pb-0">
-                      <legend className="sr-only">{label}</legend>
-                      <p className="text-[15px] leading-6 text-brand-blue">{label} <span className="text-brand-gold" aria-hidden="true">*</span></p>
+                      <legend className="text-base leading-6 text-brand-blue">{label} <span className="text-brand-gold" aria-hidden="true">*</span></legend>
                       <Rating label={label} value={scores[key]} onChange={(value) => setScores((current) => ({ ...current, [key]: value }))} />
                     </fieldset>
                   );
@@ -392,7 +393,7 @@ export const SurveyPage = () => {
                       type="button"
                       aria-pressed={active}
                       onClick={() => setRecomendaria(value)}
-                      className={`flex min-h-12 items-center justify-center gap-2 px-6 text-[15px] ${tileClass(active)}`}
+                      className={`flex min-h-12 items-center justify-center gap-2 px-6 text-base ${tileClass(active)}`}
                     >
                       {value ? <CheckIcon className={`size-4 ${active ? 'text-brand-green' : ''}`} /> : <CrossIcon className="size-4" />}
                       {label}

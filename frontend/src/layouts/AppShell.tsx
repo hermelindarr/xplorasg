@@ -23,7 +23,7 @@ const navClass = ({ isActive }: { isActive: boolean }) =>
 
 // Menú desplegable móvil: filas de texto con filete.
 const menuClass = ({ isActive }: { isActive: boolean }) =>
-  `flex items-center gap-3 border-b border-brand-sand py-3.5 text-[15px] transition-colors duration-300 ${
+  `flex items-center gap-3 border-b border-brand-sand py-3.5 text-base transition-colors duration-300 ${
     isActive ? 'font-medium text-brand-green' : 'text-brand-blue/80 hover:text-brand-blue'
   }`;
 
@@ -32,7 +32,8 @@ const bottomNavClass = ({ isActive }: { isActive: boolean }) =>
     isActive ? 'font-medium text-brand-green before:bg-brand-green' : 'text-brand-blue/70 before:bg-transparent hover:text-brand-blue'
   }`;
 
-const iconButton = 'grid size-10 place-items-center rounded-full text-brand-blue/75 transition-colors duration-300 hover:bg-brand-light hover:text-brand-blue';
+// En pantallas táctiles (pointer: coarse) los controles crecen a 44 px; con ratón conservan su tamaño compacto.
+const iconButton = 'grid size-10 pointer-coarse:size-11 place-items-center rounded-full text-brand-blue/75 transition-colors duration-300 hover:bg-brand-light hover:text-brand-blue';
 
 export const AppShell = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -59,13 +60,24 @@ export const AppShell = () => {
   // Guarda en segundo plano todas las fichas para usarlas sin señal (cuando el navegador está libre).
   useEffect(() => {
     if (!isOnline) return undefined;
+    // Espera 10 s después de que la página cargó: en una conexión lenta el navegador "parece libre" mientras
+    // espera la red, y las ~40 descargas del respaldo competían con las fotos y datos que el visitante está viendo.
     const run = () => { void prefetchCatalogDetails(); };
-    if ('requestIdleCallback' in window) {
-      const id = window.requestIdleCallback(run, { timeout: 8000 });
-      return () => window.cancelIdleCallback(id);
-    }
-    const id = globalThis.setTimeout(run, 5000);
-    return () => globalThis.clearTimeout(id);
+    let idleId: number | undefined;
+    let timerId: ReturnType<typeof setTimeout> | undefined;
+    const schedule = () => {
+      timerId = globalThis.setTimeout(() => {
+        if ('requestIdleCallback' in window) idleId = window.requestIdleCallback(run, { timeout: 15000 });
+        else run();
+      }, 10000);
+    };
+    if (document.readyState === 'complete') schedule();
+    else window.addEventListener('load', schedule, { once: true });
+    return () => {
+      window.removeEventListener('load', schedule);
+      if (timerId !== undefined) globalThis.clearTimeout(timerId);
+      if (idleId !== undefined && 'cancelIdleCallback' in window) window.cancelIdleCallback(idleId);
+    };
   }, [isOnline, lang]);
 
   useEffect(() => {
@@ -109,7 +121,7 @@ export const AppShell = () => {
       aria-label={m.switchToLabel}
       title={m.switchToLabel}
       lang={lang === 'es' ? 'en' : 'es'}
-      className={`inline-flex h-10 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium tracking-[0.08em] text-brand-blue/75 transition-colors duration-300 hover:bg-brand-light hover:text-brand-blue ${extra}`}
+      className={`inline-flex h-10 pointer-coarse:h-11 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium tracking-[0.08em] text-brand-blue/75 transition-colors duration-300 hover:bg-brand-light hover:text-brand-blue ${extra}`}
     >
       <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
         <circle cx="12" cy="12" r="9" />
@@ -140,14 +152,16 @@ export const AppShell = () => {
           </nav>
 
           <div className="ml-auto hidden items-center gap-1 lg:ml-0 lg:flex">
-            <span
-              role="status"
-              title={isOnline ? m.onlineTitle : m.offlineTitle}
-              className={`mr-1 inline-flex h-8 items-center gap-2 rounded-full px-2.5 text-xs ${isOnline ? 'text-brand-blue/70' : 'bg-ochre-100 font-medium text-ochre-950'}`}
-            >
-              <i className={`size-1.5 rounded-full ${isOnline ? 'bg-brand-green' : 'bg-ochre-600'}`} aria-hidden="true" />
-              <span className={`whitespace-nowrap ${isOnline ? 'sr-only xl:not-sr-only' : ''} ${isOnline && isAuthenticated ? 'xl:sr-only' : ''}`}>{isOnline ? m.online : m.offline}</span>
-            </span>
+            {!isOnline && (
+              <span
+                role="status"
+                title={m.offlineTitle}
+                className="mr-1 inline-flex h-8 items-center gap-2 rounded-full bg-ochre-100 px-2.5 text-xs font-medium text-ochre-950"
+              >
+                <i className="size-1.5 rounded-full bg-ochre-600" aria-hidden="true" />
+                <span className="whitespace-nowrap">{m.offline}</span>
+              </span>
+            )}
             {languageButton()}
             <NavLink to="/favoritos" aria-label={m.favorites} title={m.favorites} className={({ isActive }) => `${iconButton} ${isActive ? 'bg-brand-light text-brand-green' : ''}`}>
               <HeartIcon className="size-[18px]" />
@@ -160,22 +174,24 @@ export const AppShell = () => {
               </NavLink>
             )}
             {isAuthenticated ? (
-              <Link to="/dashboard" className="inline-flex h-10 items-center gap-2 whitespace-nowrap rounded-full border border-brand-blue/15 pl-1 pr-4 text-sm text-brand-blue transition-colors duration-300 hover:border-brand-blue/40">
+              <Link to="/dashboard" className="inline-flex h-10 pointer-coarse:h-11 items-center gap-2 whitespace-nowrap rounded-full border border-brand-blue/15 pl-1 pr-4 text-sm text-brand-blue transition-colors duration-300 hover:border-brand-blue/40">
                 <span className="font-display grid size-8 place-items-center rounded-full bg-brand-light text-sm text-brand-blue">{firstName.charAt(0).toUpperCase()}</span>
                 <span className="max-w-28 truncate">{firstName}</span>
               </Link>
             ) : (
-              <Link to="/login" className="btn btn-primary h-10 min-h-0 px-5">
+              <Link to="/login" className="btn btn-primary h-10 min-h-0 px-5 pointer-coarse:h-11">
                 {m.login}
               </Link>
             )}
           </div>
 
           <div className="ml-auto flex items-center gap-1 lg:hidden">
-            <span role="status" title={isOnline ? m.onlineTitle : m.offlineTitle} className="hidden size-10 place-items-center min-[420px]:grid">
-              <i className={`size-2 rounded-full ${isOnline ? 'bg-brand-green' : 'bg-ochre-600'}`} aria-hidden="true" />
-              <span className="sr-only">{isOnline ? m.online : m.offline}</span>
-            </span>
+            {!isOnline && (
+              <span role="status" title={m.offlineTitle} className="hidden size-10 place-items-center min-[420px]:grid">
+                <i className="size-2 rounded-full bg-ochre-600" aria-hidden="true" />
+                <span className="sr-only">{m.offline}</span>
+              </span>
+            )}
             {languageButton()}
             <button
               type="button"

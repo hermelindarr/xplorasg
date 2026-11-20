@@ -113,3 +113,9 @@ _cpanel/
 # Material pesado o histórico que no va al repositorio
 documentos/video/
 _historial/
+
+# Vínculo local con el proyecto de Vercel (CLI)
+.vercel
+
+.vercel
+.env*

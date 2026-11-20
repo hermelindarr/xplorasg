@@ -4,6 +4,7 @@ import { useMessages } from '../i18n';
 import { common } from '../i18n/common';
 import { CONTACT_EMAIL, SOCIAL_LINKS } from '../config/contact';
 import { BrandLogo } from './brand/BrandLogo';
+import { Accented } from './ui/Accented';
 
 // Logotipos oficiales de cada red (simple-icons, CC0), en un solo color de la paleta.
 const SOCIALS: Array<{ name: string; href: string; icon: SocialIcon }> = [
@@ -15,14 +16,14 @@ const SOCIALS: Array<{ name: string; href: string; icon: SocialIcon }> = [
 
 const YEAR = new Date().getFullYear();
 
-// min-h-7: área táctil de al menos 28 px (WCAG 2.5.8 pide 24 px).
-const linkClass = 'inline-flex min-h-7 items-center text-brand-light/70 transition-colors duration-300 hover:text-white';
-const headingClass = 'text-xs font-medium uppercase tracking-[0.22em] text-brand-light/60';
+// Área táctil: 44 px en móvil y tableta (dedo); 28 px en escritorio (ratón; WCAG 2.5.8 pide 24 px).
+const linkClass = 'inline-flex min-h-11 min-w-11 items-center lg:min-h-7 text-brand-light/70 transition-colors duration-300 hover:text-white';
+const headingClass = 'text-sm font-medium text-brand-light';
 
 const LegalLinks = ({ label, terms, privacy, tone = 'dark' }: { label: string; terms: string; privacy: string; tone?: 'dark' | 'light' }) => (
   <nav aria-label={label} className="flex flex-wrap gap-x-5 gap-y-2 text-xs">
-    <Link to="/terminos" className={`inline-flex min-h-7 items-center transition-colors duration-300 ${tone === 'dark' ? 'hover:text-white' : 'hover:text-brand-green'}`}>{terms}</Link>
-    <Link to="/privacidad" className={`inline-flex min-h-7 items-center transition-colors duration-300 ${tone === 'dark' ? 'hover:text-white' : 'hover:text-brand-green'}`}>{privacy}</Link>
+    <Link to="/terminos" className={`inline-flex min-h-11 items-center lg:min-h-7 transition-colors duration-300 ${tone === 'dark' ? 'hover:text-white' : 'hover:text-brand-green'}`}>{terms}</Link>
+    <Link to="/privacidad" className={`inline-flex min-h-11 items-center lg:min-h-7 transition-colors duration-300 ${tone === 'dark' ? 'hover:text-white' : 'hover:text-brand-green'}`}>{privacy}</Link>
   </nav>
 );
 
@@ -39,11 +40,11 @@ export const Footer = ({ variant = 'full' }: { variant?: 'full' | 'slim' }) => {
       <footer className="mb-16 mt-12 border-t border-brand-sand text-brand-blue/70 lg:mb-0">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-5 text-xs sm:flex-row sm:items-center sm:justify-between lg:px-8">
           <div className="flex items-center gap-3">
-            <BrandLogo variant="mark" className="h-7 w-auto" />
+            <BrandLogo variant="mark" className="h-7 w-auto" loading="lazy" />
             <span>{m.rights(YEAR)}</span>
           </div>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-            <a href={`mailto:${CONTACT_EMAIL}`} className="inline-flex min-h-7 items-center transition-colors duration-300 hover:text-brand-green">{CONTACT_EMAIL}</a>
+            <a href={`mailto:${CONTACT_EMAIL}`} className="inline-flex min-h-11 items-center lg:min-h-7 transition-colors duration-300 hover:text-brand-green">{CONTACT_EMAIL}</a>
             <LegalLinks label={m.legalNav} terms={m.terms} privacy={m.privacy} tone="light" />
           </div>
         </div>
@@ -52,18 +53,15 @@ export const Footer = ({ variant = 'full' }: { variant?: 'full' | 'slim' }) => {
   }
 
   // "Explora. Conecta." + "Vive la Sierra Gorda." en cursiva.
-  const sloganParts = m.slogan.split(/(?<=\.)\s+/);
-  const sloganLead = sloganParts.slice(0, -1).join(' ');
-  const sloganLast = sloganParts[sloganParts.length - 1];
 
   return (
     <footer className="mt-16 bg-brand-blue pb-16 text-brand-light lg:pb-0">
       <div className="mx-auto max-w-7xl px-5 lg:px-8">
         <div className="grid gap-12 py-16 lg:grid-cols-12 lg:gap-10 lg:py-20">
           <div className="lg:col-span-5">
-            <BrandLogo variant="horizontal" tone="light" />
+            <BrandLogo variant="horizontal" tone="light" loading="lazy" />
             <p className="font-display mt-8 text-[2rem] leading-[1.1] text-brand-light sm:text-4xl">
-              {sloganLead} <em className="italic text-brand-sand/80">{sloganLast}</em>
+              <Accented text={m.slogan} accent={m.sloganAccent} accentClassName="text-brand-sand/80!" />
             </p>
             <p className="mt-5 max-w-sm text-sm leading-6 text-brand-light/60">{m.footerTagline}</p>
           </div>
@@ -99,7 +97,7 @@ export const Footer = ({ variant = 'full' }: { variant?: 'full' | 'slim' }) => {
         <div className="flex flex-col gap-6 border-t border-white/10 py-8 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-brand-light/60">
             {m.writeUs}{' '}
-            <a href={`mailto:${CONTACT_EMAIL}`} className="inline-flex min-h-7 items-center text-brand-light underline decoration-white/25 underline-offset-4 transition-colors duration-300 hover:decoration-white">
+            <a href={`mailto:${CONTACT_EMAIL}`} className="inline-flex min-h-11 items-center lg:min-h-7 text-brand-light underline decoration-white/25 underline-offset-4 transition-colors duration-300 hover:decoration-white">
               {CONTACT_EMAIL}
             </a>
           </p>
@@ -114,7 +112,7 @@ export const Footer = ({ variant = 'full' }: { variant?: 'full' | 'slim' }) => {
                     rel="noopener noreferrer"
                     aria-label={m.socialLabel(name)}
                     title={name}
-                    className="grid size-10 place-items-center rounded-full border border-white/15 text-brand-light/80 transition-colors duration-300 hover:border-white/50 hover:text-white"
+                    className="grid size-10 pointer-coarse:size-11 place-items-center rounded-full border border-white/15 text-brand-light/80 transition-colors duration-300 hover:border-white/50 hover:text-white"
                   >
                     <svg viewBox="0 0 24 24" className="size-4" fill="currentColor" aria-hidden="true"><path d={icon.path} /></svg>
                   </a>

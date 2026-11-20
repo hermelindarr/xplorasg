@@ -12,10 +12,11 @@ import { defineMessages, useLanguage, useMessages } from '../i18n';
 import { categoryLabel } from '../i18n/common';
 import { CompassIcon, MapIcon, PinIcon } from '../components/brand/icons';
 import { AccessIcon, ClockIcon, TicketIcon, UsersIcon } from '../components/ui/LineIcons';
-import { AmenityGrid, BlockTitle, DetailHero, DetailSkeleton, DetailUnavailable, HeroFact, InfoBlock, PracticalItem, SectionHeading } from '../components/ui/DetailParts';
+import { AmenityGrid, BlockTitle, DetailHero, DetailSkeleton, DetailUnavailable, HeroFact, InfoBlock, PracticalItem } from '../components/ui/DetailParts';
+import { SectionHeading } from '../components/ui/SectionHeading';
 import { RelatedRail } from '../components/ui/RelatedRail';
 import { activityIcon } from '../components/ui/activityIcons';
-import { activityTags } from '../utils/text';
+import { activityTags, informativePrice } from '../utils/text';
 import type { Place } from '../types/catalog';
 
 const messages = defineMessages({
@@ -146,7 +147,7 @@ export const ServiceDetailPage = () => {
   const hasCoordinates = latitude !== null && longitude !== null && Number.isFinite(latitude) && Number.isFinite(longitude);
   const offers = [...new Set(activityTags(service.tipoServicio, 6))];
   const highlights = ([
-    [TicketIcon, m.priceRange, service.rangoPrecio],
+    [TicketIcon, m.priceRange, informativePrice(service.rangoPrecio)],
     [ClockIcon, m.schedule, service.horario],
     [UsersIcon, m.provider, service.prestador],
   ] as const).filter((item) => Boolean(item[2]));
@@ -178,10 +179,10 @@ export const ServiceDetailPage = () => {
 
       <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)] gap-14 px-5 py-16 lg:grid-cols-12 lg:gap-10 lg:px-8 lg:py-24">
         <div className="min-w-0 lg:col-span-7">
-          <SectionHeading title={m.about} />
+          <SectionHeading size="md" title={m.about} />
           <p className="mt-7 max-w-[40rem] whitespace-pre-line text-[17px] leading-8 text-brand-blue/75 sm:text-lg sm:leading-9">{service.descripcion || m.noDescription}</p>
 
-          {service.rangoPrecio && (
+          {informativePrice(service.rangoPrecio) && (
             <div className="mt-10 max-w-[40rem] border-y border-brand-sand py-6 lg:hidden">{/* En escritorio el precio ya está en la cabecera. */}
               <p className="text-xs font-medium text-brand-gold">{m.priceRange}</p>
               <p className="font-display mt-2 text-xl leading-snug text-brand-blue sm:text-2xl">{service.rangoPrecio}</p>

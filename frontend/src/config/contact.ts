@@ -1,5 +1,5 @@
 // Contacto y redes oficiales de XploraSG (un solo lugar para actualizarlos).
-export const CONTACT_EMAIL = 'xplora.sg8@gmail.com';
+export const CONTACT_EMAIL = 'turismointeligente.sg@gmail.com';
 
 export const SOCIAL_LINKS = {
   facebook: 'https://www.facebook.com/share/1DRcqPuP9Q/',

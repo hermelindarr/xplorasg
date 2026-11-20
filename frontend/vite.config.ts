@@ -14,7 +14,11 @@ const STATIC_ROUTES = ['/', '/explorar', '/mapa', '/servicios', '/agenda', '/asi
  */
 const siteMeta = (siteUrl: string, apiUrl: string): Plugin => ({
   name: 'xplorasg-site-meta',
-  transformIndexHtml: (html) => html.replaceAll('__SITE_URL__', siteUrl).replaceAll('__API_URL__', apiUrl),
+  // Sólo se preconecta a una API remota (https); sin VITE_API_URL la API vive en el mismo dominio (/api).
+  transformIndexHtml: (html) => html
+    .replaceAll('__SITE_URL__', siteUrl)
+    .replace(/^[ \t]*<link rel="preconnect" href="__API_URL__"[^>]*>\r?\n/m, apiUrl.startsWith('https://') ? '$&' : '')
+    .replaceAll('__API_URL__', apiUrl),
   async generateBundle() {
     if (!siteUrl) {
       this.warn('VITE_SITE_URL no está definido: no se genera sitemap.xml y og:image queda con ruta relativa.');

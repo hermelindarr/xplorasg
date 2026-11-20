@@ -115,6 +115,9 @@ const PREFETCH_EVERY_MS = 12 * 60 * 60_000;
  */
 export const prefetchCatalogDetails = async (): Promise<void> => {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
+  // Con "ahorro de datos" o en 2G no se descarga el respaldo completo: sólo queda lo que el visitante abrió.
+  const connection = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+  if (connection?.saveData || connection?.effectiveType === '2g' || connection?.effectiveType === 'slow-2g') return;
   const stampKey = `${PREFETCH_KEY}:${getLang()}`;
   try {
     const last = Number(localStorage.getItem(stampKey) || 0);

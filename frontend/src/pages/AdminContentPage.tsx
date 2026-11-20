@@ -1,5 +1,9 @@
 import { usePageTitle } from '../hooks/usePageTitle';
 import { useCallback, useEffect, useState } from 'react';
+import { ContentEditor } from '../components/admin/ContentEditor';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
+import { moderationApi } from '../services/moderationApi';
+import { errorMessage } from '../services/authorizedFetch';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -9,12 +13,10 @@ import {
   type ReviewState,
 } from '../services/adminReviewApi';
 import { categoryVisual } from '../components/brand/icons';
-import { AlertIcon, CheckCircleIcon, ExternalIcon, InboxIcon } from '../components/admin/AdminIcons';
+import { AlertIcon, CheckCircleIcon, EditIcon, ExternalIcon, InboxIcon, TrashIcon } from '../components/admin/AdminIcons';
 import { BackLink, EmptyState, Notice, PageHeader, StatusPill } from '../components/admin/AdminUi';
 import {
-  fieldLabel,
   filterChipClass,
-  panelSurface,
   quietAccent,
   quietButton,
   quietDanger,
@@ -34,13 +36,18 @@ const stateLabels: Record<ReviewState, string> = {
 const updatedFormatter = new Intl.DateTimeFormat('es-MX', { day: 'numeric', month: 'short', timeZone: 'America/Mexico_City' });
 
 export const AdminContentPage = () => {
-  usePageTitle('Revisión de contenido');
+  usePageTitle('Todo el contenido');
   const { token } = useAuth();
   const [kind, setKind] = useState<ReviewKind>('lugar');
   const [state, setState] = useState<ReviewState | ''>('');
   const [items, setItems] = useState<ReviewItem[]>([]);
-  const [reasons, setReasons] = useState<Record<number, string>>({});
-  const [rejecting, setRejecting] = useState<Record<number, boolean>>({});
+  const [rejecting, setRejecting] = useState<ReviewItem | null>(null);
+  const [deleting, setDeleting] = useState<ReviewItem | null>(null);
+  const [unpublishing, setUnpublishing] = useState<ReviewItem | null>(null);
+  const [editing, setEditing] = useState<{ kind: ReviewKind; id: number; nombre: string } | null>(null);
+  const [dialogBusy, setDialogBusy] = useState(false);
+  const [dialogError, setDialogError] = useState('');
+  const [notice, setNotice] = useState('');
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<number | null>(null);
   const [error, setError] = useState('');
@@ -63,12 +70,13 @@ export const AdminContentPage = () => {
   // oxlint-disable-next-line react/set-state-in-effect
   useEffect(() => { void load(); }, [load]);
 
-  const updateState = async (item: ReviewItem, nextState: ReviewState) => {
+  const updateState = async (item: ReviewItem, nextState: ReviewState, reason?: string) => {
     if (!token) return;
     setSavingId(item.id);
     setError('');
+    setNotice('');
     try {
-      await adminReviewApi.update(token, item, nextState, reasons[item.id]);
+      await adminReviewApi.update(token, item, nextState, reason);
       await load();
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : 'No fue posible actualizar el contenido.');
@@ -79,13 +87,62 @@ export const AdminContentPage = () => {
 
   const ready = items.filter((item) => !item.faltantes.length).length;
 
+  const confirmReject = async (reason: string) => {
+    if (!rejecting) return;
+    setDialogBusy(true);
+    setDialogError('');
+    try {
+      if (!token) return;
+      await adminReviewApi.update(token, rejecting, 'rechazado', reason);
+      setRejecting(null);
+      setNotice(`“${rejecting.nombre}” se rechazó.`);
+      await load();
+    } catch (requestError) {
+      setDialogError(errorMessage(requestError, 'No fue posible rechazar.'));
+    } finally {
+      setDialogBusy(false);
+    }
+  };
+
+  // Despublicar: vuelve a revisión y deja de verse en la vista pública (los datos se conservan).
+  const confirmUnpublish = async () => {
+    if (!unpublishing || !token) return;
+    setDialogBusy(true);
+    setDialogError('');
+    try {
+      await adminReviewApi.update(token, unpublishing, 'en_revision');
+      setUnpublishing(null);
+      setNotice(`“${unpublishing.nombre}” ya no está publicado. Quedó en revisión.`);
+      await load();
+    } catch (requestError) {
+      setDialogError(errorMessage(requestError, 'No fue posible despublicar.'));
+    } finally {
+      setDialogBusy(false);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!deleting || !token) return;
+    setDialogBusy(true);
+    setDialogError('');
+    try {
+      await moderationApi.remove(token, deleting.tipo, deleting.id);
+      setDeleting(null);
+      setNotice(`“${deleting.nombre}” se eliminó.`);
+      await load();
+    } catch (requestError) {
+      setDialogError(errorMessage(requestError, 'No fue posible eliminar.'));
+    } finally {
+      setDialogBusy(false);
+    }
+  };
+
   return (
     <section className="mx-auto max-w-7xl px-5 pb-20 pt-10 lg:px-8">
       <PageHeader
         before={<BackLink to="/admin">Panel de administración</BackLink>}
-        eyebrow="Administración editorial"
-        title="Revisión de contenido"
-        meta={<p className="max-w-3xl">Revisa borradores y controla su publicación. El sistema bloquea la aprobación cuando faltan coordenadas, fuente o multimedia pública autorizada.</p>}
+        title="Todo el contenido"
+        meta={<p className="max-w-3xl">Lugares y servicios en cualquier estado. El sistema bloquea la publicación cuando faltan coordenadas, fuente o multimedia pública autorizada. Las solicitudes nuevas de prestadores están en <Link to="/admin/moderacion" className="underline underline-offset-2">Solicitudes pendientes</Link>.</p>}
       />
 
       {/* Barra de herramientas: tipo como pestañas subrayadas, estado como filtros */}
@@ -119,103 +176,137 @@ export const AdminContentPage = () => {
         )}
       </div>
 
+      {notice && <Notice tone="ok" className="mt-6">{notice}</Notice>}
       {error && <Notice tone="error" className="mt-6">{error}</Notice>}
 
       {loading ? (
-        <div className="mt-6 grid gap-4 lg:grid-cols-2">{[0, 1, 2, 3].map((item) => <div key={item} className="h-56 animate-pulse rounded-xl border border-brand-sand bg-white" />)}</div>
+        <div className="mt-6 grid gap-px overflow-hidden rounded-xl border border-brand-sand bg-brand-sand">{[0, 1, 2, 3].map((item) => <div key={item} className="h-24 animate-pulse bg-white" />)}</div>
       ) : (
-        <div className="mt-6 grid gap-4 lg:grid-cols-2">
+        <ul className="mt-6 divide-y divide-brand-sand overflow-hidden rounded-xl border border-brand-sand bg-white">
           {items.map((item) => {
             const visual = categoryVisual(item.categoria);
             const saving = savingId === item.id;
-            const reason = reasons[item.id] || '';
             const publicPath = item.slug ? `/${item.tipo === 'lugar' ? 'lugares' : 'servicios'}/${item.slug}` : null;
             return (
-              <article key={`${item.tipo}-${item.id}`} className={`${panelSurface} flex min-w-0 flex-col transition-opacity ${saving ? 'opacity-60' : ''}`}>
-                <div className="flex items-start gap-3.5 px-5 pt-5 sm:px-6">
+              <li key={`${item.tipo}-${item.id}`} className={`flex min-w-0 flex-col transition-opacity lg:flex-row lg:items-start ${saving ? 'opacity-60' : ''}`}>
+                <div className="flex min-w-0 flex-1 items-start gap-3.5 px-5 pt-5 sm:px-6 lg:pb-5">
                   <span className={`grid size-9 shrink-0 place-items-center rounded-full bg-brand-light ${visual.tone}`}><visual.Icon className="size-[18px]" /></span>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1.5">
-                      <h2 className="min-w-0 font-sans text-[15px] font-medium leading-6 tracking-normal text-brand-blue">{item.nombre}</h2>
+                      <h2 className="min-w-0 font-sans text-base font-medium leading-6 tracking-normal text-brand-blue [text-wrap:pretty]">{item.nombre}</h2>
                       <StatusPill {...statusOf(item.estado, stateLabels)} />
                     </div>
                     <p className="mt-0.5 text-xs leading-5 text-brand-blue/70">
-                      {item.municipio || 'Sin municipio'} · {item.categoria || 'Sin categoría'}
-                      {item.updatedAt && <> · editado {updatedFormatter.format(new Date(item.updatedAt))}</>}
+                      {item.municipio || 'Sin municipio'}, {item.categoria || 'sin categoría'}
+                      {item.updatedAt && <>. Editado el {updatedFormatter.format(new Date(item.updatedAt))}</>}
                     </p>
                   </div>
                 </div>
 
-                <div className="px-5 pb-5 sm:px-6">
-                  {item.faltantes.length ? (
-                    <p className="mt-4 flex flex-wrap items-center gap-x-1.5 gap-y-1 rounded-lg border border-ochre-200 bg-ochre-50/70 px-3 py-2 text-xs leading-5 text-ochre-900">
-                      <AlertIcon className="size-3.5 shrink-0 text-ochre-600" />
-                      <span className="font-medium">Falta para publicar:</span>
-                      {item.faltantes.join(' · ')}
+                <div className="px-5 pb-2 sm:px-6 lg:hidden" aria-hidden="true" />
+                <div className="px-5 sm:px-6 lg:w-80 lg:shrink-0 lg:px-0 lg:py-5">
+                  {/* Requisitos de publicación: sólo importan mientras no está publicado. */}
+                  {item.estado !== 'aprobado' && (item.faltantes.length ? (
+                    <p className="flex items-start gap-1.5 text-label leading-5 text-ochre-900">
+                      <AlertIcon className="mt-0.5 size-3.5 shrink-0 text-ochre-600" />
+                      <span>Falta para publicar: {item.faltantes.join(', ')}</span>
                     </p>
                   ) : (
-                    <p className="mt-4 flex items-center gap-1.5 text-xs font-medium text-brand-green">
+                    <p className="flex items-center gap-1.5 text-label font-medium text-brand-green">
                       <CheckCircleIcon className="size-3.5" /> Listo para publicar
                     </p>
+                  ))}
+
+                  {/* El motivo sólo tiene sentido si el contenido está rechazado o suspendido. */}
+                  {item.motivoRevision && (item.estado === 'rechazado' || item.estado === 'suspendido') && (
+                    <p className="mt-2 text-label leading-5 text-brand-blue/75"><span className="font-medium text-brand-blue">Motivo:</span> {item.motivoRevision}</p>
                   )}
 
-                  {item.motivoRevision && <p className="mt-3 text-xs leading-5 text-brand-blue/75"><span className="font-medium text-brand-blue">Último motivo:</span> {item.motivoRevision}</p>}
-
-                  {/* El motivo sólo aparece cuando se va a rechazar: tarjetas más limpias. */}
-                  {rejecting[item.id] && (
-                    <div className="animate-fade-up mt-4 grid gap-1.5">
-                      <label className={fieldLabel} htmlFor={`reason-${item.id}`}>Motivo del rechazo (lo verá el equipo editorial)</label>
-                      <textarea
-                        id={`reason-${item.id}`}
-                        value={reason}
-                        autoFocus
-                        onChange={(event) => setReasons((current) => ({ ...current, [item.id]: event.target.value }))}
-                        rows={2}
-                        className="field min-h-0 resize-y"
-                        placeholder="Ej. Faltan coordenadas verificadas"
-                      />
-                    </div>
-                  )}
                 </div>
 
-                <div className="mt-auto flex flex-wrap items-center gap-2 border-t border-brand-sand px-5 py-3.5 sm:px-6">
-                  <button type="button" disabled={saving || item.faltantes.length > 0} onClick={() => void updateState(item, 'aprobado')} className={quietAccent}>
-                    <CheckCircleIcon className="size-4" /> Aprobar
-                  </button>
-                  {item.estado !== 'en_revision' && (
-                    <button type="button" disabled={saving} onClick={() => void updateState(item, 'en_revision')} className={quietButton}>
-                      Enviar a revisión
+                <div className="flex flex-wrap items-center gap-2 px-5 py-4 sm:px-6 lg:w-[26rem] lg:shrink-0 lg:justify-end lg:py-5">
+                  {/* Acciones según el estado: publicado → despublicar; no publicado → aprobar o rechazar. */}
+                  {item.estado === 'aprobado' ? (
+                    <button type="button" disabled={saving} onClick={() => { setDialogError(''); setUnpublishing(item); }} className={quietButton}>
+                      Despublicar
                     </button>
-                  )}
-                  {rejecting[item.id] ? (
-                    <>
-                      <button type="button" disabled={saving || !reason.trim()} onClick={() => void updateState(item, 'rechazado')} className="btn min-h-9 bg-clay-700 px-4 py-1.5 !text-[13px] text-white hover:bg-clay-800">
-                        Confirmar rechazo
-                      </button>
-                      <button type="button" onClick={() => setRejecting((current) => ({ ...current, [item.id]: false }))} className={quietGhost}>
-                        Cancelar
-                      </button>
-                    </>
                   ) : (
-                    <button type="button" disabled={saving} onClick={() => setRejecting((current) => ({ ...current, [item.id]: true }))} className={quietDanger}>
-                      Rechazar
-                    </button>
+                    <>
+                      <button type="button" disabled={saving || item.faltantes.length > 0} onClick={() => void updateState(item, 'aprobado')} className={quietAccent}>
+                        <CheckCircleIcon className="size-4" /> Aprobar y publicar
+                      </button>
+                      {item.estado !== 'rechazado' && (
+                        <button type="button" disabled={saving} onClick={() => { setDialogError(''); setRejecting(item); }} className={quietDanger}>
+                          Rechazar
+                        </button>
+                      )}
+                    </>
                   )}
+                  <button type="button" disabled={saving} onClick={() => setEditing({ kind: item.tipo, id: item.id, nombre: item.nombre })} className={quietGhost} aria-label={`Editar ${item.nombre}`}>
+                    <EditIcon className="size-4" /> Editar
+                  </button>
+                  <button type="button" disabled={saving} onClick={() => { setDialogError(''); setDeleting(item); }} className={`${quietGhost} text-clay-800`} aria-label={`Eliminar ${item.nombre}`}>
+                    <TrashIcon className="size-4" /> Eliminar
+                  </button>
                   {publicPath && item.estado === 'aprobado' && (
-                    <Link to={publicPath} className="ml-auto inline-flex min-h-7 items-center gap-1 text-xs text-brand-blue/75 underline-offset-2 hover:text-brand-blue hover:underline">
+                    <Link to={publicPath} className="inline-flex min-h-9 items-center gap-1 text-label text-brand-blue/75 underline-offset-2 hover:text-brand-blue hover:underline pointer-coarse:min-h-11">
                       Ver ficha <ExternalIcon className="size-3.5" />
                     </Link>
                   )}
                 </div>
-              </article>
+              </li>
             );
           })}
           {!items.length && (
-            <div className="col-span-full">
+            <li className="p-2">
               <EmptyState icon={InboxIcon} title="No hay contenido con estos filtros" text="Prueba con otro estado o cambia entre lugares y servicios." />
-            </div>
+            </li>
           )}
-        </div>
+        </ul>
+      )}
+
+      <ConfirmDialog
+        open={Boolean(rejecting)}
+        title="¿Rechazar este contenido?"
+        confirmLabel="Rechazar"
+        reasonLabel="Motivo del rechazo (quedará registrado)"
+        busy={dialogBusy}
+        error={dialogError}
+        onConfirm={(reason) => void confirmReject(reason)}
+        onCancel={() => setRejecting(null)}
+      >
+        <p>“{rejecting?.nombre}” dejará de estar publicado si lo estaba.</p>
+      </ConfirmDialog>
+      <ConfirmDialog
+        open={Boolean(unpublishing)}
+        title="¿Despublicar este contenido?"
+        confirmLabel="Despublicar"
+        tone="primary"
+        busy={dialogBusy}
+        error={dialogError}
+        onConfirm={() => void confirmUnpublish()}
+        onCancel={() => setUnpublishing(null)}
+      >
+        <p>“{unpublishing?.nombre}” dejará de verse en la vista pública y quedará en revisión. No se borra nada: puedes volver a publicarlo cuando quieras.</p>
+      </ConfirmDialog>
+      <ConfirmDialog
+        open={Boolean(deleting)}
+        title="¿Eliminar definitivamente de la plataforma?"
+        confirmLabel="Eliminar"
+        busy={dialogBusy}
+        error={dialogError}
+        onConfirm={() => void confirmDelete()}
+        onCancel={() => setDeleting(null)}
+      >
+        <p>“{deleting?.nombre}” desaparecerá de la vista pública y de los paneles. Si estaba publicado, deja de verse de inmediato.</p>
+      </ConfirmDialog>
+      {token && (
+        <ContentEditor
+          token={token}
+          target={editing}
+          onClose={() => setEditing(null)}
+          onSaved={(message) => { setEditing(null); setNotice(message); void load(); }}
+        />
       )}
     </section>
   );

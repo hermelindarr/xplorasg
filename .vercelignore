@@ -1,0 +1,22 @@
+# Despliegue con la CLI de Vercel desde la raíz del repositorio.
+# El proyecto de Vercel usa "Root Directory: frontend", así que sólo se sube esa carpeta
+# (el backend va empaquetado en frontend/api/index.js con `npm run build:vercel`).
+
+# Todo lo de la raíz queda fuera…
+/*
+# …excepto el frontend.
+!/frontend
+
+# Nunca subir variables locales ni claves: en Vercel se usan las del proyecto.
+# (frontend/.env.local apunta a localhost y rompería el sitio publicado.)
+.env
+.env.*
+!.env.example
+
+# Artefactos y dependencias que Vercel reconstruye.
+/frontend/node_modules
+/frontend/dist
+/frontend/dev-dist
+/frontend/test-results
+/frontend/playwright-report
+/frontend/.vite

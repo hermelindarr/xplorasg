@@ -1,7 +1,10 @@
-import { supabase } from '../supabaseClient';
+import { getSupabase, mightHaveSession, supabaseEnabled } from '../supabaseClient';
 import type { Place } from '../types/catalog';
 
 const getAuthHeaders = async () => {
+  // Sin sesión guardada no hace falta cargar Supabase.
+  if (!supabaseEnabled || !mightHaveSession()) return {};
+  const supabase = await getSupabase();
   if (!supabase) return {};
   const { data: { session } } = await supabase.auth.getSession();
   return session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {};

@@ -21,8 +21,14 @@ export interface ProviderService {
   rango_precio: string | null;
   contacto: string | null;
   reservacion: string | null;
+  tipo_servicio: string | null;
   estado_aprobacion: ApprovalState;
+  motivo_revision: string | null;
+  /** Cambios enviados a revisión que todavía no se publican. */
+  cambios_propuestos: ServiceChanges | null;
+  cambios_enviados_at: string | null;
   municipio: string;
+  categoria: string | null;
   updated_at: string;
 }
 
@@ -45,7 +51,28 @@ export interface MyBusiness {
   promociones: ProviderPromotion[];
 }
 
-export type ServiceChanges = Partial<Pick<ProviderService, 'descripcion' | 'horario' | 'rango_precio' | 'contacto' | 'reservacion'>>;
+export interface ServiceChanges {
+  descripcion?: string | null;
+  horario?: string | null;
+  rango_precio?: string | null;
+  contacto?: string | null;
+  reservacion?: string | null;
+  /** Enlace https a una foto; se publica sólo cuando el administrador aprueba. */
+  imagen_url?: string | null;
+}
+
+export interface NewService extends ServiceChanges {
+  nombre: string;
+  municipio_id: number;
+  categoria_id: number;
+  tipo_servicio?: string;
+}
+
+/** Respuesta de un envío: todo queda pendiente de revisión. */
+export interface PendingResponse<T> {
+  data: T & { pendiente: true };
+  message: string;
+}
 
 export interface NewPromotion {
   servicio_id: number;
@@ -58,11 +85,18 @@ export interface NewPromotion {
 
 export const providerApi = {
   myBusiness: (token: string) => authorizedJson<{ data: MyBusiness }>('/api/prestador/mi-negocio', token),
+  createService: (token: string, service: NewService) =>
+    authorizedJson<PendingResponse<{ id: number; nombre: string; estado_aprobacion: ApprovalState }>>('/api/prestador/servicios', token, {
+      method: 'POST',
+      body: JSON.stringify(service),
+    }),
   updateService: (token: string, id: number, changes: ServiceChanges) =>
-    authorizedJson<{ data: ProviderService }>(`/api/prestador/servicios/${id}`, token, {
+    authorizedJson<PendingResponse<Partial<ProviderService>>>(`/api/prestador/servicios/${id}`, token, {
       method: 'PATCH',
       body: JSON.stringify(changes),
     }),
+  withdrawChanges: (token: string, id: number) =>
+    authorizedJson<{ data: { id: number } }>(`/api/prestador/servicios/${id}/cambios`, token, { method: 'DELETE' }),
   createPromotion: (token: string, promotion: NewPromotion) =>
     authorizedJson<{ data: { id: number } }>('/api/prestador/promociones', token, {
       method: 'POST',

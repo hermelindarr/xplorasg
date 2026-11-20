@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useParams } from 'react-router-dom';
 import { CatalogApiError, catalogApi } from '../services/catalogApi';
 import type { Place } from '../types/catalog';
@@ -10,11 +10,21 @@ import { trackEvent } from '../services/feedbackApi';
 import { ShareButton } from '../components/ShareButton';
 import { defineMessages, useLanguage, useMessages } from '../i18n';
 import { categoryLabel, common } from '../i18n/common';
-import { AdventureIcon, LodgingIcon, MapIcon, RouteIcon, SparkleIcon, WifiOffIcon } from '../components/brand/icons';
-import { AccessIcon, ClockIcon, ExternalIcon, MountainIcon, NavigationIcon, TicketIcon } from '../components/ui/LineIcons';
-import { AmenityGrid, BlockTitle, DetailHero, DetailSkeleton, DetailUnavailable, HeroFact, InfoBlock, PracticalItem, SectionHeading } from '../components/ui/DetailParts';
+import { AdventureIcon, LodgingIcon, RouteIcon, SparkleIcon, WifiOffIcon } from '../components/brand/icons';
+import { AccessIcon, NavigationIcon } from '../components/ui/LineIcons';
+import { AmenityGrid, BlockTitle, DetailHero, DetailSkeleton, DetailUnavailable, InfoBlock, PracticalItem } from '../components/ui/DetailParts';
+import { SectionHeading } from '../components/ui/SectionHeading';
 import { RelatedRail } from '../components/ui/RelatedRail';
 import { activityIcon } from '../components/ui/activityIcons';
+import { usePlaceElevations } from '../services/elevationApi';
+
+// Convierte las URL de un texto en enlaces legibles (muestra el dominio, no la dirección completa).
+const linkify = (text: string): ReactNode[] => text.split(/(https?:\/\/[^\s,;]+)/g).map((part, index) => {
+  if (!/^https?:\/\//.test(part)) return part;
+  let label = part;
+  try { label = new URL(part).hostname.replace(/^www\./, ''); } catch { /* se deja la URL tal cual */ }
+  return <a key={index} href={part} target="_blank" rel="noopener noreferrer" className="text-brand-green underline decoration-brand-green/30 underline-offset-4 hover:decoration-brand-green">{label}</a>;
+});
 
 const messages = defineMessages({
   rulesTitle: 'Importante antes de ir',
@@ -33,7 +43,7 @@ const messages = defineMessages({
   availableServices: 'Servicios disponibles',
   accessibility: 'Accesibilidad',
   recommendations: 'Recomendaciones',
-  practicalInfo: 'Datos prácticos',
+  practicalInfo: 'Para tu visita',
   municipality: 'Municipio',
   address: 'Dirección',
   schedule: 'Horario',
@@ -41,6 +51,8 @@ const messages = defineMessages({
   contact: 'Contacto',
   altitude: 'Altitud',
   altitudeUnit: 'm s. n. m.',
+  altitudeHint: 'metros sobre el nivel del mar',
+  accessTitle: 'Camino y acceso',
   directions: 'Cómo llegar (GPS)',
   openStreetMap: 'Ver en OpenStreetMap',
   currentWeather: 'Clima actual',
@@ -66,7 +78,7 @@ const messages = defineMessages({
   availableServices: 'Available services',
   accessibility: 'Accessibility',
   recommendations: 'Recommendations',
-  practicalInfo: 'Practical info',
+  practicalInfo: 'For your visit',
   municipality: 'Municipality',
   address: 'Address',
   schedule: 'Hours',
@@ -74,6 +86,8 @@ const messages = defineMessages({
   contact: 'Contact',
   altitude: 'Altitude',
   altitudeUnit: 'm above sea level',
+  altitudeHint: 'meters above sea level',
+  accessTitle: 'Road and access',
   directions: 'Get directions (GPS)',
   openStreetMap: 'View on OpenStreetMap',
   currentWeather: 'Current weather',
@@ -96,6 +110,8 @@ export const PlaceDetailPage = () => {
   const m = useMessages(messages);
   const c = useMessages(common);
   usePageTitle(place?.nombre, place?.descripcion);
+  const placeList = useMemo(() => (place ? [place] : []), [place]);
+  const elevation = usePlaceElevations(placeList)[place?.slug ?? ''];
 
   useEffect(() => {
     const controller = new AbortController();
@@ -143,9 +159,6 @@ export const PlaceDetailPage = () => {
 
   const offlineDate = storedAt ? new Date(storedAt).toLocaleString(locale) : '';
   const media = place.multimedia?.length ? place.multimedia : place.imagenPrincipal ? [place.imagenPrincipal] : [];
-  const coordinates = place.latitud && place.longitud
-    ? `https://www.openstreetmap.org/?mlat=${encodeURIComponent(place.latitud)}&mlon=${encodeURIComponent(place.longitud)}#map=15/${encodeURIComponent(place.latitud)}/${encodeURIComponent(place.longitud)}`
-    : null;
   const latitude = place.latitud ? Number(place.latitud) : null;
   const longitude = place.longitud ? Number(place.longitud) : null;
   const tags = activityTags(place.actividades, 6);
@@ -159,15 +172,9 @@ export const PlaceDetailPage = () => {
   const hasCoordinates = latitude !== null && longitude !== null && Number.isFinite(latitude) && Number.isFinite(longitude);
   const directionsUrl = hasCoordinates ? `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}` : null;
   const category = categoryLabel(place.categoria, lang);
-  const highlights = ([
-    [ClockIcon, m.schedule, place.horarios],
-    [TicketIcon, m.cost, place.costo],
-    [MountainIcon, m.altitude, place.altitud ? `${place.altitud.toLocaleString(locale)} ${m.altitudeUnit}` : null],
-    [MapIcon, m.address, place.direccion],
-  ] as const).filter((item) => Boolean(item[2])).slice(0, 3);
+  const altitude = typeof place.altitud === 'number' ? place.altitud : elevation;
 
   const rules = ruleSentences(place.recomendaciones);
-  const inHero = (label: string) => highlights.some((item) => item[1] === label);
 
   return (
     <article>
@@ -193,7 +200,7 @@ export const PlaceDetailPage = () => {
             </svg>
             <div>
               <p className="font-medium">{m.rulesTitle}</p>
-              <ul className="mt-1 grid gap-1 text-[15px] leading-6">
+              <ul className="mt-1 grid gap-1 text-base leading-6">
                 {rules.map((rule) => <li key={rule}>{rule}</li>)}
               </ul>
             </div>
@@ -211,16 +218,17 @@ export const PlaceDetailPage = () => {
             <FavoriteButton placeId={place.id} size="lg" />
           </>
         )}
-        highlights={highlights.length > 0 && (
-          <div>
-            {highlights.map(([Icon, label, value]) => <HeroFact key={label} icon={Icon} label={label}>{value}</HeroFact>)}
+        highlights={altitude !== undefined && (
+          <div className="lg:text-right">
+            <p className="font-display text-5xl leading-none tabular-nums text-brand-blue lg:text-6xl">{altitude.toLocaleString(locale)}<span className="ml-1 text-2xl">m</span></p>
+            <p className="mt-2 text-sm text-brand-blue/70">{m.altitudeHint}</p>
           </div>
         )}
       />
 
       <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)] gap-14 px-5 py-16 lg:grid-cols-12 lg:gap-10 lg:px-8 lg:py-24">
         <div className="min-w-0 lg:col-span-7">
-          <SectionHeading title={m.about} />
+          <SectionHeading size="md" title={m.about} />
           <p className="mt-7 max-w-[40rem] whitespace-pre-line text-[17px] leading-8 text-brand-blue/75 sm:text-lg sm:leading-9">{place.descripcion || m.noDescription}</p>
           {isClosedNotice(place.horarios) && (
             <p role="status" className="mt-6 max-w-[40rem] rounded-lg border border-clay-200 bg-clay-50 px-5 py-4 text-sm font-medium text-clay-800">
@@ -241,9 +249,9 @@ export const PlaceDetailPage = () => {
             <section className="mt-16 rounded-xl bg-brand-light px-6 py-8 sm:px-10 sm:py-10">
               <h2 className="flex items-center gap-3 text-2xl leading-tight text-brand-blue sm:text-[1.75rem]">
                 <RouteIcon className="size-6 shrink-0 text-brand-gold" />
-                {m.directionsShort}
+                {m.accessTitle}
               </h2>
-              <p className="mt-4 max-w-[38rem] whitespace-pre-line text-[15px] leading-8 text-brand-blue/75">{place.infoAcceso}</p>
+              <p className="mt-4 max-w-[38rem] whitespace-pre-line text-base leading-8 text-brand-blue/75">{place.infoAcceso}</p>
             </section>
           )}
 
@@ -262,31 +270,16 @@ export const PlaceDetailPage = () => {
         <div className="h-fit lg:sticky lg:top-24 lg:col-span-4 lg:col-start-9">
           <h2 className="text-[1.75rem] leading-tight text-brand-blue">{m.practicalInfo}</h2>
           <dl className="mt-6 border-t border-brand-sand">
-            <PracticalItem label={m.municipality}>{place.municipio}</PracticalItem>
-            {place.direccion && <PracticalItem label={m.address} inHero={inHero(m.address)}>{place.direccion}</PracticalItem>}
-            {place.horarios && <PracticalItem label={m.schedule} inHero={inHero(m.schedule)}>{place.horarios}</PracticalItem>}
-            {place.costo && <PracticalItem label={m.cost} inHero={inHero(m.cost)}>{place.costo}</PracticalItem>}
-            {place.contacto && <PracticalItem label={m.contact}>{place.contacto}</PracticalItem>}
-            {place.altitud && <PracticalItem label={m.altitude} inHero={inHero(m.altitude)}>{place.altitud.toLocaleString(locale)} {m.altitudeUnit}</PracticalItem>}
+            {altitude !== undefined && <PracticalItem label={m.altitude}>{altitude.toLocaleString(locale)} {m.altitudeUnit}</PracticalItem>}
+            {place.horarios && <PracticalItem label={m.schedule}>{place.horarios}</PracticalItem>}
+            {place.costo && <PracticalItem label={m.cost}>{place.costo}</PracticalItem>}
+            {place.direccion && <PracticalItem label={m.address}>{place.direccion}</PracticalItem>}
+            {place.contacto && <PracticalItem label={m.contact}>{linkify(place.contacto)}</PracticalItem>}
           </dl>
-          {directionsUrl && (
-            <div className="mt-7 grid gap-3">
-              <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="btn btn-accent min-h-12 w-full">
-                <NavigationIcon className="size-4" />
-                {m.directions}
-              </a>
-              {coordinates && (
-                <a href={coordinates} target="_blank" rel="noopener noreferrer" className="btn btn-secondary min-h-12 w-full">
-                  <ExternalIcon className="size-4" />
-                  {m.openStreetMap}
-                </a>
-              )}
-            </div>
-          )}
           {hasCoordinates && (
             <div className="mt-12">
               <h2 className="text-xl leading-tight text-brand-blue">{m.currentWeather}</h2>
-              <WeatherCard latitude={latitude} longitude={longitude} altitude={place.altitud} />
+              <WeatherCard latitude={latitude} longitude={longitude} />
             </div>
           )}
         </div>

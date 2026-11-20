@@ -60,7 +60,7 @@ Authentication → **URL Configuration**:
 
 Recomendado: activar *Confirm email* y *Leaked password protection*.
 
-**Cuenta administradora:** el panel `/admin` se maneja con el correo oficial `xplora.sg8@gmail.com`.
+**Cuenta administradora:** el panel `/admin` se maneja con el correo oficial `turismointeligente.sg@gmail.com` (migración `017`; antes `xplora.sg8@gmail.com`, migración `015`).
 1. Regístrate en la app con ese correo y tu contraseña (la contraseña no se guarda en ningún archivo del proyecto). Si ya estaba registrado como turista, sáltate este paso.
 2. Confirma la cuenta desde el correo que llega a esa bandeja.
 3. Supabase → SQL Editor → ejecuta `database/migrations/015_supabase_administrador_xplorasg.sql`. La cuenta anterior (`hermelindarojasrubio@gmail.com`) deja de ser administradora y queda como turista.

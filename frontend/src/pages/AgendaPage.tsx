@@ -7,7 +7,8 @@ import { usePageTitle } from '../hooks/usePageTitle';
 import { defineMessages, useLanguage, useMessages } from '../i18n';
 import { ArrowRightIcon, CalendarIcon, PinIcon, SparkleIcon } from '../components/brand/icons';
 import { PageHero } from '../components/ui/PageHero';
-import { ItalicTail, Photo } from '../components/home/HomeUi';
+import { Accented } from '../components/ui/Accented';
+import { Photo } from '../components/ui/Photo';
 
 type Tab = 'eventos' | 'promociones';
 
@@ -16,6 +17,7 @@ const agendaMessages = defineMessages({
   loadError: 'No pudimos cargar la agenda. Revisa tu conexión e inténtalo de nuevo.',
   eyebrow: 'Tradición viva',
   title: 'Agenda Sierra Gorda',
+  titleAccent: 'Sierra Gorda',
   intro: 'Fiestas patronales, huapango y tradiciones de las misiones, además de promociones de prestadores locales.',
   tabsLabel: 'Secciones de la agenda',
   eventsTab: 'Eventos culturales',
@@ -45,6 +47,7 @@ const agendaMessages = defineMessages({
   loadError: 'We couldn’t load the events. Check your connection and try again.',
   eyebrow: 'Living tradition',
   title: 'Sierra Gorda events',
+  titleAccent: 'Sierra Gorda',
   intro: 'Patron saint festivals, huapango music and mission traditions, plus deals from local businesses.',
   tabsLabel: 'Events sections',
   eventsTab: 'Cultural events',
@@ -153,7 +156,7 @@ export const AgendaPage = () => {
     <>
     <PageHero
       eyebrow={m.eyebrow}
-      title={<ItalicTail text={m.title} words={2} />}
+      title={<Accented text={m.title} accent={m.titleAccent} />}
       subtitle={m.intro}
       image={hero}
     />
@@ -169,7 +172,7 @@ export const AgendaPage = () => {
                 role="tab"
                 aria-selected={active}
                 onClick={() => setTab(value)}
-                className={`relative -mb-px inline-flex min-h-12 items-center whitespace-nowrap border-b py-3 text-[15px] transition-colors duration-300 ${
+                className={`relative -mb-px inline-flex min-h-12 items-center whitespace-nowrap border-b py-3 text-base transition-colors duration-300 ${
                   active ? 'border-brand-blue font-medium text-brand-blue' : 'border-transparent text-brand-blue/70 hover:text-brand-blue'
                 }`}
               >
@@ -240,7 +243,7 @@ const EmptyState = ({ title, message }: { title: string; message: string }) => {
   return (
     <div className="mt-8 rounded-xl bg-brand-light px-6 py-16 text-center sm:py-20">
       <h2 className="text-3xl leading-tight text-brand-blue sm:text-4xl">{title}</h2>
-      <p className="mx-auto mt-3 max-w-md text-[15px] leading-7 text-brand-blue/70">{message}</p>
+      <p className="mx-auto mt-3 max-w-md text-base leading-7 text-brand-blue/70">{message}</p>
       <Link to="/explorar" className="btn btn-primary mt-7 min-h-12 px-7">
         {m.exploreCatalog}
       </Link>
@@ -265,7 +268,7 @@ const EventoCard = ({ evento }: { evento: Evento }) => {
       <p className="flex flex-col lg:col-start-1 lg:row-start-1">
         {tentative ? (
           <>
-            <span className="text-xs font-medium uppercase tracking-[0.14em] text-brand-gold">{m.tentative}</span>
+            <span className="text-xs font-medium text-brand-gold">{m.tentative}</span>
             <span className="font-display mt-1 text-3xl leading-none text-brand-blue sm:text-4xl">{clean(format.month.format(start))}</span>
             <span className="mt-2 text-xs font-medium tracking-[0.14em] text-brand-blue/70">{format.year.format(start)}</span>
           </>
@@ -298,7 +301,7 @@ const EventoCard = ({ evento }: { evento: Evento }) => {
             </li>
           )}
         </ul>
-        {evento.descripcion && <p className="mt-4 max-w-xl text-[15px] leading-7 text-brand-blue/75">{evento.descripcion}</p>}
+        {evento.descripcion && <p className="mt-4 max-w-xl text-base leading-7 text-brand-blue/75">{evento.descripcion}</p>}
         {evento.lugar_slug && (
           <Link
             to={`/lugares/${evento.lugar_slug}`}
@@ -321,11 +324,11 @@ const PromocionCard = ({ promocion }: { promocion: Promocion }) => {
     <article className="relative flex h-full flex-col rounded-xl border border-brand-sand bg-white">
       <div className="px-6 pb-6 pt-6 sm:px-7 sm:pt-7">
         {promocion.es_ejemplo ? (
-          <p className="inline-flex items-center gap-2 rounded-full border border-brand-blue/20 px-2.5 py-0.5 text-xs font-medium uppercase tracking-[0.2em] text-brand-blue/70">
+          <p className="inline-flex items-center gap-2 rounded-full border border-brand-blue/20 px-2.5 py-0.5 text-xs font-medium text-brand-blue/70">
             {m.sample}
           </p>
         ) : (
-          <p className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.2em] text-brand-gold">
+          <p className="flex items-center gap-2 text-sm font-medium text-brand-gold">
             <SparkleIcon className="size-3.5" />
             {m.promotion}
           </p>
@@ -344,7 +347,7 @@ const PromocionCard = ({ promocion }: { promocion: Promocion }) => {
               : promocion.servicio_nombre}
           </p>
         )}
-        {promocion.descripcion && <p className="mt-4 text-[15px] leading-7 text-brand-blue/75">{promocion.descripcion}</p>}
+        {promocion.descripcion && <p className="mt-4 text-base leading-7 text-brand-blue/75">{promocion.descripcion}</p>}
         {promocion.condiciones && (
           <p className="mt-3 text-xs leading-5 text-brand-blue/70">
             <span className="font-medium text-brand-blue/70">{m.conditions}: </span>
@@ -365,7 +368,7 @@ const PromocionCard = ({ promocion }: { promocion: Promocion }) => {
           <Link
             to={`/servicios/${promocion.servicio_slug}`}
             aria-label={`${m.viewService}: ${promocion.servicio_nombre ?? promocion.titulo}`}
-            className="group inline-flex items-center gap-1.5 border-b border-brand-blue/25 pb-0.5 text-[13px] font-medium text-brand-blue transition-colors duration-300 hover:border-brand-green hover:text-brand-green"
+            className="group inline-flex items-center gap-1.5 border-b border-brand-blue/25 pb-0.5 text-label font-medium text-brand-blue transition-colors duration-300 hover:border-brand-green hover:text-brand-green"
           >
             {m.viewService}
             <ArrowRightIcon className="size-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />

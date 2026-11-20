@@ -1,0 +1,408 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-18T00:40:29.336Z",
+  "title": "Design System: XploraSG",
+  "extensions": {
+    "colorMeta": {
+      "forest-ink": {
+        "role": "primary",
+        "displayName": "Deep Forest Ink",
+        "canonical": "#1F2C24",
+        "tonalRamp": [
+          "#090D0B",
+          "#101612",
+          "#161F19",
+          "#1B2720",
+          "#4C5650",
+          "#848B87",
+          "#BCC0BD",
+          "#E4E6E5"
+        ]
+      },
+      "forest-green": {
+        "role": "primary",
+        "displayName": "Forest Green",
+        "canonical": "#2F5D3E",
+        "tonalRamp": [
+          "#0E1C13",
+          "#182F1F",
+          "#21412B",
+          "#295237",
+          "#597D65",
+          "#8DA695",
+          "#C1CEC5",
+          "#E6ECE8"
+        ]
+      },
+      "sage": {
+        "role": "secondary",
+        "displayName": "Sierra Sage",
+        "canonical": "#6E8B6F",
+        "tonalRamp": [
+          "#212A21",
+          "#374638",
+          "#4D614E",
+          "#617A62",
+          "#8BA28C",
+          "#AFBFB0",
+          "#D4DCD4",
+          "#EEF1EE"
+        ]
+      },
+      "terracotta": {
+        "role": "tertiary",
+        "displayName": "Mission Terracotta",
+        "canonical": "#9E552F",
+        "tonalRamp": [
+          "#2F1A0E",
+          "#4F2B18",
+          "#6F3C21",
+          "#8B4B29",
+          "#B17759",
+          "#CAA28D",
+          "#E2CCC1",
+          "#F3EBE6"
+        ]
+      },
+      "cream": {
+        "role": "neutral",
+        "displayName": "Limestone Cream",
+        "canonical": "#F3EDE2",
+        "tonalRamp": [
+          "#494744",
+          "#7A7771",
+          "#AAA69E",
+          "#D6D1C7",
+          "#F5F1E8",
+          "#F8F5EF",
+          "#FBFAF6",
+          "#FEFDFC"
+        ]
+      },
+      "sand": {
+        "role": "neutral",
+        "displayName": "Dry-Earth Sand",
+        "canonical": "#E6DCCB",
+        "tonalRamp": [
+          "#45423D",
+          "#736E66",
+          "#A19A8E",
+          "#CAC2B3",
+          "#EBE3D5",
+          "#F1ECE2",
+          "#F8F5EF",
+          "#FCFBF9"
+        ]
+      },
+      "warm-paper": {
+        "role": "neutral",
+        "displayName": "Warm Paper",
+        "canonical": "#FAF7F1",
+        "tonalRamp": [
+          "#4B4A48",
+          "#7D7C79",
+          "#AFADA9",
+          "#DCD9D4",
+          "#FBF9F4",
+          "#FCFBF7",
+          "#FEFDFB",
+          "#FEFEFD"
+        ]
+      },
+      "white": {
+        "role": "neutral",
+        "displayName": "White",
+        "canonical": "#FFFFFF",
+        "tonalRamp": [
+          "#4D4D4D",
+          "#808080",
+          "#B3B3B3",
+          "#E0E0E0",
+          "#FFFFFF",
+          "#FFFFFF",
+          "#FFFFFF",
+          "#FFFFFF"
+        ]
+      },
+      "clay-error": {
+        "role": "error",
+        "displayName": "Clay",
+        "canonical": "#833C25",
+        "tonalRamp": [
+          "#27120B",
+          "#421E13",
+          "#5C2A1A",
+          "#733521",
+          "#9C6351",
+          "#BB9487",
+          "#DAC5BE",
+          "#F0E8E5"
+        ]
+      },
+      "clay-error-bg": {
+        "role": "error",
+        "displayName": "Clay Wash",
+        "canonical": "#FBF1EC",
+        "tonalRamp": [
+          "#4B4847",
+          "#7E7976",
+          "#B0A9A5",
+          "#DDD4D0",
+          "#FCF4F0",
+          "#FDF7F5",
+          "#FEFBF9",
+          "#FFFDFD"
+        ]
+      },
+      "ochre-warning": {
+        "role": "warning",
+        "displayName": "Ochre",
+        "canonical": "#503915",
+        "tonalRamp": [
+          "#181106",
+          "#281D0B",
+          "#38280F",
+          "#463212",
+          "#736144",
+          "#9F927E",
+          "#CBC4B9",
+          "#EAE7E3"
+        ]
+      },
+      "ochre-warning-bg": {
+        "role": "warning",
+        "displayName": "Ochre Wash",
+        "canonical": "#FAF4E6",
+        "tonalRamp": [
+          "#4B4945",
+          "#7D7A73",
+          "#AFABA1",
+          "#DCD7CA",
+          "#FBF6EB",
+          "#FCF9F1",
+          "#FEFCF8",
+          "#FEFEFC"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Home hero headline stating the elevation range."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section and page titles."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Place and service names on cards."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Descriptions and reading text, about 70ch."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Municipality, elevation on cards, field labels, metadata. Sentence case."
+      },
+      "data": {
+        "displayName": "Data",
+        "purpose": "Elevation figure and temperature, tabular numerals."
+      }
+    },
+    "shadows": [
+      {
+        "name": "soft-rest",
+        "value": "0 1px 2px rgb(31 44 36 / 0.04), 0 6px 18px -12px rgb(31 44 36 / 0.10)",
+        "purpose": "Occasional resting elevation for white surfaces."
+      },
+      {
+        "name": "search-lift",
+        "value": "0 24px 60px -28px rgba(31,44,36,.45)",
+        "purpose": "Only the home search card where it overlaps the hero."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out-soft",
+        "value": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Default easing for state transitions (300ms)."
+      },
+      {
+        "name": "terrain-reveal",
+        "value": "clip-path inset(0 100% 0 0) to inset(0), 1.6s ease-out-soft",
+        "purpose": "The single orchestrated load moment: the terrain draws west to east. Off under reduced motion."
+      },
+      {
+        "name": "photo-fade",
+        "value": "opacity 500ms ease-out",
+        "purpose": "Photos fade in once loaded instead of popping over the sand placeholder."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Default action on light surfaces.",
+      "html": "<button class=\"ds-btn-primary\">Guardar lugar</button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 20px;border-radius:999px;font:500 14px/1.2 Poppins,ui-sans-serif,system-ui,sans-serif;cursor:pointer;transition:background-color .3s,border-color .3s,color .3s;background:var(--color-brand-blue,#1F2C24);color:#fff;border:0}.ds-btn-primary:hover{background:var(--color-brand-green,#2F5D3E)}.ds-btn-primary:focus-visible{outline:2px solid var(--color-brand-green,#2F5D3E);outline-offset:3px;}"
+    },
+    {
+      "name": "Accent Button",
+      "kind": "button",
+      "refersTo": "button-accent",
+      "description": "The main action of a page, e.g. Cómo llegar.",
+      "html": "<button class=\"ds-btn-accent\">Cómo llegar</button>",
+      "css": ".ds-btn-accent{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 20px;border-radius:999px;font:500 14px/1.2 Poppins,ui-sans-serif,system-ui,sans-serif;cursor:pointer;transition:background-color .3s,border-color .3s,color .3s;background:var(--color-brand-green,#2F5D3E);color:#fff;border:0}.ds-btn-accent:hover{background:var(--color-brand-blue,#1F2C24)}.ds-btn-accent:focus-visible{outline:2px solid var(--color-brand-green,#2F5D3E);outline-offset:3px;}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Quiet companion action.",
+      "html": "<button class=\"ds-btn-secondary\">Compartir</button>",
+      "css": ".ds-btn-secondary{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 20px;border-radius:999px;font:500 14px/1.2 Poppins,ui-sans-serif,system-ui,sans-serif;cursor:pointer;transition:background-color .3s,border-color .3s,color .3s;background:#fff;color:var(--color-brand-blue,#1F2C24);border:1px solid rgb(31 44 36 / .22)}.ds-btn-secondary:hover{border-color:var(--color-brand-blue,#1F2C24)}.ds-btn-secondary:focus-visible{outline:2px solid var(--color-brand-green,#2F5D3E);outline-offset:3px;}"
+    },
+    {
+      "name": "Button on Dark",
+      "kind": "button",
+      "refersTo": "button-on-dark",
+      "description": "Primary action on the forest-ink hero.",
+      "html": "<div class=\"ds-dark\"><button class=\"ds-btn-ondark\">Planear con Chatboot</button></div>",
+      "css": ".ds-dark{background:#1F2C24;padding:24px;border-radius:16px}.ds-btn-ondark{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 20px;border-radius:999px;font:500 14px/1.2 Poppins,ui-sans-serif,system-ui,sans-serif;cursor:pointer;transition:background-color .3s,border-color .3s,color .3s;min-height:48px;padding:12px 24px;background:#FAF7F1;color:#1F2C24;border:0}.ds-btn-ondark:hover{background:#fff}.ds-btn-ondark:focus-visible{outline:2px solid #FAF7F1;outline-offset:3px}"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "Text input with a green focus halo.",
+      "html": "<label class=\"ds-field-label\">Buscar lugar<input class=\"ds-field\" placeholder=\"Cascadas, misiones, miradores…\"></label>",
+      "css": ".ds-field-label{display:grid;gap:6px;font:500 13px Poppins,sans-serif;color:rgb(31 44 36 / .7)}.ds-field{min-height:48px;width:100%;border-radius:10px;border:1px solid rgb(31 44 36 / .14);background:#fff;padding:12px 16px;font:400 14px Poppins,sans-serif;color:#1F2C24;outline:none;transition:all .3s}.ds-field::placeholder{color:rgb(31 44 36 / .4)}.ds-field:hover{border-color:rgb(31 44 36 / .28)}.ds-field:focus{border-color:#2F5D3E;box-shadow:0 0 0 4px rgb(47 93 62 / .15)}"
+    },
+    {
+      "name": "Filter Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Category filter; selected inverts to ink.",
+      "html": "<div class=\"ds-chips\"><button class=\"ds-chip is-on\" aria-pressed=\"true\">Todas</button><button class=\"ds-chip\" aria-pressed=\"false\">Naturaleza</button></div>",
+      "css": ".ds-chips{display:flex;gap:8px}.ds-chip{min-height:40px;padding:8px 16px;border-radius:999px;border:1px solid rgb(31 44 36 / .15);background:transparent;color:rgb(31 44 36 / .75);font:400 14px Poppins,sans-serif;cursor:pointer;transition:all .3s}.ds-chip:hover{border-color:rgb(31 44 36 / .4);color:#1F2C24}.ds-chip.is-on{background:#1F2C24;border-color:#1F2C24;color:#fff}.ds-chip:focus-visible{outline:2px solid var(--color-brand-green,#2F5D3E);outline-offset:3px;}"
+    },
+    {
+      "name": "Place Card",
+      "kind": "card",
+      "refersTo": "card-media",
+      "description": "Clean photo above; municipality and elevation, name and two lines of description below.",
+      "html": "<article class=\"ds-card\"><div class=\"ds-card-photo\"></div><div class=\"ds-card-meta\"><span>Peñamiller</span><span>1,264 m</span></div><h3 class=\"ds-card-title\"><a href=\"#\">Cañón del Paraíso</a></h3><p class=\"ds-card-text\">Desfiladero del río Extoraz con paredes de mármol negro.</p></article>",
+      "css": ".ds-card{position:relative;max-width:300px;font-family:Poppins,sans-serif}.ds-card-photo{aspect-ratio:4/3;border-radius:12px;background:#E6DCCB}.ds-card-meta{display:flex;justify-content:space-between;margin-top:16px;font-size:13px;color:rgb(31 44 36 / .7);font-variant-numeric:tabular-nums}.ds-card-title{margin:4px 0 0;font:400 1.35rem/1.25 Fraunces,Georgia,serif;color:#1F2C24}.ds-card-title a{color:inherit;text-decoration:none;outline:none}.ds-card-title a::after{content:\"\";position:absolute;inset:0;border-radius:12px}.ds-card:hover .ds-card-title a{text-decoration:underline;text-underline-offset:4px}.ds-card-title a:focus-visible::after{outline:2px solid #2F5D3E;outline-offset:4px}.ds-card-text{margin:8px 0 0;font-size:14px;line-height:1.7;color:rgb(31 44 36 / .75)}"
+    },
+    {
+      "name": "Bottom Navigation",
+      "kind": "nav",
+      "refersTo": "nav-bottom",
+      "description": "Fixed mobile bar; the active item turns green with a 1px line above.",
+      "html": "<nav class=\"ds-bnav\"><a class=\"is-on\" href=\"#\">Explorar</a><a href=\"#\">Mapa</a><a href=\"#\">Servicios</a><a href=\"#\">Agenda</a><a href=\"#\">Favoritos</a></nav>",
+      "css": ".ds-bnav{display:grid;grid-template-columns:repeat(5,1fr);height:64px;border-top:1px solid #E6DCCB;background:#FAF7F1;font:400 12px Poppins,sans-serif}.ds-bnav a{position:relative;display:flex;align-items:center;justify-content:center;color:rgb(31 44 36 / .7);text-decoration:none}.ds-bnav a::before{content:\"\";position:absolute;top:0;left:20px;right:20px;height:1px;background:transparent}.ds-bnav a.is-on{color:#2F5D3E;font-weight:500}.ds-bnav a.is-on::before{background:#2F5D3E}.ds-bnav a:hover{color:#1F2C24}"
+    },
+    {
+      "name": "Sierra Profile",
+      "kind": "custom",
+      "refersTo": "hero-panel",
+      "description": "Signature: places plotted on the real terrain cross-section; the selected point turns terracotta.",
+      "html": "<svg class=\"ds-profile\" viewBox=\"0 0 300 120\" role=\"img\" aria-label=\"Perfil de altitud\"><rect width=\"300\" height=\"120\" fill=\"#1F2C24\"/><path d=\"M0 90 C40 85 60 30 90 28 C120 26 140 70 170 80 C200 88 230 60 260 55 L300 70 L300 110 L0 110Z\" fill=\"#2F5D3E\" stroke=\"#6E8B6F\" stroke-width=\"1.5\"/><line x1=\"0\" x2=\"300\" y1=\"55\" y2=\"55\" stroke=\"#F3EDE2\" stroke-opacity=\".14\" stroke-dasharray=\"2 6\"/><circle cx=\"60\" cy=\"62\" r=\"4\" fill=\"#FAF7F1\" stroke=\"#1F2C24\" stroke-width=\"1.5\"/><circle cx=\"170\" cy=\"76\" r=\"4\" fill=\"#FAF7F1\" stroke=\"#1F2C24\" stroke-width=\"1.5\"/><line x1=\"90\" x2=\"90\" y1=\"26\" y2=\"110\" stroke=\"#9E552F\" stroke-dasharray=\"3 4\"/><circle cx=\"90\" cy=\"26\" r=\"6.5\" fill=\"#9E552F\" stroke=\"#FAF7F1\" stroke-width=\"2\"/></svg>",
+      "css": ".ds-profile{display:block;width:100%;max-width:420px;border-radius:16px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "La sierra en corte, en bitácora de campo",
+    "overview": "The Sierra Gorda is defined by its drop: from the semi-desert of Peñamiller up to the pine forests of Pinal de Amoles at about 2,700 m, and down to the mission valleys at about 500 m. The system turns that fact into its signature. The home page opens on a real terrain cross-section with every catalog place plotted at its true longitude and elevation, and elevation then travels with each place as a first-class data point: on cards, on the mosaic, and as the large figure at the top of every place page.\n\nEverything around that signature reads like a local guide's field logbook: precise notes, real photographs, today's weather and the next three days, the road and access in plain words. Components are sober instruments. Photographs and verified data do the persuading; chrome stays quiet. The page is calm, generous in space and editorial in rhythm, never busy.\n\nConfirmed rejections: it must never look like a generic AI-generated template (tracked uppercase labels over every section, one italic word in each headline, 01/02/03 markers on things that are not steps, an arrow on every link), and never like a government portal (crests, grey blocks, link lists).",
+    "keyCharacteristics": [
+      "One bold element per page: the elevation profile on the home page, the elevation figure on a place page.",
+      "Real photographs only, clean on top of cards, never covered by labels or veils.",
+      "Serif for headlines and key figures, sans for everything you read or tap.",
+      "Warm paper backgrounds, forest ink text, terracotta reserved for fine detail.",
+      "Show only what helps a visitor decide; omit placeholders, filler stats and non-information."
+    ],
+    "rules": [
+      {
+        "name": "The Terracotta Whisper Rule",
+        "body": "Terracotta marks a single point of attention per view (the selected place, a required mark). It is never a fill for buttons or large areas.",
+        "section": "colors"
+      },
+      {
+        "name": "The Earth States Rule",
+        "body": "Errors and warnings use clay and ochre at 9:1 contrast or better; system reds, ambers, greys and slates are out of palette.",
+        "section": "colors"
+      },
+      {
+        "name": "The Sentence Case Rule",
+        "body": "Labels are written in natural sentence case. Tracked uppercase is reserved for the logo tagline and the calendar date blocks of the Agenda.",
+        "section": "typography"
+      },
+      {
+        "name": "The Role Scale Rule",
+        "body": "Text sizes come from roles (`text-label`, `text-sm`, `text-base`, `text-title`, `section-title`), not from one-off pixel values such as `text-[15px]`. Reading text never drops below 16px.",
+        "section": "typography"
+      },
+      {
+        "name": "The Plain Headline Rule",
+        "body": "Headlines are set evenly. No single word is switched to italic or another color for emphasis.",
+        "section": "typography"
+      },
+      {
+        "name": "The One Bold Element Rule",
+        "body": "Each page spends its boldness in one place (the profile, the elevation figure). Everything around it stays quiet and aligned to the grid.",
+        "section": "layout"
+      },
+      {
+        "name": "The Flat Field Rule",
+        "body": "Cards have no frame and no shadow: the photo's rounded edge and the text below define them.",
+        "section": "elevation"
+      },
+      {
+        "name": "The No Glass Rule",
+        "body": "No backdrop blur, glassmorphism or decorative gradients. A single uniform dark veil over a photo is allowed only when text must sit on it.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do show elevation wherever a place appears, in tabular numerals with \"m\".",
+      "Do keep photographs clean: no badges, veils or pills on top of card photos.",
+      "Do write labels in sentence case and keep headlines evenly set.",
+      "Do keep touch targets at 44px or more on touch screens and visible 2px green focus outlines. Compact controls (chips, icon buttons, small WhatsApp and favorite buttons, map zoom) stay at 32–40px for a mouse and grow with the `pointer-coarse:` variant (`pointer-coarse:min-h-11`, `pointer-coarse:size-11`); when the drawn mark must stay small (map pins, profile points), add an invisible hit area instead of enlarging the drawing.",
+      "Do use clay and ochre for errors, warnings and offline notices.",
+      "Do treat reduced motion as \"no movement, keep the meaning\": under `prefers-reduced-motion` remove slides, lifts, zooms and smooth scrolling (use `scrollBehavior()` from `utils/motion.ts` for scrolls started in code), and keep short opacity and color transitions that signal state (photo loaded, assistant open, terrain shown as a 300ms fade). Never zero out every transition globally.",
+      "Do show hours and cost in full; never truncate them with an ellipsis."
+    ],
+    "donts": [
+      "Don't put tracked uppercase eyebrow labels over sections.",
+      "Don't italicize or recolor one word of a headline for emphasis.",
+      "Don't number items 01/02/03 unless they are a real sequence of steps (the survey is one).",
+      "Don't add an arrow to every link or an extra arrow button to cards.",
+      "Don't use filler statistics (\"20 lugares publicados\") or non-information such as \"Consultar tarifa vigente\".",
+      "Don't use backdrop blur, glassmorphism, decorative gradients or saturated colors outside the palette.",
+      "Don't add fade-and-rise entrances to cards or sections as they scroll into view; the terrain drawing is the page's single choreographed moment.",
+      "Don't look like a government portal: no crests, grey blocks or link-list layouts."
+    ]
+  }
+}

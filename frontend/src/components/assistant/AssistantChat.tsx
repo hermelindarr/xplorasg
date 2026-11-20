@@ -13,6 +13,7 @@ import { WhatsAppIcon } from '../WhatsAppButton';
 import { buildWhatsappUrl, hasRealPhone } from '../../utils/whatsapp';
 import { useVoice } from './useVoice';
 import { MacawAvatar } from '../brand/Macaw';
+import { scrollBehavior } from '../../utils/motion';
 
 interface ChatMessage {
   id: number;
@@ -67,8 +68,8 @@ const ReferenceCard = ({ reference, onNavigate }: ReferenceCardProps) => {
         </div>
         {canSave && <FavoriteButton placeId={reference.id} size="sm" />}
       </div>
-      {reference.resumen && <p className="mt-1.5 line-clamp-2 text-[13px] leading-5 text-brand-blue/75">{reference.resumen}</p>}
-      {reference.detalle && <p className="mt-1 line-clamp-2 text-[13px] leading-5 text-brand-blue/75"><span className="font-medium text-brand-blue">{reference.tipo === 'servicio' ? m.price : m.whatToDo}:</span> {reference.detalle}</p>}
+      {reference.resumen && <p className="mt-1.5 line-clamp-2 text-label leading-5 text-brand-blue/75">{reference.resumen}</p>}
+      {reference.detalle && <p className="mt-1 line-clamp-2 text-label leading-5 text-brand-blue/75"><span className="font-medium text-brand-blue">{reference.tipo === 'servicio' ? m.price : m.whatToDo}:</span> {reference.detalle}</p>}
       {(canMap || canContact) && (
         <div className="mt-2.5 flex flex-wrap gap-2">
           {canMap && (
@@ -148,9 +149,9 @@ export const AssistantChat = ({ variant = 'page', onNavigate, autoFocus = false,
     const answer = lastAnswerRef.current;
     if (!loading && last?.role === 'assistant' && last.id > 0 && answer) {
       const offset = answer.getBoundingClientRect().top - box.getBoundingClientRect().top;
-      box.scrollTo({ top: Math.max(0, box.scrollTop + offset - 16), behavior: 'smooth' });
+      box.scrollTo({ top: Math.max(0, box.scrollTop + offset - 16), behavior: scrollBehavior() });
     } else {
-      box.scrollTo({ top: box.scrollHeight, behavior: 'smooth' });
+      box.scrollTo({ top: box.scrollHeight, behavior: scrollBehavior() });
     }
   }, [messages, loading]);
 
@@ -243,7 +244,7 @@ export const AssistantChat = ({ variant = 'page', onNavigate, autoFocus = false,
                   {` · ${message.weather.condicion}`}
                 </p>
               )}
-              <p className="whitespace-pre-line text-[15px] leading-7 text-brand-blue">{message.text}</p>
+              <p className="whitespace-pre-line text-base leading-7 text-brand-blue">{message.text}</p>
               {message.references && message.references.length > 0 && (
                 <ul className="mt-4 divide-y divide-brand-sand border-y border-brand-sand py-3.5">
                   {message.references.map((reference) => (
@@ -270,7 +271,7 @@ export const AssistantChat = ({ variant = 'page', onNavigate, autoFocus = false,
 
       <div className={`border-t border-brand-sand bg-brand-paper ${compact ? 'px-4 pb-4 pt-3' : 'px-5 py-4 sm:px-8'}`}>
         {!isOnline && (
-          <div role="status" className="mb-3 flex gap-3 rounded-lg border border-ochre-200 bg-ochre-50 px-4 py-3 text-[13px] leading-5 text-ochre-900">
+          <div role="status" className="mb-3 flex gap-3 rounded-lg border border-ochre-200 bg-ochre-50 px-4 py-3 text-label leading-5 text-ochre-900">
             <WifiOffIcon className="mt-0.5 size-4 shrink-0" strokeWidth={1.5} />
             <p>
               <b className="font-medium">{m.offlineTitle}.</b> {m.offlineText}{' '}
@@ -286,7 +287,7 @@ export const AssistantChat = ({ variant = 'page', onNavigate, autoFocus = false,
                 type="button"
                 disabled={loading || !isOnline}
                 onClick={() => void send(suggestion)}
-                className="shrink-0 rounded-full border border-brand-blue/20 bg-brand-paper px-3.5 py-1.5 text-[13px] text-brand-blue transition-colors duration-300 hover:border-brand-green hover:text-brand-green disabled:opacity-50"
+                className="inline-flex shrink-0 items-center rounded-full border border-brand-blue/20 bg-brand-paper px-3.5 py-1.5 pointer-coarse:min-h-11 text-label text-brand-blue transition-colors duration-300 hover:border-brand-green hover:text-brand-green disabled:opacity-50"
               >
                 {suggestion}
               </button>
@@ -353,7 +354,7 @@ export const AssistantChat = ({ variant = 'page', onNavigate, autoFocus = false,
             type="button"
             onClick={requestLocation}
             disabled={locationState === 'loading' || locationState === 'ok'}
-            className={`inline-flex min-h-8 items-center gap-1.5 rounded-full px-3 text-xs font-medium transition-colors duration-300 ${
+            className={`inline-flex min-h-8 pointer-coarse:min-h-11 items-center gap-1.5 rounded-full px-3 text-xs font-medium transition-colors duration-300 ${
               locationState === 'ok'
                 ? 'bg-brand-green/10 text-brand-green'
                 : 'border border-brand-blue/20 text-brand-blue hover:border-brand-green hover:text-brand-green'
@@ -368,7 +369,7 @@ export const AssistantChat = ({ variant = 'page', onNavigate, autoFocus = false,
               onClick={voice.toggleSpeakReplies}
               aria-pressed={voice.speakReplies}
               aria-label={m.readAloudLabel}
-              className={`inline-flex min-h-8 items-center gap-1.5 rounded-full px-3 text-xs font-medium transition-colors duration-300 ${
+              className={`inline-flex min-h-8 pointer-coarse:min-h-11 items-center gap-1.5 rounded-full px-3 text-xs font-medium transition-colors duration-300 ${
                 voice.speakReplies
                   ? 'bg-brand-green/10 text-brand-green'
                   : 'border border-brand-blue/20 text-brand-blue hover:border-brand-green hover:text-brand-green'

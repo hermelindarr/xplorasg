@@ -13,7 +13,7 @@ import { categoryLabel, common } from '../i18n/common';
 import {
   AdventureIcon, ArrowRightIcon, CloseIcon, CompassIcon, MapIcon, PinIcon, RouteIcon,
 } from '../components/brand/icons';
-import { ItalicTail } from '../components/home/HomeUi';
+import { Accented } from '../components/ui/Accented';
 
 const mapMessages = defineMessages({
   pageTitle: 'Mapa interactivo',
@@ -35,6 +35,7 @@ const mapMessages = defineMessages({
   straightLineNote: 'Distancia en línea recta y tiempo aproximado (las carreteras de la sierra son más largas). Para navegar usa Google Maps.',
   eyebrow: 'Ubícate y explora',
   title: 'Mapa de la Sierra Gorda',
+  titleAccent: 'Sierra Gorda',
   intro: 'Ubica los lugares de la Sierra Gorda, encuentra lo más cercano a ti y prepara tu ruta.',
   locating: 'Buscando ubicación…',
   useLocation: 'Usar mi ubicación',
@@ -106,6 +107,7 @@ const mapMessages = defineMessages({
   straightLineNote: 'Straight-line distance and approximate time (mountain roads are longer). Use Google Maps to navigate.',
   eyebrow: 'Find your way and explore',
   title: 'Sierra Gorda map',
+  titleAccent: 'map',
   intro: 'Find Sierra Gorda places, see what is closest to you and plan your route.',
   locating: 'Finding your location…',
   useLocation: 'Use my location',
@@ -161,7 +163,8 @@ const mapMessages = defineMessages({
 
 const SIERRA_GORDA_CENTER: LatLngExpression = [21.22, -99.55];
 
-// Colores de la paleta v3 para los trazos de Leaflet (no aceptan clases de Tailwind).
+// Copia exacta de los tokens brand-blue, brand-teal y brand-gold (index.css): Leaflet dibuja con atributos SVG,
+// que no aceptan clases de Tailwind ni variables CSS. Si cambia la paleta, cambiar también aquí.
 const INK = '#1F2C24';
 const SAGE = '#6E8B6F';
 const TERRACOTTA = '#9E552F';
@@ -610,7 +613,7 @@ export const MapPage = () => {
 
   // Chips discretos, como en el inicio: texto con borde fino; el activo en tinta.
   const chipClass = (active: boolean) =>
-    `inline-flex shrink-0 items-center rounded-full border px-3.5 py-1.5 text-[13px] transition-colors duration-300 ${
+    `inline-flex shrink-0 items-center rounded-full border px-3.5 py-1.5 pointer-coarse:min-h-11 pointer-coarse:px-4 text-label transition-colors duration-300 ${
       active
         ? 'border-brand-blue bg-brand-blue text-white'
         : 'border-brand-blue/15 bg-transparent text-brand-blue/75 hover:border-brand-blue/40 hover:text-brand-blue'
@@ -620,7 +623,6 @@ export const MapPage = () => {
     ? `https://www.google.com/maps/dir/?api=1&destination=${destination.latitud},${destination.longitud}${userLocation ? `&origin=${userLocation[0]},${userLocation[1]}` : ''}&travelmode=${routeProfile.startsWith('foot') ? 'walking' : routeProfile.startsWith('cycling') ? 'bicycling' : 'driving'}`
     : null;
 
-  const titleWords = lang === 'en' ? 1 : 2;
   const columnHeight = 'lg:h-[calc(100svh-150px)] lg:min-h-[620px] lg:max-h-[880px]';
 
   return (
@@ -629,11 +631,10 @@ export const MapPage = () => {
       <header className="mx-auto max-w-7xl px-5 pt-8 lg:px-8 lg:pt-14">
         <div className="flex flex-col gap-6 border-b border-brand-sand pb-7 md:flex-row md:items-end md:justify-between lg:pb-10">
           <div className="max-w-2xl">
-            <p className="eyebrow">{m.eyebrow}</p>
             <h1 className="mt-5 text-[2.5rem] leading-[1.04] text-brand-blue sm:text-5xl lg:text-[3.5rem]">
-              <ItalicTail text={m.title} words={titleWords} />
+              <Accented text={m.title} accent={m.titleAccent} />
             </h1>
-            <p className="mt-5 max-w-xl text-[15px] leading-7 text-brand-blue/75">{m.intro}</p>
+            <p className="mt-5 max-w-xl text-base leading-7 text-brand-blue/75">{m.intro}</p>
           </div>
           <div className="flex shrink-0 flex-col items-start gap-3 md:items-end">
             <button type="button" onClick={requestLocation} disabled={locating} className="btn btn-primary min-h-12 px-6 disabled:cursor-wait">
@@ -660,7 +661,7 @@ export const MapPage = () => {
 
         <div className={`grid gap-6 ${panelOpen ? 'lg:grid-cols-[360px_minmax(0,1fr)]' : ''}`}>
           {/* Mapa (primero en móvil; a la derecha en escritorio) */}
-          <div className={`relative order-1 h-[56vh] min-h-[380px] overflow-hidden rounded-xl border border-brand-blue/10 bg-brand-light lg:order-2 [&_.leaflet-bar]:overflow-hidden! [&_.leaflet-bar]:rounded-lg! [&_.leaflet-bar]:border! [&_.leaflet-bar]:border-brand-blue/15! [&_.leaflet-bar]:shadow-none! [&_.leaflet-bar_a]:text-brand-blue! ${columnHeight}`}>
+          <div className={`relative order-1 h-[56vh] min-h-[380px] overflow-hidden rounded-xl border border-brand-blue/10 bg-brand-light lg:order-2 [&_.leaflet-bar]:overflow-hidden! [&_.leaflet-bar]:rounded-lg! [&_.leaflet-bar]:border! [&_.leaflet-bar]:border-brand-blue/15! [&_.leaflet-bar]:shadow-none! [&_.leaflet-bar_a]:text-brand-blue! pointer-coarse:[&_.leaflet-bar_a]:size-11! pointer-coarse:[&_.leaflet-bar_a]:leading-[44px]! ${columnHeight}`}>
             {loading && (
               <div className="absolute inset-0 z-[500] grid place-items-center bg-brand-paper/75">
                 <span className="inline-flex items-center gap-2.5 rounded-full border border-brand-sand bg-white px-4 py-2 text-sm text-brand-blue">
@@ -669,7 +670,26 @@ export const MapPage = () => {
                 </span>
               </div>
             )}
-            <MapContainer center={SIERRA_GORDA_CENTER} zoom={9} minZoom={7} maxZoom={18} scrollWheelZoom className="size-full" zoomControl={false}>
+            <MapContainer
+              center={SIERRA_GORDA_CENTER}
+              zoom={9}
+              minZoom={2}
+              maxZoom={18}
+              zoomSnap={0.25}
+              zoomDelta={0.5}
+              wheelPxPerZoomLevel={80}
+              wheelDebounceTime={30}
+              zoomAnimation
+              inertia
+              dragging
+              touchZoom
+              doubleClickZoom
+              boxZoom
+              keyboard
+              scrollWheelZoom
+              className="size-full"
+              zoomControl={false}
+            >
               <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -836,7 +856,7 @@ export const MapPage = () => {
                               type="button"
                               aria-pressed={active}
                               onClick={() => setRouteProfile(value)}
-                              className={`inline-flex min-h-11 items-center gap-2 rounded-lg border px-3 text-[13px] transition-colors duration-300 ${
+                              className={`inline-flex min-h-11 items-center gap-2 rounded-lg border px-3 text-label transition-colors duration-300 ${
                                 active ? 'border-brand-blue bg-brand-blue text-white' : 'border-brand-blue/15 text-brand-blue/75 hover:border-brand-blue/40 hover:text-brand-blue'
                               }`}
                             >
@@ -849,7 +869,7 @@ export const MapPage = () => {
                     </div>
 
                     {!userLocation && (
-                      <p className="text-[13px] leading-5 text-brand-blue/75">{locationMessage || m.needLocation}</p>
+                      <p className="text-label leading-5 text-brand-blue/75">{locationMessage || m.needLocation}</p>
                     )}
                     <button type="button" onClick={() => void calculateRoute()} disabled={routeLoading || locating} className="btn btn-accent min-h-12 w-full rounded-lg">
                       {routeLoading ? m.calculating : locating ? m.locating : userLocation ? m.drawRoute : `${m.useLocation} · ${m.drawRoute}`}
@@ -875,7 +895,7 @@ export const MapPage = () => {
                       </dl>
                     )}
                     {routeError && (
-                      <div role="status" className="border-l-2 border-brand-gold bg-brand-light px-4 py-3 text-[13px] leading-5 text-brand-blue">
+                      <div role="status" className="border-l-2 border-brand-gold bg-brand-light px-4 py-3 text-label leading-5 text-brand-blue">
                         <p className="font-medium">{routeError}</p>
                         <p className="mt-1 text-brand-blue/75">{m.routeFallback}</p>
                       </div>
@@ -948,7 +968,7 @@ export const MapPage = () => {
 
               {/* Leyenda */}
               <PanelSection title={m.legend}>
-                <ul className="mt-4 grid grid-cols-2 gap-x-3 gap-y-2.5 text-[13px] text-brand-blue/75">
+                <ul className="mt-4 grid grid-cols-2 gap-x-3 gap-y-2.5 text-label text-brand-blue/75">
                   {legendItems.map(({ label, dot }) => (
                     <li key={label} className="inline-flex items-center gap-2"><i className={`size-2 rounded-full ${dot}`} aria-hidden="true" />{label}</li>
                   ))}

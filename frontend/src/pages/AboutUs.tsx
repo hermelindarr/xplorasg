@@ -4,7 +4,8 @@ import { aboutMessages } from '../i18n/about';
 import { BrandLogo } from '../components/brand/BrandLogo';
 import { CONTACT_EMAIL } from '../config/contact';
 import { CommunityIcon, NatureIcon, SparkleIcon } from '../components/brand/icons';
-import { ItalicTail, TextLink } from '../components/home/HomeUi';
+import { Accented } from '../components/ui/Accented';
+import { TextLink } from '../components/ui/TextLink';
 import { PageHero } from '../components/ui/PageHero';
 
 const extra = defineMessages({
@@ -31,7 +32,7 @@ export const AboutUs = () => {
       <PageHero
         layout="stacked"
         eyebrow={m.eyebrow}
-        title={<ItalicTail text={m.title} words={1} />}
+        title={<Accented text={m.title} accent={m.titleAccent} />}
         subtitle={m.missionText}
         image={{
           url: '/equipo/xplorasg-equipo-1600.webp',
@@ -53,17 +54,15 @@ export const AboutUs = () => {
       {/* Valores en columnas con filetes */}
       <section className="bg-brand-light" aria-labelledby="about-values">
         <div className="mx-auto max-w-7xl px-5 py-20 lg:px-8 lg:py-28">
-          <p className="eyebrow">{m.missionTitle}</p>
-          <h2 id="about-values" className="section-title mt-5"><ItalicTail text={m.valuesTitle} words={1} /></h2>
+          <h2 id="about-values" className="section-title"><Accented text={m.valuesTitle} accent={m.valuesTitleAccent} /></h2>
           <div className="mt-12 grid gap-10 md:grid-cols-3 md:gap-8 lg:mt-16 lg:gap-12">
-            {values.map(({ Icon, title, text }, i) => (
+            {values.map(({ Icon, title, text }) => (
               <article key={title} className="border-t border-brand-blue/70 pt-6">
-                <div className="flex items-center justify-between">
-                  <span className="font-display text-sm italic text-brand-gold" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+                <div className="flex items-center">
                   <Icon className="size-5 text-brand-green" strokeWidth={1.4} />
                 </div>
                 <h3 className="font-display mt-6 text-2xl leading-tight text-brand-blue">{title}</h3>
-                <p className="mt-3 max-w-sm text-[15px] leading-7 text-brand-blue/75">{text}</p>
+                <p className="mt-3 max-w-sm text-base leading-7 text-brand-blue/75">{text}</p>
               </article>
             ))}
           </div>
@@ -76,12 +75,12 @@ export const AboutUs = () => {
           <div className="lg:col-span-4">
             <BrandLogo variant="mark" className="h-12 w-auto" />
             <p className="eyebrow mt-8">{m.programTitle}</p>
-            <p className="mt-5 text-[15px] leading-8 text-brand-blue/70">{m.programText}</p>
+            <p className="mt-5 text-base leading-8 text-brand-blue/70">{m.programText}</p>
           </div>
           <div className="rounded-xl bg-brand-light px-6 py-10 sm:px-10 sm:py-12 lg:col-span-7 lg:col-start-6 lg:px-14 lg:py-14">
             <p className="eyebrow">{m.ctaEmail}</p>
             <h2 className="section-title mt-5">{m.ctaTitle}</h2>
-            <p className="mt-5 max-w-lg text-[15px] leading-7 text-brand-blue/75 sm:text-base sm:leading-8">{m.ctaText}</p>
+            <p className="mt-5 max-w-lg text-base leading-7 text-brand-blue/75 sm:leading-8">{m.ctaText}</p>
             <div className="mt-8 flex flex-col gap-5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-7">
               <a href={`mailto:${CONTACT_EMAIL}`} className="btn btn-primary min-h-12 max-w-full px-6">
                 <span className="truncate"><span className="max-sm:hidden">{m.ctaEmail} · </span>{CONTACT_EMAIL}</span>

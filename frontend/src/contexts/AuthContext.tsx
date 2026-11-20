@@ -10,7 +10,8 @@ import {
 import axios from 'axios';
 import { messagesNow, useMessages } from '../i18n';
 import { authSession } from '../i18n/auth';
-import { supabase } from '../supabaseClient';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { getSupabase, mightHaveSession, supabaseEnabled } from '../supabaseClient';
 
 export interface User {
   id: string;
@@ -142,19 +143,53 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       const { message, authProblem } = profileError(error);
       clearLocalSession();
-      if (authProblem) await supabase?.auth.signOut();
+      if (authProblem) await (await getSupabase())?.auth.signOut();
       throw new AuthFlowError(message);
     }
   }, [clearLocalSession, loadProfile]);
 
-  // ---- Restaurar la sesión al abrir la app y escuchar cambios de Supabase ----
+  // ---- Escucha de cambios de sesión de Supabase (renovación del token, cierre en otra pestaña) ----
+  // Se conecta en cuanto la librería se carga: al restaurar una sesión guardada o al iniciar sesión / registrarse.
+  const authListener = useRef<(() => void) | null>(null);
+  const ensureAuthListener = useCallback((supabase: SupabaseClient) => {
+    if (authListener.current) return;
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') setPasswordRecovery(true);
+      if (!session) {
+        clearLocalSession();
+        setLoading(false);
+        return;
+      }
+      // Misma persona (renovación del token, actualización de datos): sólo se actualiza el token, sin recargar la vista.
+      if (userRef.current?.id === session.user.id) {
+        applyUser(userRef.current, session.access_token);
+        return;
+      }
+      if (event === 'INITIAL_SESSION') return; // ya lo atiende initializeSession
+      void loadSupabaseProfile(session.access_token)
+        .catch((error) => console.error('La sesión de Supabase no pudo vincularse con el perfil:', error))
+        .finally(() => setLoading(false));
+    });
+    authListener.current = () => data.subscription.unsubscribe();
+  }, [applyUser, clearLocalSession, loadSupabaseProfile]);
+
+  // ---- Restaurar la sesión al abrir la app ----
   useEffect(() => {
     let active = true;
     const finishLoading = () => { if (active) setLoading(false); };
 
     const initializeSession = async () => {
       try {
-        if (supabase) {
+        if (supabaseEnabled) {
+          // Sin sesión guardada ni enlace de confirmación/recuperación: no hay nada que restaurar y
+          // la librería de Supabase no se descarga (se cargará al iniciar sesión).
+          if (!mightHaveSession()) {
+            clearLocalSession();
+            return;
+          }
+          const supabase = await getSupabase();
+          if (!supabase || !active) return;
+          ensureAuthListener(supabase);
           const { data, error } = await supabase.auth.getSession();
           if (error) throw error;
           if (data.session && idleTooLong()) {
@@ -188,33 +223,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     void initializeSession();
 
-    if (!supabase) {
-      return () => { active = false; };
-    }
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'PASSWORD_RECOVERY') setPasswordRecovery(true);
-      if (!session) {
-        clearLocalSession();
-        finishLoading();
-        return;
-      }
-      // Misma persona (renovación del token, actualización de datos): sólo se actualiza el token, sin recargar la vista.
-      if (userRef.current?.id === session.user.id) {
-        applyUser(userRef.current, session.access_token);
-        return;
-      }
-      if (event === 'INITIAL_SESSION') return; // ya lo atiende initializeSession
-      void loadSupabaseProfile(session.access_token)
-        .catch((error) => console.error('La sesión de Supabase no pudo vincularse con el perfil:', error))
-        .finally(finishLoading);
-    });
-
     return () => {
       active = false;
-      authListener.subscription.unsubscribe();
+      authListener.current?.();
+      authListener.current = null;
     };
-  }, [applyUser, clearLocalSession, loadProfile, loadSupabaseProfile]);
+  }, [clearLocalSession, ensureAuthListener, loadProfile, loadSupabaseProfile]);
 
   const resetNotice = () => {
     sessionStorage.removeItem(NOTICE_KEY);
@@ -223,8 +237,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password?: string): Promise<User> => {
     resetNotice();
-    if (supabase) {
+    if (supabaseEnabled) {
       if (!password) throw new AuthFlowError(messagesNow(authSession).enterYourPassword);
+      const supabase = (await getSupabase())!;
+      ensureAuthListener(supabase);
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       if (!data.session) throw new AuthFlowError(messagesNow(authSession).noSession);
@@ -244,8 +260,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const register = async (email: string, nombre: string, password?: string): Promise<RegisterResult> => {
     resetNotice();
-    if (supabase) {
+    if (supabaseEnabled) {
       if (!password) throw new AuthFlowError(messagesNow(authSession).enterAPassword);
+      const supabase = (await getSupabase())!;
+      ensureAuthListener(supabase);
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -276,12 +294,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const requestPasswordReset = async (email: string) => {
+    const supabase = await getSupabase();
     if (!supabase) throw new AuthFlowError(messagesNow(authSession).resetUnavailable);
     const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: appUrl('/restablecer-contrasena') });
     if (error) throw error;
   };
 
   const updatePassword = async (password: string) => {
+    const supabase = await getSupabase();
     if (!supabase) throw new AuthFlowError(messagesNow(authSession).changeUnavailable);
     const { error } = await supabase.auth.updateUser({ password });
     if (error) throw error;
@@ -289,6 +309,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const resendConfirmation = async (email: string) => {
+    const supabase = await getSupabase();
     if (!supabase) return;
     const { error } = await supabase.auth.resend({ type: 'signup', email, options: { emailRedirectTo: appUrl('/auth/confirm') } });
     if (error) throw error;
@@ -300,7 +321,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setNoticeReason(reason);
     }
     try {
-      if (supabase) await supabase.auth.signOut();
+      if (supabaseEnabled) await (await getSupabase())?.auth.signOut();
     } finally {
       clearLocalSession();
       localStorage.removeItem(LAST_ACTIVITY_KEY);
@@ -331,6 +352,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const expiresAt = tokenExpiresAt(token);
       if (expiresAt !== null && expiresAt - Date.now() < 30_000) {
         // Supabase intenta renovar el token; si no puede, la sesión se cierra.
+        const supabase = await getSupabase();
         if (supabase) {
           const { data, error } = await supabase.auth.refreshSession();
           if (error || !data.session) await logout('expirada');

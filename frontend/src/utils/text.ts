@@ -48,3 +48,9 @@ export const withoutRules = (value: string | null | undefined): string | null =>
     .join(' ');
   return rest || null;
 };
+
+// Precios que no dicen nada ("Consultar tarifa vigente", "Precios definidos por cada productor"):
+// ocupaban espacio sin ayudar a decidir. Sólo se muestra un precio con cifras o un rango real.
+const UNINFORMATIVE_PRICE = /consult|definid|var[ií]a|confirm|por cada|depende|check|varies|defined/i;
+export const informativePrice = (price: string | null | undefined): string | null =>
+  price && !UNINFORMATIVE_PRICE.test(price) ? price : null;

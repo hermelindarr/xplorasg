@@ -88,7 +88,7 @@ export const ResetPasswordPage = () => {
       <Card>
         <StatusBadge tone="warning" />
         <h1 className="text-[2.25rem] leading-[1.08] text-brand-blue sm:text-[2.5rem]">{m.invalidLinkTitle}</h1>
-        <p className="mt-4 text-[15px] leading-7 text-brand-blue/75">{error ? linkErrorText(error, m) : m.invalidResetLink}</p>
+        <p className="mt-4 text-base leading-7 text-brand-blue/75">{error ? linkErrorText(error, m) : m.invalidResetLink}</p>
         <Link to="/login" className="btn btn-accent mt-8 min-h-12 px-7">
           {m.requestNewLink}
           <ArrowRightIcon className="size-4" />
@@ -102,14 +102,13 @@ export const ResetPasswordPage = () => {
       <Card>
         <StatusBadge tone="success" />
         <h1 className="text-[2.25rem] leading-[1.08] text-brand-blue sm:text-[2.5rem]">{m.passwordUpdatedTitle}</h1>
-        <p className="mt-4 text-[15px] leading-7 text-brand-blue/75">{m.passwordUpdatedText}</p>
+        <p className="mt-4 text-base leading-7 text-brand-blue/75">{m.passwordUpdatedText}</p>
       </Card>
     );
   }
 
   return (
     <Card>
-      <p className="eyebrow">{m.eyebrow}</p>
       <h1 className="mt-5 text-[2.25rem] leading-[1.08] text-brand-blue sm:text-[2.5rem]">{m.newPasswordTitle}</h1>
       <p className="mt-3 inline-flex items-center gap-2 text-sm text-brand-blue/70"><ShieldIcon className="size-4 text-brand-green" />{m.forEmail(user.email)}</p>
       <form onSubmit={(event) => void submit(event)} className="mt-8 grid gap-5">
@@ -155,7 +154,7 @@ export const AuthConfirmPage = () => {
       <Card>
         <StatusBadge tone="warning" />
         <h1 className="text-[2.25rem] leading-[1.08] text-brand-blue sm:text-[2.5rem]">{m.confirmFailedTitle}</h1>
-        <p className="mt-4 text-[15px] leading-7 text-brand-blue/75">{linkErrorText(error, m)}{m.confirmFailedHint}</p>
+        <p className="mt-4 text-base leading-7 text-brand-blue/75">{linkErrorText(error, m)}{m.confirmFailedHint}</p>
         <Link to="/login" className="btn btn-accent mt-8 min-h-12 px-7">{m.goToLogin}</Link>
       </Card>
     );
@@ -165,7 +164,7 @@ export const AuthConfirmPage = () => {
       <Card>
         <StatusBadge tone="success" />
         <h1 className="text-[2.25rem] leading-[1.08] text-brand-blue sm:text-[2.5rem]">{m.emailConfirmedGreeting(user.nombre?.split(' ')[0] || m.welcomeFallback)}</h1>
-        <p className="mt-4 text-[15px] leading-7 text-brand-blue/75">{m.accountReady}</p>
+        <p className="mt-4 text-base leading-7 text-brand-blue/75">{m.accountReady}</p>
       </Card>
     );
   }
@@ -174,7 +173,7 @@ export const AuthConfirmPage = () => {
       <Card>
         <StatusBadge tone="success" />
         <h1 className="text-[2.25rem] leading-[1.08] text-brand-blue sm:text-[2.5rem]">{m.emailConfirmedTitle}</h1>
-        <p className="mt-4 text-[15px] leading-7 text-brand-blue/75">{m.canSignInNow}</p>
+        <p className="mt-4 text-base leading-7 text-brand-blue/75">{m.canSignInNow}</p>
         <Link to="/login" className="btn btn-accent mt-8 min-h-12 px-7">{m.signIn}</Link>
       </Card>
     );
